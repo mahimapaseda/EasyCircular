@@ -184,6 +184,7 @@ router.post("/:id/extract", authOptional, async (req, res) => {
     const extractedText = (aiResult.text || "").trim();
     const pageCount = aiResult.pages || 0;
     const ocrUsed = Boolean(aiResult.ocrUsed);
+    const ocrLang = aiResult.ocrLang || null;
     const extractionError = aiResult.error || null;
 
     if (!extractedText) {
@@ -191,6 +192,7 @@ router.post("/:id/extract", authOptional, async (req, res) => {
       circular.extractedText = "";
       circular.processingMeta = {
         ocrUsed,
+        ocrLang,
         pageCount,
         extractionError:
           extractionError ||
@@ -209,6 +211,7 @@ router.post("/:id/extract", authOptional, async (req, res) => {
     circular.status = "extracted";
     circular.processingMeta = {
       ocrUsed,
+      ocrLang,
       pageCount,
       extractionError: extractionError,
     };

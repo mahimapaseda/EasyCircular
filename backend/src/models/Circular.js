@@ -21,6 +21,7 @@ const circularSchema = new mongoose.Schema(
     },
     processingMeta: {
       ocrUsed: { type: Boolean, default: false },
+      ocrLang: { type: String, default: null },
       pageCount: { type: Number, default: 0 },
       extractionError: { type: String, default: null },
     },

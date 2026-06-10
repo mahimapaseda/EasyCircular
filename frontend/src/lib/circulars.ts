@@ -12,6 +12,7 @@ export type CircularStatus =
 
 export type CircularProcessingMeta = {
   ocrUsed: boolean;
+  ocrLang: string | null;
   pageCount: number;
   extractionError: string | null;
 };

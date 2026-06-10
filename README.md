@@ -107,12 +107,22 @@ EasyCircular/
 - [x] `POST /api/circulars/:id/extract` — text extraction via AI service
 - [x] `PATCH /api/circulars/:id/text` — save edited text
 - [x] `GET /api/circulars` — list circulars (by account or browser session)
-- [x] AI `POST /parse/pdf` — pdfplumber → PyMuPDF → Tesseract OCR fallback
+- [x] AI `POST /parse/pdf` — pdfplumber → PyMuPDF → Tesseract OCR fallback (`sin+eng+tam` for MOE circulars)
 - [x] Frontend upload, extract, review UI on `/circular/[id]`
 
 **MongoDB must be running** before upload works (`docker compose up mongodb -d` or local MongoDB on port 27017).
 
 Place test PDFs in `docs/sample-circulars/` (see README there).
+
+### Sinhala & Tamil OCR (Windows)
+
+Scanned MOE circulars use Tesseract with **Sinhala + English + Tamil**:
+
+```powershell
+.\scripts\install-tesseract-languages.ps1
+```
+
+Then restart the AI service and click **Re-extract** on the circular page.
 
 ## Next: Phase 3
 

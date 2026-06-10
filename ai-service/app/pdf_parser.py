@@ -2,6 +2,8 @@ import io
 import re
 from dataclasses import dataclass
 
+from app.ocr_languages import resolve_ocr_settings
+
 TEXT_DENSITY_THRESHOLD = 50
 
 
@@ -10,6 +12,7 @@ class ParseResult:
     text: str
     pages: int
     ocr_used: bool
+    ocr_lang: str | None
     page_texts: list[str]
     error: str | None = None
 
@@ -49,7 +52,7 @@ def _extract_with_pymupdf(data: bytes) -> tuple[list[str], int]:
     return page_texts, page_count
 
 
-def _ocr_with_pymupdf(data: bytes) -> tuple[list[str], int]:
+def _ocr_with_pymupdf(data: bytes) -> tuple[list[str], int, str]:
     import fitz
 
     try:
@@ -58,14 +61,23 @@ def _ocr_with_pymupdf(data: bytes) -> tuple[list[str], int]:
     except ImportError as exc:
         raise RuntimeError("OCR dependencies are not installed") from exc
 
+    ocr_lang, tess_config = resolve_ocr_settings()
     page_texts: list[str] = []
+
     with fitz.open(stream=data, filetype="pdf") as doc:
         for page in doc:
             pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
             image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-            page_texts.append(pytesseract.image_to_string(image, lang="eng"))
+            page_texts.append(
+                pytesseract.image_to_string(
+                    image,
+                    lang=ocr_lang,
+                    config=tess_config or "",
+                )
+            )
         page_count = doc.page_count
-    return page_texts, page_count
+
+    return page_texts, page_count, ocr_lang
 
 
 def _is_tesseract_available() -> bool:
@@ -80,11 +92,19 @@ def _is_tesseract_available() -> bool:
 
 def parse_pdf_bytes(data: bytes) -> ParseResult:
     if not data:
-        return ParseResult(text="", pages=0, ocr_used=False, page_texts=[], error="Empty file")
+        return ParseResult(
+            text="",
+            pages=0,
+            ocr_used=False,
+            ocr_lang=None,
+            page_texts=[],
+            error="Empty file",
+        )
 
     page_texts: list[str] = []
     page_count = 0
     ocr_used = False
+    ocr_lang: str | None = None
     errors: list[str] = []
 
     try:
@@ -115,12 +135,13 @@ def parse_pdf_bytes(data: bytes) -> ParseResult:
                 text=combined,
                 pages=page_count,
                 ocr_used=False,
+                ocr_lang=None,
                 page_texts=page_texts,
                 error=message if not combined else message,
             )
 
         try:
-            page_texts, page_count = _ocr_with_pymupdf(data)
+            page_texts, page_count, ocr_lang = _ocr_with_pymupdf(data)
             combined = _normalize_text("\n\n".join(page_texts))
             ocr_used = True
         except Exception as exc:
@@ -129,6 +150,7 @@ def parse_pdf_bytes(data: bytes) -> ParseResult:
                 text=combined,
                 pages=page_count,
                 ocr_used=False,
+                ocr_lang=None,
                 page_texts=page_texts,
                 error="; ".join(errors) if errors else str(exc),
             )
@@ -138,6 +160,7 @@ def parse_pdf_bytes(data: bytes) -> ParseResult:
             text="",
             pages=page_count,
             ocr_used=ocr_used,
+            ocr_lang=ocr_lang,
             page_texts=page_texts,
             error="; ".join(errors),
         )
@@ -146,6 +169,7 @@ def parse_pdf_bytes(data: bytes) -> ParseResult:
         text=combined,
         pages=page_count,
         ocr_used=ocr_used,
+        ocr_lang=ocr_lang,
         page_texts=page_texts,
         error="; ".join(errors) if errors and not combined else None,
     )

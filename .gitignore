@@ -21,6 +21,7 @@ build/
 # Uploads & data
 uploads/
 docs/sample-circulars/*.pdf
+ai-service/tessdata/*.traineddata
 *.log
 
 # OS / IDE

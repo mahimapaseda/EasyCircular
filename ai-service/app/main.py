@@ -71,6 +71,7 @@ def parse_pdf(request: ParsePdfRequest):
         "text": result.text,
         "pages": result.pages,
         "ocrUsed": result.ocr_used,
+        "ocrLang": result.ocr_lang,
         "pageTexts": result.page_texts,
         "error": result.error,
         "filename": request.filename,

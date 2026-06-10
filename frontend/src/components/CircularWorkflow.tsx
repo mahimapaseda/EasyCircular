@@ -159,7 +159,9 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
             <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
               {circular.processingMeta.pageCount} page
               {circular.processingMeta.pageCount === 1 ? "" : "s"}
-              {circular.processingMeta.ocrUsed ? " · OCR used" : ""}
+              {circular.processingMeta.ocrUsed
+                ? ` · OCR used${circular.processingMeta.ocrLang ? ` (${circular.processingMeta.ocrLang})` : ""}`
+                : ""}
             </p>
           )}
 
