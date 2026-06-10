@@ -5,6 +5,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const authRoutes = require("./routes/auth");
+const circularRoutes = require("./routes/circulars");
 
 const PORT = Number(process.env.PORT) || 4000;
 const MONGODB_URI =
@@ -31,6 +32,7 @@ async function connectMongo() {
 }
 
 app.use("/api/auth", authRoutes);
+app.use("/api/circulars", circularRoutes);
 
 app.get("/health", async (_req, res) => {
   const checks = {

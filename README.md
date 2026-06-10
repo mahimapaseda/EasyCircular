@@ -101,6 +101,19 @@ EasyCircular/
 - [x] Phase 1 verification script (`npm run verify:phase1`)
 - [ ] Sample MOE circular PDFs in `docs/sample-circulars/` (collect before Phase 2)
 
-## Next: Phase 2
+## Phase 2 — Document ingestion
 
-PDF upload, text extraction (PyMuPDF + OCR), and manual text review. See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md).
+- [x] `POST /api/circulars/upload` — PDF upload (max 20 MB, multer)
+- [x] `POST /api/circulars/:id/extract` — text extraction via AI service
+- [x] `PATCH /api/circulars/:id/text` — save edited text
+- [x] `GET /api/circulars` — list circulars (by account or browser session)
+- [x] AI `POST /parse/pdf` — pdfplumber → PyMuPDF → Tesseract OCR fallback
+- [x] Frontend upload, extract, review UI on `/circular/[id]`
+
+**MongoDB must be running** before upload works (`docker compose up mongodb -d` or local MongoDB on port 27017).
+
+Place test PDFs in `docs/sample-circulars/` (see README there).
+
+## Next: Phase 3
+
+NER, structured summarization, and entity highlights. See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md).

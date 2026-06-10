@@ -74,7 +74,7 @@ export default function HomePage() {
           </div>
         </AnimateIn>
         <AnimateIn delay={150}>
-          <UploadDropzone disabled />
+          <UploadDropzone />
         </AnimateIn>
       </section>
 

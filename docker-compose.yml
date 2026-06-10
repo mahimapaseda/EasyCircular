@@ -47,6 +47,9 @@ services:
       PORT: 4000
       MONGODB_URI: mongodb://mongodb:27017/easycircular
       AI_SERVICE_URL: http://ai-service:5000
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       mongodb:
         condition: service_healthy
@@ -78,3 +81,4 @@ services:
 
 volumes:
   mongodb_data:
+  uploads_data:

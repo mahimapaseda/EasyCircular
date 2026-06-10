@@ -130,12 +130,12 @@ Features are grouped by the phase in which they are delivered.
 - [x] Root README with local run instructions
 
 ### Phase 2 — Document ingestion
-- [ ] PDF upload (single file, max 20 MB)
-- [ ] Text extraction (PyMuPDF + pdfplumber)
-- [ ] Tesseract OCR fallback for scanned PDFs
-- [ ] Manual text edit before AI processing
-- [ ] MongoDB persistence for circular records
-- [ ] Basic error handling and loading states
+- [x] PDF upload (single file, max 20 MB)
+- [x] Text extraction (PyMuPDF + pdfplumber)
+- [x] Tesseract OCR fallback for scanned PDFs
+- [x] Manual text edit before AI processing
+- [x] MongoDB persistence for circular records
+- [x] Basic error handling and loading states
 
 ### Phase 3 — AI processing core
 - [ ] NER: dates, person/org names, legal clause patterns (SpaCy + regex)
@@ -579,15 +579,15 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 
 ---
 
-## 14. Immediate next steps — Phase 2
+## 14. Immediate next steps — Phase 3
 
-Phase 1 is complete. Verify anytime with `npm run verify:phase1` (or `docker compose up --build`).
+Phase 2 is complete. Collect sample PDFs in `docs/sample-circulars/` for testing.
 
-1. Collect 3–5 sample MOE circular PDFs into `docs/sample-circulars/` (see README there).
-2. Implement `POST /upload` with multer on the backend.
-3. Add AI `/parse/pdf` (PyMuPDF + pdfplumber).
-4. Wire frontend upload to store PDF + MongoDB circular record.
-5. Display extracted text on `/circular/[id]` (step 1 of the workflow).
+1. Implement SpaCy + regex NER module (`POST /extract/entities`).
+2. Add LangChain structured summarization (`POST /summarize`).
+3. Wire `POST /api/circulars/:id/process` on the backend with content-hash caching.
+4. Build entity highlight UI and summary panel on `/circular/[id]`.
+5. Add hallucination guardrails (date verification, low temperature).
 
 ---
 

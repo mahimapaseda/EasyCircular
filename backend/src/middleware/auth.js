@@ -17,4 +17,21 @@ function authRequired(req, res, next) {
   }
 }
 
-module.exports = { authRequired, JWT_SECRET };
+function authOptional(req, _res, next) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const token = header.slice(7);
+    req.user = jwt.verify(token, JWT_SECRET);
+  } catch {
+    req.user = null;
+  }
+
+  next();
+}
+
+module.exports = { authRequired, authOptional, JWT_SECRET };
