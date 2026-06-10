@@ -9,7 +9,10 @@ import { useAuth } from "@/context/AuthContext";
 
 function LogoMark() {
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 via-grape-500 to-coral-500 text-white shadow-glow transition-transform duration-300 hover:scale-105">
+    <div
+      suppressHydrationWarning
+      className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 via-grape-500 to-coral-500 text-white shadow-glow transition-transform duration-300 hover:scale-105"
+    >
       <svg
         className="h-5 w-5"
         fill="none"

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
@@ -19,6 +20,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "EasyCircular",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   icons: {
     icon: "/icon.svg",
     apple: "/icon.svg",
@@ -35,8 +39,6 @@ export const viewport: Viewport = {
   ],
 };
 
-const themeScript = `(function(){try{var t=localStorage.getItem('theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d){document.documentElement.classList.add('dark');}}catch(e){}})();`;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,10 +46,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
       <body className={`${inter.variable} font-sans`}>
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
         <AuthProvider>
           {children}
           <ServiceWorkerRegister />
