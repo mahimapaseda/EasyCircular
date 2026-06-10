@@ -111,7 +111,7 @@ EasyCircular/
 
 | Service | Port (dev) | Responsibility |
 |---------|------------|----------------|
-| `frontend` | 3000 | UI, upload, display, edit extracted text |
+| `frontend` | 3002 | UI, upload, display, edit extracted text |
 | `backend` | 4000 | REST API, MongoDB, S3/local file storage, call AI service |
 | `ai-service` | 5000 | Stateless NLP pipeline |
 | `mongodb` | 27017 | Documents, summaries, cache |
