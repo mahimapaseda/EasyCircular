@@ -123,11 +123,11 @@ EasyCircular/
 Features are grouped by the phase in which they are delivered.
 
 ### Phase 1 — Foundation
-- [ ] Monorepo structure (`frontend`, `backend`, `ai-service`)
-- [ ] Docker Compose with MongoDB
-- [ ] Health endpoints on all services
-- [ ] Environment templates (`.env.example`)
-- [ ] Root README with local run instructions
+- [x] Monorepo structure (`frontend`, `backend`, `ai-service`)
+- [x] Docker Compose with MongoDB
+- [x] Health endpoints on all services
+- [x] Environment templates (`.env.example`)
+- [x] Root README with local run instructions
 
 ### Phase 2 — Document ingestion
 - [ ] PDF upload (single file, max 20 MB)
@@ -579,16 +579,15 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 
 ---
 
-## 14. Immediate next steps — start Phase 1
+## 14. Immediate next steps — Phase 2
 
-1. Create monorepo folder structure (`frontend`, `backend`, `ai-service`).
-2. Add `docker-compose.yml` with MongoDB.
-3. Scaffold Express backend with health check and MongoDB connection.
-4. Scaffold FastAPI AI service with health check.
-5. Scaffold Next.js frontend with upload placeholder page.
-6. Add root `README.md` with `npm run dev` / setup instructions.
-7. Verify Phase 1 exit gate: all services healthy via `docker compose up`.
-8. Collect 3–5 sample MOE circular PDFs (needed from Phase 2 onward).
+Phase 1 is complete. Verify anytime with `npm run verify:phase1` (or `docker compose up --build`).
+
+1. Collect 3–5 sample MOE circular PDFs into `docs/sample-circulars/` (see README there).
+2. Implement `POST /upload` with multer on the backend.
+3. Add AI `/parse/pdf` (PyMuPDF + pdfplumber).
+4. Wire frontend upload to store PDF + MongoDB circular record.
+5. Display extracted text on `/circular/[id]` (step 1 of the workflow).
 
 ---
 

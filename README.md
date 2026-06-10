@@ -30,6 +30,16 @@ docker compose up --build
 
 Open http://localhost:3002 — the **System Status** panel should show all services as healthy.
 
+### Verify Phase 1 exit gate
+
+With services running (Docker or local dev):
+
+```bash
+npm run verify:phase1
+```
+
+Checks AI `/health`, backend `/health` (MongoDB + AI reachable), and frontend HTTP 200.
+
 ## Local development (without Docker)
 
 ### 1. MongoDB
@@ -88,6 +98,8 @@ EasyCircular/
 - [x] Health endpoints on all services
 - [x] Environment templates (`.env.example`)
 - [x] Root README with run instructions
+- [x] Phase 1 verification script (`npm run verify:phase1`)
+- [ ] Sample MOE circular PDFs in `docs/sample-circulars/` (collect before Phase 2)
 
 ## Next: Phase 2
 

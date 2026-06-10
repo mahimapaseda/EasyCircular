@@ -20,6 +20,7 @@ build/
 
 # Uploads & data
 uploads/
+docs/sample-circulars/*.pdf
 *.log
 
 # OS / IDE

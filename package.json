@@ -1,0 +1,9 @@
+{
+  "name": "easycircular",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EasyCircular monorepo",
+  "scripts": {
+    "verify:phase1": "node scripts/verify-phase1.mjs"
+  }
+}
