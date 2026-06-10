@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CircularsPage() {
+  const { user, loading } = useAuth();
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -16,6 +20,27 @@ export default function CircularsPage() {
           Upload new circular
         </Link>
       </div>
+
+      {!loading && !user && (
+        <div className="card mt-6 border-brand-200 bg-brand-50/50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            <Link
+              href="/sign-in"
+              className="font-semibold text-brand-600 hover:underline dark:text-brand-400"
+            >
+              Sign in
+            </Link>{" "}
+            or{" "}
+            <Link
+              href="/sign-up"
+              className="font-semibold text-brand-600 hover:underline dark:text-brand-400"
+            >
+              create an account
+            </Link>{" "}
+            to keep your circulars in one place.
+          </p>
+        </div>
+      )}
 
       <div className="card mt-8 flex flex-col items-center justify-center px-6 py-16 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 via-grape-500 to-coral-500 text-white shadow-glow">

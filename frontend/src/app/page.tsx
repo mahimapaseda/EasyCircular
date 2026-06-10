@@ -1,7 +1,7 @@
 import FeatureSection from "@/components/FeatureSection";
+import HeroActions from "@/components/HeroActions";
 import ProcessingStatus from "@/components/ProcessingStatus";
 import UploadDropzone from "@/components/UploadDropzone";
-import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -22,14 +22,7 @@ export default function HomePage() {
               get a clear summary with the important dates and actions pulled out
               for you.
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <a href="#upload" className="btn-primary">
-                Upload a circular
-              </a>
-              <Link href="/circulars" className="btn-secondary">
-                View my circulars
-              </Link>
-            </div>
+            <HeroActions />
           </div>
         </div>
       </section>

@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const axios = require("axios");
+const authRoutes = require("./routes/auth");
 
 const PORT = Number(process.env.PORT) || 4000;
 const MONGODB_URI =
@@ -28,6 +29,8 @@ async function connectMongo() {
     serverSelectionTimeoutMS: 5000,
   });
 }
+
+app.use("/api/auth", authRoutes);
 
 app.get("/health", async (_req, res) => {
   const checks = {

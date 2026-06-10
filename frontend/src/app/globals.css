@@ -28,4 +28,16 @@
   .gradient-text {
     @apply bg-gradient-to-r from-brand-600 via-grape-600 to-coral-500 bg-clip-text text-transparent dark:from-brand-300 dark:via-grape-400 dark:to-coral-400;
   }
+
+  .auth-group {
+    @apply inline-flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900;
+  }
+
+  .auth-group-sign-in {
+    @apply px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-brand-400;
+  }
+
+  .auth-group-sign-up {
+    @apply bg-gradient-to-r from-brand-600 via-grape-600 to-coral-500 px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110;
+  }
 }
