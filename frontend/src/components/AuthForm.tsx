@@ -192,7 +192,7 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+          className="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-brand-700 hover:shadow-glow active:scale-[0.98] disabled:opacity-60"
         >
           {submitting ? "Please wait…" : isSignUp ? "Sign up" : "Sign in"}
         </button>

@@ -1,3 +1,5 @@
+import AnimateIn from "@/components/AnimateIn";
+
 const features = [
   {
     title: "Save reading time",
@@ -43,31 +45,30 @@ const features = [
 export default function FeatureSection() {
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {features.map((feature) => (
-        <article
-          key={feature.title}
-          className="card group p-6 hover:-translate-y-1 hover:shadow-glow"
-        >
-          <div
-            className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.accent} text-white shadow-sm`}
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.7}
+      {features.map((feature, i) => (
+        <AnimateIn key={feature.title} delay={i * 120}>
+          <article className="card-hover group h-full p-6">
+            <div
+              className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.accent} text-white shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
             >
-              {feature.icon}
-            </svg>
-          </div>
-          <h3 className="font-semibold text-slate-900 dark:text-white">
-            {feature.title}
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-            {feature.description}
-          </p>
-        </article>
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.7}
+              >
+                {feature.icon}
+              </svg>
+            </div>
+            <h3 className="font-semibold text-slate-900 dark:text-white">
+              {feature.title}
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+              {feature.description}
+            </p>
+          </article>
+        </AnimateIn>
       ))}
     </div>
   );

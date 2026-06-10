@@ -39,7 +39,9 @@ export default function AuthLayout({
         </div>
 
         <div className="flex flex-1 items-center justify-center px-6 pb-10 sm:px-10">
-          <div className="w-full max-w-md">{children}</div>
+          <div className="w-full max-w-md animate-fade-in-up opacity-0" style={{ animationFillMode: "forwards", animationDelay: "150ms" }}>
+            {children}
+          </div>
         </div>
       </div>
     </div>

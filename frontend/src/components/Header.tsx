@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 
 function LogoMark() {
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 via-grape-500 to-coral-500 text-white shadow-glow">
+    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 via-grape-500 to-coral-500 text-white shadow-glow transition-transform duration-300 hover:scale-105">
       <svg
         className="h-5 w-5"
         fill="none"
@@ -113,7 +113,7 @@ export default function Header() {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-md dark:border-slate-800/70 dark:bg-slate-950/90">
+    <header className="sticky top-0 z-50 animate-fade-in border-b border-slate-200/70 bg-white/90 backdrop-blur-md dark:border-slate-800/70 dark:bg-slate-950/90">
       <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <LogoMark />

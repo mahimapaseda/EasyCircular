@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import AnimateIn from "@/components/AnimateIn";
 import { useAuth } from "@/context/AuthContext";
 
 export default function CircularsPage() {
   const { user, loading } = useAuth();
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+      <AnimateIn>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -69,6 +71,7 @@ export default function CircularsPage() {
           Upload your first circular
         </Link>
       </div>
+      </AnimateIn>
     </div>
   );
 }

@@ -6,7 +6,7 @@ export default function AuthIllustration() {
 
       <svg
         viewBox="0 0 480 400"
-        className="relative z-10 w-full max-w-md"
+        className="relative z-10 w-full max-w-md animate-float-slow"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >

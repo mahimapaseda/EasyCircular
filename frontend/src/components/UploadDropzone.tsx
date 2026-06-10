@@ -19,7 +19,7 @@ export default function UploadDropzone({ disabled = true }: UploadDropzoneProps)
   );
 
   return (
-    <div className="card p-6 sm:p-8">
+    <div className="card overflow-hidden p-6 transition-shadow duration-300 hover:shadow-glow sm:p-8">
       <label
         htmlFor="circular-upload"
         onDragOver={(e) => {
@@ -32,13 +32,17 @@ export default function UploadDropzone({ disabled = true }: UploadDropzoneProps)
           setDragOver(false);
           onFile(e.dataTransfer.files[0]);
         }}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition ${
+        className={`relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-all duration-300 ${
           dragOver
-            ? "border-grape-400 bg-grape-500/10"
+            ? "scale-[1.02] border-grape-400 bg-grape-500/10 shadow-glow"
             : "border-slate-300 bg-slate-50/80 hover:border-brand-400 hover:bg-brand-50/60 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/10"
         } ${disabled ? "cursor-not-allowed" : ""}`}
       >
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 via-grape-500 to-coral-500 text-white shadow-glow">
+        <div
+          className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 via-grape-500 to-coral-500 text-white shadow-glow transition-transform duration-300 ${
+            dragOver ? "scale-110" : "animate-float-slow"
+          }`}
+        >
           <svg
             className="h-8 w-8"
             fill="none"
@@ -62,7 +66,7 @@ export default function UploadDropzone({ disabled = true }: UploadDropzoneProps)
         </p>
 
         {selectedFile ? (
-          <p className="mt-4 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-brand-700 shadow-sm dark:bg-slate-800 dark:text-brand-300">
+          <p className="mt-4 animate-scale-in rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-brand-700 shadow-sm dark:bg-slate-800 dark:text-brand-300">
             Selected: {selectedFile}
           </p>
         ) : (
