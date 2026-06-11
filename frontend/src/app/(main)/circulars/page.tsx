@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AnimateIn from "@/components/AnimateIn";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import {
   listCirculars,
   statusLabel,
@@ -27,43 +28,34 @@ function statusClasses(status: Circular["status"]) {
 
 export default function CircularsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const [items, setItems] = useState<Circular[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await listCirculars();
-        if (!cancelled) {
-          setItems(data.items);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Could not load circulars");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await listCirculars();
+      setItems(data.items);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not load circulars";
+      setError(message);
+      showToast(message, "error");
+    } finally {
+      setLoading(false);
     }
+  }, [showToast]);
 
+  useEffect(() => {
     if (!authLoading) {
       void load();
     }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [authLoading, user?.id]);
+  }, [authLoading, user?.id, load]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
       <AnimateIn>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -74,9 +66,19 @@ export default function CircularsPage() {
               Everything you&apos;ve uploaded, with its current status.
             </p>
           </div>
-          <Link href="/#upload" className="btn-primary w-full sm:w-auto">
-            Upload new circular
-          </Link>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <button
+              type="button"
+              onClick={() => void load()}
+              disabled={loading}
+              className="btn-secondary w-full sm:w-auto"
+            >
+              Refresh
+            </button>
+            <Link href="/#upload" className="btn-primary w-full sm:w-auto text-center">
+              Upload new circular
+            </Link>
+          </div>
         </div>
 
         {!authLoading && !user && (
@@ -95,8 +97,11 @@ export default function CircularsPage() {
         )}
 
         {error && (
-          <div className="card mt-6 border-coral-200 bg-coral-50 p-4 text-sm text-coral-800 dark:border-coral-500/30 dark:bg-coral-500/10 dark:text-coral-200">
-            {error}
+          <div className="card mt-6 flex flex-col gap-3 border-coral-200 bg-coral-50 p-4 text-sm text-coral-800 dark:border-coral-500/30 dark:bg-coral-500/10 dark:text-coral-200 sm:flex-row sm:items-center sm:justify-between">
+            <p>{error}</p>
+            <button type="button" onClick={() => void load()} className="btn-secondary shrink-0">
+              Retry
+            </button>
           </div>
         )}
 
@@ -138,21 +143,30 @@ export default function CircularsPage() {
               <li key={item.id}>
                 <Link
                   href={`/circular/${item.id}`}
-                  className="card flex flex-col gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-glow sm:flex-row sm:items-center sm:justify-between sm:p-5"
+                  className="card block p-4 transition hover:-translate-y-0.5 hover:shadow-glow sm:p-5"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-slate-900 dark:text-white">
-                      {item.originalFilename}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      {new Date(item.createdAt).toLocaleString()}
-                    </p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-slate-900 dark:text-white">
+                        {item.originalFilename}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {new Date(item.createdAt).toLocaleString()}
+                        {item.entities.length > 0 &&
+                          ` · ${item.entities.length} entities`}
+                      </p>
+                      {item.summary?.title && (
+                        <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">
+                          {item.summary.title}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className={`inline-flex w-fit shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${statusClasses(item.status)}`}
+                    >
+                      {statusLabel(item.status)}
+                    </span>
                   </div>
-                  <span
-                    className={`inline-flex w-fit shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${statusClasses(item.status)}`}
-                  >
-                    {statusLabel(item.status)}
-                  </span>
                 </Link>
               </li>
             ))}

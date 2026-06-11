@@ -44,6 +44,10 @@ function hashText(text) {
   return crypto.createHash("sha256").update(text).digest("hex");
 }
 
+function workingText(circular) {
+  return (circular.editedText || circular.extractedText || "").trim();
+}
+
 function serializeCircular(doc) {
   return {
     id: doc._id.toString(),
@@ -52,6 +56,8 @@ function serializeCircular(doc) {
     extractedText: doc.extractedText,
     editedText: doc.editedText,
     contentHash: doc.contentHash,
+    entities: doc.entities || [],
+    summary: doc.summary || null,
     processingMeta: doc.processingMeta,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
@@ -252,6 +258,107 @@ router.patch("/:id/text", authOptional, async (req, res) => {
     res.json({ circular: serializeCircular(circular) });
   } catch (error) {
     res.status(500).json({ error: error.message || "Failed to save text" });
+  }
+});
+
+router.post("/:id/process", authOptional, async (req, res) => {
+  try {
+    const circular = await Circular.findById(req.params.id);
+    if (!circular) {
+      return res.status(404).json({ error: "Circular not found" });
+    }
+
+    const text = workingText(circular);
+    if (!text) {
+      return res.status(400).json({
+        error: "Extract and review text before running AI processing",
+      });
+    }
+
+    if (circular.status === "uploaded") {
+      return res.status(400).json({
+        error: "Extract text from the PDF before processing",
+      });
+    }
+
+    const contentHash = hashText(text);
+    circular.contentHash = contentHash;
+
+    const cached = await Circular.findOne({
+      contentHash,
+      status: "completed",
+      _id: { $ne: circular._id },
+      summary: { $ne: null },
+    }).sort({ updatedAt: -1 });
+
+    if (cached?.summary?.sections?.length) {
+      circular.entities = cached.entities;
+      circular.summary = cached.summary;
+      circular.status = "completed";
+      circular.processingMeta = {
+        ...circular.processingMeta.toObject?.() ?? circular.processingMeta,
+        model: cached.processingMeta?.model || "cache",
+        tokensUsed: 0,
+        durationMs: 0,
+        cached: true,
+        guardrailWarnings: cached.processingMeta?.guardrailWarnings || [],
+      };
+      await circular.save();
+      return res.json({ circular: serializeCircular(circular), cached: true });
+    }
+
+    circular.status = "processing";
+    await circular.save();
+
+    const started = Date.now();
+    let pipelineResult;
+
+    try {
+      const aiResponse = await axios.post(
+        `${AI_SERVICE_URL}/pipeline`,
+        { text },
+        { timeout: 180000 },
+      );
+      pipelineResult = aiResponse.data;
+    } catch (error) {
+      const message =
+        error.response?.data?.detail ||
+        error.response?.data?.error ||
+        error.message ||
+        "AI service unreachable";
+
+      circular.status = "failed";
+      circular.processingMeta = {
+        ...circular.processingMeta.toObject?.() ?? circular.processingMeta,
+        extractionError: String(message),
+      };
+      await circular.save();
+      return res.status(502).json({ error: String(message) });
+    }
+
+    const durationMs = Date.now() - started;
+    const aiMeta = pipelineResult.processingMeta || {};
+
+    circular.entities = pipelineResult.entities || [];
+    circular.summary = pipelineResult.summary || null;
+    circular.status = "completed";
+    circular.processingMeta = {
+      ...circular.processingMeta.toObject?.() ?? circular.processingMeta,
+      model: aiMeta.model || null,
+      tokensUsed: aiMeta.tokensUsed || 0,
+      durationMs,
+      cached: false,
+      guardrailWarnings: pipelineResult.guardrailWarnings || [],
+    };
+    await circular.save();
+
+    res.json({
+      circular: serializeCircular(circular),
+      cached: false,
+      guardrailWarnings: pipelineResult.guardrailWarnings || [],
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Processing failed" });
   }
 });
 

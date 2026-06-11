@@ -10,11 +10,33 @@ export type CircularStatus =
   | "completed"
   | "failed";
 
+export type EntityLabel = "DATE" | "PERSON" | "ORG" | "LAW" | "OTHER";
+
+export type Entity = {
+  text: string;
+  label: EntityLabel;
+  start: number;
+  end: number;
+};
+
+export type CircularSummary = {
+  title: string;
+  sections: { heading: string; content: string }[];
+  actionItems: string[];
+  rawMarkdown: string;
+  mode?: string;
+};
+
 export type CircularProcessingMeta = {
   ocrUsed: boolean;
   ocrLang: string | null;
   pageCount: number;
   extractionError: string | null;
+  model?: string | null;
+  tokensUsed?: number;
+  durationMs?: number;
+  cached?: boolean;
+  guardrailWarnings?: string[];
 };
 
 export type Circular = {
@@ -24,6 +46,8 @@ export type Circular = {
   extractedText: string;
   editedText: string | null;
   contentHash: string;
+  entities: Entity[];
+  summary: CircularSummary | null;
   processingMeta: CircularProcessingMeta;
   createdAt: string;
   updatedAt: string;
@@ -162,6 +186,22 @@ export async function saveCircularText(
   return data.circular;
 }
 
+export async function processCircular(
+  id: string,
+): Promise<{ circular: Circular; cached?: boolean; guardrailWarnings?: string[] }> {
+  const response = await fetch(`${API_URL}/api/circulars/${id}/process`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || data.detail || "Processing failed");
+  }
+
+  return data;
+}
+
 export function displayText(circular: Circular): string {
   return circular.editedText ?? circular.extractedText ?? "";
 }
@@ -169,6 +209,7 @@ export function displayText(circular: Circular): string {
 export function workflowStep(circular: Circular): number {
   if (circular.status === "uploaded") return 2;
   if (circular.status === "extracted" || circular.status === "failed") return 3;
+  if (circular.status === "processing") return 4;
   return 4;
 }
 

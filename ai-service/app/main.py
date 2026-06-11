@@ -7,13 +7,16 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from app.llm import active_model_name, llm_is_configured
+from app.ner import extract_entities
 from app.pdf_parser import parse_pdf_bytes
+from app.summarize import summarize_text
 
 load_dotenv()
 
 app = FastAPI(
     title="EasyCircular AI Service",
-    version="0.1.0",
+    version="0.2.0",
     description="Stateless NLP pipeline for MOE circular processing",
 )
 
@@ -30,13 +33,29 @@ class ParsePdfRequest(BaseModel):
     filename: str | None = None
 
 
+class TextRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+
+
+class SummarizeRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+    entities: list[dict] | None = None
+
+
+class PipelineRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+
+
 @app.get("/health")
 def health():
+    provider = os.getenv("LLM_PROVIDER", "openai")
     return {
         "service": "ai-service",
         "status": "ok",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "llm_model": os.getenv("LLM_MODEL", "gpt-4o-mini"),
+        "llm_provider": provider,
+        "llm_model": active_model_name(),
+        "llm_configured": llm_is_configured(),
     }
 
 
@@ -44,7 +63,7 @@ def health():
 def root():
     return {
         "name": "EasyCircular AI Service",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "health": "/health",
     }
 
@@ -75,4 +94,26 @@ def parse_pdf(request: ParsePdfRequest):
         "pageTexts": result.page_texts,
         "error": result.error,
         "filename": request.filename,
+    }
+
+
+@app.post("/extract/entities")
+def extract_entities_endpoint(request: TextRequest):
+    entities = extract_entities(request.text)
+    return {"entities": entities, "count": len(entities)}
+
+
+@app.post("/summarize")
+def summarize_endpoint(request: SummarizeRequest):
+    result = summarize_text(request.text, request.entities or [])
+    return result
+
+
+@app.post("/pipeline")
+def pipeline_endpoint(request: PipelineRequest):
+    entities = extract_entities(request.text)
+    result = summarize_text(request.text, entities)
+    return {
+        "entities": entities,
+        **result,
     }

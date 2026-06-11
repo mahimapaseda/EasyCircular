@@ -4,6 +4,7 @@
   "private": true,
   "description": "EasyCircular monorepo",
   "scripts": {
-    "verify:phase1": "node scripts/verify-phase1.mjs"
+    "verify:phase1": "node scripts/verify-phase1.mjs",
+    "verify:phase4": "node scripts/verify-phase4.mjs"
   }
 }

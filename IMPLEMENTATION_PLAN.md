@@ -138,20 +138,20 @@ Features are grouped by the phase in which they are delivered.
 - [x] Basic error handling and loading states
 
 ### Phase 3 — AI processing core
-- [ ] NER: dates, person/org names, legal clause patterns (SpaCy + regex)
-- [ ] Abstractive + extractive hybrid summary via LLM (LangChain)
-- [ ] Structured summary output (purpose, requirements, deadlines, actions)
-- [ ] Summary caching by content hash
-- [ ] Entity highlight UI in source text
-- [ ] Hallucination guardrails (date verification, low temperature)
+- [x] NER: dates, person/org names, legal clause patterns (SpaCy + regex)
+- [x] Abstractive + extractive hybrid summary via LLM (LangChain)
+- [x] Structured summary output (purpose, requirements, deadlines, actions)
+- [x] Summary caching by content hash
+- [x] Entity highlight UI in source text
+- [x] Hallucination guardrails (date verification, low temperature)
 
 ### Phase 4 — MVP product completion
-- [ ] Summary panel with structured sections
-- [ ] Circular list/history page
-- [ ] Processing status step indicator (upload → extract → review → summarize)
-- [ ] Export summary (TXT/Markdown)
-- [ ] Mobile-responsive layout
-- [ ] Environment-based LLM provider (OpenAI / Gemini)
+- [x] Summary panel with structured sections
+- [x] Circular list/history page
+- [x] Processing status step indicator (upload → extract → review → summarize)
+- [x] Export summary (TXT/Markdown)
+- [x] Mobile-responsive layout
+- [x] Environment-based LLM provider (OpenAI / Gemini)
 
 ### Phase 5 — Validation & release
 - [ ] ROUGE evaluation script and reference dataset
@@ -579,15 +579,15 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 
 ---
 
-## 14. Immediate next steps — Phase 3
+## 14. Immediate next steps — Phase 5
 
-Phase 2 is complete. Collect sample PDFs in `docs/sample-circulars/` for testing.
+Phase 4 is complete. Run `npm run verify:phase4` before dissertation demos.
 
-1. Implement SpaCy + regex NER module (`POST /extract/entities`).
-2. Add LangChain structured summarization (`POST /summarize`).
-3. Wire `POST /api/circulars/:id/process` on the backend with content-hash caching.
-4. Build entity highlight UI and summary panel on `/circular/[id]`.
-5. Add hallucination guardrails (date verification, low temperature).
+1. Build ROUGE evaluation script and reference summary dataset.
+2. Add rate limiting and API cost logging on the backend.
+3. Security pass: upload validation audit, env secrets review.
+4. Plan UAT sessions with school staff (≥5 participants).
+5. Set up CI (GitHub Actions) and staging deployment.
 
 ---
 

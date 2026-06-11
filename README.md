@@ -78,6 +78,15 @@ npm install
 npm run dev
 ```
 
+**If you see `Cannot find module './948.js'` (or similar):** the `.next` cache is stale — usually because `npm run build` ran while `npm run dev` was still running. Stop the dev server, then:
+
+```bash
+cd frontend
+npm run dev:clean
+```
+
+Do not run `npm run build` and `npm run dev` at the same time.
+
 ## Project structure
 
 ```
@@ -124,6 +133,30 @@ Scanned MOE circulars use Tesseract with **Sinhala + English + Tamil**:
 
 Then restart the AI service and click **Re-extract** on the circular page.
 
-## Next: Phase 3
+## Phase 3 — AI processing
 
-NER, structured summarization, and entity highlights. See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md).
+- [x] SpaCy + regex NER (`POST /extract/entities`)
+- [x] LangChain summarization (`POST /summarize`) with extractive fallback when no API key
+- [x] `POST /api/circulars/:id/process` — NER + summary with content-hash cache
+- [x] Entity highlights + summary panel on `/circular/[id]`
+- [x] Date guardrails (warnings when summary dates are not in source)
+
+Set `OPENAI_API_KEY` in `ai-service/.env` for LLM summaries; otherwise an extractive fallback is used.
+
+## Phase 4 — MVP product completion
+
+- [x] Export summary as **TXT** or **Markdown** from `/circular/[id]`
+- [x] Toast notifications + **Retry** on errors
+- [x] Circular list with status badges, entity counts, summary preview
+- [x] Mobile-responsive workflow layout
+- [x] `LLM_PROVIDER=openai|gemini` (set `OPENAI_API_KEY` or `GOOGLE_API_KEY`)
+
+Verify the MVP flow:
+
+```bash
+npm run verify:phase4
+```
+
+## Next: Phase 5
+
+ROUGE evaluation, UAT, security hardening, CI, and staging deploy. See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md).

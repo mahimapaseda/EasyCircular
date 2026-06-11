@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import EntityHighlight from "@/components/EntityHighlight";
 import ProcessingStatus from "@/components/ProcessingStatus";
+import SummaryPanel from "@/components/SummaryPanel";
+import { useToast } from "@/context/ToastContext";
 import {
   displayText,
   extractCircularText,
   fetchCircular,
+  processCircular,
   saveCircularText,
   workflowStep,
   type Circular,
@@ -19,11 +23,13 @@ type CircularWorkflowProps = {
 export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   const [circular, setCircular] = useState<Circular | null>(null);
   const [draftText, setDraftText] = useState("");
+  const [showHighlights, setShowHighlights] = useState(true);
   const [loading, setLoading] = useState(true);
   const [extracting, setExtracting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -46,16 +52,20 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   async function handleExtract() {
     setExtracting(true);
     setError(null);
-    setSaveMessage(null);
     try {
       const response = await extractCircularText(id);
       setCircular(response.circular);
       setDraftText(displayText(response.circular));
       if (response.error) {
         setError(response.error);
+        showToast(response.error, "error");
+      } else {
+        showToast("Text extracted successfully.", "success");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Extraction failed");
+      const message = err instanceof Error ? err.message : "Extraction failed";
+      setError(message);
+      showToast(message, "error");
       await load();
     } finally {
       setExtracting(false);
@@ -65,16 +75,40 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   async function handleSave() {
     setSaving(true);
     setError(null);
-    setSaveMessage(null);
     try {
       const updated = await saveCircularText(id, draftText);
       setCircular(updated);
       setDraftText(displayText(updated));
-      setSaveMessage("Your edits were saved.");
+      showToast("Your edits were saved.", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save text");
+      const message = err instanceof Error ? err.message : "Could not save text";
+      setError(message);
+      showToast(message, "error");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleProcess() {
+    setProcessing(true);
+    setError(null);
+    try {
+      const result = await processCircular(id);
+      setCircular(result.circular);
+      setDraftText(displayText(result.circular));
+      showToast(
+        result.cached
+          ? "Loaded a cached summary for identical text."
+          : "Summary generated successfully.",
+        "success",
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Processing failed";
+      setError(message);
+      showToast(message, "error");
+      await load();
+    } finally {
+      setProcessing(false);
     }
   }
 
@@ -102,29 +136,29 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   const step = workflowStep(circular);
   const hasText = Boolean(displayText(circular));
   const extractionError = circular.processingMeta.extractionError;
+  const sourceText = displayText(circular);
 
   return (
     <>
       <ProcessingStatus currentStep={step} />
 
       {error && (
-        <div className="mt-6 rounded-xl border border-coral-200 bg-coral-50 px-4 py-3 text-sm text-coral-800 dark:border-coral-500/30 dark:bg-coral-500/10 dark:text-coral-200">
-          {error}
-        </div>
-      )}
-
-      {saveMessage && (
-        <div className="mt-6 rounded-xl border border-mint-200 bg-mint-50 px-4 py-3 text-sm text-mint-800 dark:border-mint-500/30 dark:bg-mint-500/10 dark:text-mint-200">
-          {saveMessage}
+        <div className="mt-6 flex flex-col gap-3 rounded-xl border border-coral-200 bg-coral-50 px-4 py-3 text-sm text-coral-800 dark:border-coral-500/30 dark:bg-coral-500/10 dark:text-coral-200 sm:flex-row sm:items-center sm:justify-between">
+          <p>{error}</p>
+          <button type="button" onClick={() => void load()} className="btn-secondary shrink-0">
+            Retry
+          </button>
         </div>
       )}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <section className="card p-6">
+        <section className="card p-4 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="font-semibold text-slate-900 dark:text-white">
-                Extracted text
+                {circular.entities.length > 0 && showHighlights
+                  ? "Source text (highlighted)"
+                  : "Extracted text"}
               </h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                 {circular.originalFilename}
@@ -141,17 +175,20 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
                   {extracting ? "Extracting…" : "Extract text"}
                 </button>
               )}
-              {(circular.status === "extracted" ||
-                circular.status === "failed") && (
-                <button
-                  type="button"
-                  onClick={() => void handleExtract()}
-                  disabled={extracting}
-                  className="btn-secondary"
-                >
-                  {extracting ? "Re-extracting…" : "Re-extract"}
-                </button>
-              )}
+              {(circular.status === "uploaded" ||
+                circular.status === "extracted" ||
+                circular.status === "failed" ||
+                circular.status === "completed") &&
+                circular.status !== "uploaded" && (
+                  <button
+                    type="button"
+                    onClick={() => void handleExtract()}
+                    disabled={extracting}
+                    className="btn-secondary"
+                  >
+                    {extracting ? "Re-extracting…" : "Re-extract"}
+                  </button>
+                )}
             </div>
           </div>
 
@@ -185,27 +222,46 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
 
           {(hasText || circular.status !== "uploaded") && !extracting && (
             <>
-              <textarea
-                value={draftText}
-                onChange={(e) => setDraftText(e.target.value)}
-                disabled={!hasText && circular.status === "failed"}
-                placeholder={
-                  circular.status === "failed"
-                    ? "No text could be extracted. Try re-extract or upload a different PDF."
-                    : "Extracted text will appear here…"
-                }
-                className="mt-4 min-h-[280px] w-full resize-y rounded-xl border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-800 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              />
+              {circular.entities.length > 0 && (
+                <div className="mt-4 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowHighlights((v) => !v)}
+                    className="text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400"
+                  >
+                    {showHighlights ? "Edit text" : "Show highlights"}
+                  </button>
+                </div>
+              )}
+
+              {showHighlights && circular.entities.length > 0 ? (
+                <div className="mt-4 max-h-[420px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                  <EntityHighlight text={sourceText} entities={circular.entities} />
+                </div>
+              ) : (
+                <textarea
+                  value={draftText}
+                  onChange={(e) => setDraftText(e.target.value)}
+                  disabled={!hasText && circular.status === "failed"}
+                  placeholder={
+                    circular.status === "failed"
+                      ? "No text could be extracted. Try re-extract or upload a different PDF."
+                      : "Extracted text will appear here…"
+                  }
+                  className="mt-4 min-h-[280px] w-full resize-y rounded-xl border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-800 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                />
+              )}
+
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => void handleSave()}
-                  disabled={saving || !hasText}
+                  disabled={saving || !hasText || showHighlights}
                   className="btn-primary"
                 >
                   {saving ? "Saving…" : "Save edits"}
                 </button>
-                {circular.editedText && (
+                {circular.editedText && !showHighlights && (
                   <button
                     type="button"
                     onClick={() => setDraftText(circular.extractedText)}
@@ -219,27 +275,14 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
           )}
         </section>
 
-        <section className="card p-6">
-          <h2 className="font-semibold text-slate-900 dark:text-white">
-            Summary &amp; entities
-          </h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            The purpose, deadlines, and action items, with key entities
-            highlighted.
-          </p>
-          <div className="mt-4 min-h-[280px] rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400">
-            {circular.status === "extracted" && circular.editedText ? (
-              <p>Text reviewed and saved. Summarization arrives in Phase 3.</p>
-            ) : circular.status === "extracted" ? (
-              <p>
-                Review and save the extracted text first. AI summarization will be
-                available in the next phase.
-              </p>
-            ) : (
-              <p>The summary will appear here after the circular is processed.</p>
-            )}
-          </div>
-        </section>
+        <SummaryPanel
+          circular={circular}
+          processing={processing}
+          onProcess={() => void handleProcess()}
+          onExport={(format) =>
+            showToast(`Summary exported as ${format.toUpperCase()}.`, "success")
+          }
+        />
       </div>
     </>
   );

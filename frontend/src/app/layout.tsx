@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { AuthProvider } from "@/context/AuthContext";
+import { ToastProvider } from "@/context/ToastContext";
 import "./globals.css";
 
 const inter = Inter({
@@ -49,8 +50,10 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans`}>
         <Script src="/theme-init.js" strategy="beforeInteractive" />
         <AuthProvider>
-          {children}
-          <ServiceWorkerRegister />
+          <ToastProvider>
+            {children}
+            <ServiceWorkerRegister />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>
