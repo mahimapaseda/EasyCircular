@@ -1,96 +1,75 @@
-import AnimateIn from "@/components/AnimateIn";
-import FeatureSection from "@/components/FeatureSection";
-import HeroActions from "@/components/HeroActions";
-import HeroBackground from "@/components/HeroBackground";
-import ProcessingStatus from "@/components/ProcessingStatus";
+import Link from "next/link";
+import HealthStatus from "@/components/HealthStatus";
 import UploadDropzone from "@/components/UploadDropzone";
+import WorkflowStepper from "@/components/workflow/WorkflowStepper";
 
 export default function HomePage() {
   return (
     <div>
-      <section className="relative overflow-hidden border-b border-slate-200 bg-hero-light dark:border-slate-800 dark:bg-hero-dark">
-        <HeroBackground />
-        <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0ms", animationFillMode: "forwards" }}>
-              <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/70 px-3 py-1 text-xs font-semibold text-brand-700 backdrop-blur dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300">
-                <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-coral-500" />
-                Ministry of Education · Sri Lanka
-              </span>
-            </div>
-            <h1
-              className="mt-5 animate-fade-in-up text-3xl font-extrabold tracking-tight text-slate-900 opacity-0 dark:text-white sm:text-4xl md:text-5xl lg:text-6xl"
-              style={{ animationDelay: "100ms", animationFillMode: "forwards" }}
-            >
-              Read circulars in <span className="gradient-text">minutes</span>,
-              not hours
-            </h1>
-            <p
-              className="mt-5 animate-fade-in-up text-base leading-relaxed text-slate-600 opacity-0 dark:text-slate-300 sm:text-lg"
-              style={{ animationDelay: "200ms", animationFillMode: "forwards" }}
-            >
-              Upload an official school circular, check the extracted text, and
-              get a clear summary with the important dates and actions pulled out
-              for you.
+      <section className="border-b border-ink-200 bg-white dark:border-ink-800 dark:bg-ink-900">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-20">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand-700 dark:text-brand-300">
+              Sri Lanka Ministry of Education
             </p>
-            <div
-              className="animate-fade-in-up opacity-0"
-              style={{ animationDelay: "300ms", animationFillMode: "forwards" }}
-            >
-              <HeroActions />
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl lg:text-5xl">
+              Turn long circulars into clear, actionable summaries
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-600 dark:text-ink-300">
+              Upload an official school circular, verify extracted text, and
+              generate a structured summary with dates, legal references, and
+              action items — with human review at every step.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="#upload" className="btn-primary">
+                Upload circular
+              </Link>
+              <Link href="/circulars" className="btn-secondary">
+                Open library
+              </Link>
+            </div>
+          </div>
+
+          <div className="panel">
+            <h2 className="text-sm font-semibold text-ink-900 dark:text-white">
+              System status
+            </h2>
+            <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
+              API, database, and AI pipeline health.
+            </p>
+            <div className="mt-4">
+              <HealthStatus />
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-        <AnimateIn>
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-              How it works
-            </h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Four simple steps, made for busy school staff.
-            </p>
-          </div>
-        </AnimateIn>
-        <AnimateIn delay={100}>
-          <ProcessingStatus currentStep={1} />
-        </AnimateIn>
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-ink-900 dark:text-white">
+            Processing workflow
+          </h2>
+          <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
+            A guided four-step pipeline designed for school administrators.
+          </p>
+        </div>
+        <WorkflowStepper currentStep={1} />
       </section>
 
       <section
         id="upload"
-        className="mx-auto max-w-3xl scroll-mt-24 px-4 pb-14 sm:px-6 sm:pb-20"
+        className="border-t border-ink-200 bg-ink-50/60 dark:border-ink-800 dark:bg-ink-950/40"
       >
-        <AnimateIn>
+        <div className="mx-auto max-w-3xl scroll-mt-24 px-4 py-12 sm:px-6">
           <div className="mb-6 text-center">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-ink-900 dark:text-white">
               Upload a circular
             </h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Start with a PDF from the Ministry of Education.
+            <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
+              PDF only · up to 20 MB · digital or scanned documents supported
             </p>
           </div>
-        </AnimateIn>
-        <AnimateIn delay={150}>
           <UploadDropzone />
-        </AnimateIn>
-      </section>
-
-      <section className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/40">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <AnimateIn>
-            <div className="mb-10 text-center">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Built around what schools actually need
-              </h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                Shaped by feedback from principals, teachers, and admin officers.
-              </p>
-            </div>
-          </AnimateIn>
-          <FeatureSection />
         </div>
       </section>
     </div>

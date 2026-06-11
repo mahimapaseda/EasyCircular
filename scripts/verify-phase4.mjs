@@ -43,7 +43,7 @@ results.push(
 
 results.push(
   await check("AI /pipeline", async () => {
-    const response = await fetch(`${AI_URL}/pipeline`, {
+    const response = await fetch(`${AI_URL}/v1/pipeline`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: SAMPLE_TEXT }),

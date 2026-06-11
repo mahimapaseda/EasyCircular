@@ -16,10 +16,10 @@ function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.Re
   return (
     <label
       htmlFor={htmlFor}
-      className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+      className="mb-2 block text-sm font-medium text-ink-700 dark:text-ink-300"
     >
       {children}
-      <span className="text-coral-500"> *</span>
+      <span className="text-rose-500"> *</span>
     </label>
   );
 }
@@ -76,15 +76,14 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
     }
   }
 
-  const inputClass =
-    "w-full rounded-lg border border-slate-300 bg-white py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500";
+  const inputClass = "input-field py-3";
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+      <h1 className="text-2xl font-bold text-ink-900 dark:text-white">
         {isSignUp ? "Create your account" : "Welcome!"}
       </h1>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+      <p className="mt-2 text-sm text-ink-500 dark:text-ink-400">
         {isSignUp
           ? "Sign up to save and manage your circulars"
           : "Sign in to your account to continue"}
@@ -184,7 +183,7 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
         )}
 
         {error && (
-          <p className="rounded-lg bg-coral-500/10 px-3 py-2.5 text-sm text-coral-700 dark:text-coral-300">
+          <p className="rounded-lg bg-rose-50 px-3 py-2.5 text-sm text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
             {error}
           </p>
         )}
@@ -192,7 +191,7 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-brand-700 hover:shadow-glow active:scale-[0.98] disabled:opacity-60"
+          className="btn-primary w-full py-3"
         >
           {submitting ? "Please wait…" : isSignUp ? "Sign up" : "Sign in"}
         </button>

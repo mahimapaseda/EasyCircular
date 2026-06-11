@@ -16,7 +16,7 @@ export default function SignUpPage() {
   }, [user, loading, router]);
 
   if (loading || user) {
-    return <p className="text-center text-sm text-slate-500">Loading…</p>;
+    return <p className="text-center text-sm text-ink-500">Loading…</p>;
   }
 
   return (

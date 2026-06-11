@@ -3,19 +3,21 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const axios = require("axios");
 const authRoutes = require("./routes/auth");
 const circularRoutes = require("./routes/circulars");
+const { attachSession } = require("./middleware/session");
+const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
+const { healthCheck } = require("./services/aiClient");
 
 const PORT = Number(process.env.PORT) || 4000;
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/easycircular";
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:5000";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ exposedHeaders: ["X-Session-Id"] }));
 app.use(express.json());
+app.use(attachSession);
 
 mongoose.connection.on("disconnected", () => {
   console.warn("MongoDB disconnected");
@@ -41,6 +43,7 @@ app.get("/health", async (_req, res) => {
     timestamp: new Date().toISOString(),
     mongodb: "unknown",
     aiService: "unknown",
+    apiVersion: "v1",
   };
 
   try {
@@ -57,10 +60,8 @@ app.get("/health", async (_req, res) => {
   }
 
   try {
-    const aiResponse = await axios.get(`${AI_SERVICE_URL}/health`, {
-      timeout: 3000,
-    });
-    checks.aiService = aiResponse.data?.status === "ok" ? "ok" : "degraded";
+    const aiResponse = await healthCheck();
+    checks.aiService = aiResponse?.status === "ok" ? "ok" : "degraded";
     if (checks.aiService !== "ok") {
       checks.status = "degraded";
     }
@@ -76,10 +77,14 @@ app.get("/health", async (_req, res) => {
 app.get("/", (_req, res) => {
   res.json({
     name: "EasyCircular API",
-    version: "0.1.0",
+    version: "0.2.0",
+    apiVersion: "v1",
     health: "/health",
   });
 });
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 async function start() {
   try {

@@ -46,12 +46,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto animate-fade-in rounded-xl border px-4 py-3 text-sm shadow-lg ${
+            className={`pointer-events-auto animate-fade-up rounded-xl border px-4 py-3 text-sm shadow-lg ${
               toast.tone === "success"
-                ? "border-mint-200 bg-mint-50 text-mint-900 dark:border-mint-500/30 dark:bg-mint-500/15 dark:text-mint-100"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-100"
                 : toast.tone === "error"
-                  ? "border-coral-200 bg-coral-50 text-coral-900 dark:border-coral-500/30 dark:bg-coral-500/15 dark:text-coral-100"
-                  : "border-brand-200 bg-white text-slate-800 dark:border-brand-500/30 dark:bg-slate-900 dark:text-slate-100"
+                  ? "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-500/30 dark:bg-rose-500/15 dark:text-rose-100"
+                  : "border-brand-200 bg-white text-ink-800 dark:border-brand-500/30 dark:bg-ink-900 dark:text-ink-100"
             }`}
           >
             {toast.message}

@@ -2,7 +2,8 @@
 
 AI/NLP web application for Sri Lankan Ministry of Education circulars — upload PDFs, extract text, identify key entities, and produce structured summaries with human review.
 
-**Stack:** Next.js · Express · FastAPI · MongoDB
+**Stack:** Next.js · Express · FastAPI · MongoDB  
+**Architecture:** API v1 · service-layer backend · session-scoped guest access · map-reduce summarization
 
 ## Prerequisites
 
@@ -156,6 +157,15 @@ Verify the MVP flow:
 ```bash
 npm run verify:phase4
 ```
+
+## System redesign (v0.2)
+
+| Layer | Changes |
+|-------|---------|
+| **Backend** | Service layer (`circularService`, `aiClient`), anonymous `X-Session-Id`, rate limiting on `/process`, centralized error handling |
+| **AI service** | `/v1/*` endpoints, cached SpaCy model, chunked map-reduce summarization for long circulars |
+| **Frontend** | Professional document-workspace UI, sidebar workflow stepper, session-aware API client |
+| **Shared** | `shared/api-contract.js` workflow constants |
 
 ## Next: Phase 5
 

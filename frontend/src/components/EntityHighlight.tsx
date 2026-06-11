@@ -2,11 +2,11 @@ import type { ReactNode } from "react";
 import type { Entity } from "@/lib/circulars";
 
 const LABEL_STYLES: Record<Entity["label"], string> = {
-  DATE: "bg-sun-200/80 text-sun-900 dark:bg-sun-500/25 dark:text-sun-100",
-  PERSON: "bg-grape-200/80 text-grape-900 dark:bg-grape-500/25 dark:text-grape-100",
-  ORG: "bg-brand-200/80 text-brand-900 dark:bg-brand-500/25 dark:text-brand-100",
-  LAW: "bg-coral-200/80 text-coral-900 dark:bg-coral-500/25 dark:text-coral-100",
-  OTHER: "bg-slate-200/80 text-slate-800 dark:bg-slate-600/40 dark:text-slate-100",
+  DATE: "bg-amber-200/90 text-amber-950 dark:bg-amber-500/25 dark:text-amber-100",
+  PERSON: "bg-violet-200/90 text-violet-950 dark:bg-violet-500/25 dark:text-violet-100",
+  ORG: "bg-brand-200/90 text-brand-950 dark:bg-brand-500/25 dark:text-brand-100",
+  LAW: "bg-rose-200/90 text-rose-950 dark:bg-rose-500/25 dark:text-rose-100",
+  OTHER: "bg-ink-200/90 text-ink-800 dark:bg-ink-600/40 dark:text-ink-100",
 };
 
 type EntityHighlightProps = {
@@ -22,7 +22,7 @@ export default function EntityHighlight({
 }: EntityHighlightProps) {
   if (!text) {
     return (
-      <p className={`text-sm text-slate-500 dark:text-slate-400 ${className}`}>
+      <p className={`text-sm text-ink-500 dark:text-ink-400 ${className}`}>
         No text to display.
       </p>
     );
@@ -41,7 +41,7 @@ export default function EntityHighlight({
   if (valid.length === 0) {
     return (
       <div
-        className={`whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-100 ${className}`}
+        className={`whitespace-pre-wrap text-sm leading-relaxed text-ink-800 dark:text-ink-100 ${className}`}
       >
         {text}
       </div>
@@ -72,12 +72,12 @@ export default function EntityHighlight({
   });
 
   if (cursor < text.length) {
-    parts.push(<span key={`t-end`}>{text.slice(cursor)}</span>);
+    parts.push(<span key="t-end">{text.slice(cursor)}</span>);
   }
 
   return (
     <div
-      className={`whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-100 ${className}`}
+      className={`whitespace-pre-wrap text-sm leading-relaxed text-ink-800 dark:text-ink-100 ${className}`}
     >
       {parts}
     </div>

@@ -13,10 +13,10 @@ export default function AuthLayout({
         <AuthIllustration />
       </div>
 
-      <div className="relative flex w-full flex-col bg-white dark:bg-slate-950 lg:w-1/2">
+      <div className="relative flex w-full flex-col bg-white dark:bg-ink-950 lg:w-1/2">
         <div className="flex items-center justify-between px-6 py-5 sm:px-10">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 via-grape-500 to-coral-500 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white">
               <svg
                 className="h-5 w-5"
                 fill="none"
@@ -31,7 +31,7 @@ export default function AuthLayout({
                 />
               </svg>
             </div>
-            <span className="text-lg font-bold text-slate-900 dark:text-white">
+            <span className="text-lg font-bold text-ink-900 dark:text-white">
               EasyCircular
             </span>
           </Link>
@@ -39,9 +39,7 @@ export default function AuthLayout({
         </div>
 
         <div className="flex flex-1 items-center justify-center px-6 pb-10 sm:px-10">
-          <div className="w-full max-w-md animate-fade-in-up opacity-0" style={{ animationFillMode: "forwards", animationDelay: "150ms" }}>
-            {children}
-          </div>
+          <div className="w-full max-w-md animate-fade-up">{children}</div>
         </div>
       </div>
     </div>

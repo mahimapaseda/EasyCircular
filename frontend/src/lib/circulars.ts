@@ -1,7 +1,9 @@
 import { API_URL } from "@/lib/api";
 import { getStoredToken } from "@/lib/auth";
-
-const LOCAL_CIRCULARS_KEY = "easycircular_local_circulars";
+import {
+  captureSessionFromResponse,
+  sessionHeaders,
+} from "@/lib/session";
 
 export type CircularStatus =
   | "uploaded"
@@ -37,6 +39,7 @@ export type CircularProcessingMeta = {
   durationMs?: number;
   cached?: boolean;
   guardrailWarnings?: string[];
+  chunkCount?: number;
 };
 
 export type Circular = {
@@ -60,32 +63,28 @@ export type CircularListResponse = {
   total: number;
 };
 
-function authHeaders(): HeadersInit {
+function authHeaders(): Record<string, string> {
   const token = getStoredToken();
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...sessionHeaders() };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
   return headers;
 }
 
-export function getLocalCircularIds(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(LOCAL_CIRCULARS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-export function rememberLocalCircular(id: string) {
-  if (typeof window === "undefined") return;
-  const ids = getLocalCircularIds();
-  if (!ids.includes(id)) {
-    localStorage.setItem(LOCAL_CIRCULARS_KEY, JSON.stringify([id, ...ids]));
-  }
+async function apiFetch(
+  input: string,
+  init?: RequestInit,
+): Promise<Response> {
+  const response = await fetch(input, {
+    ...init,
+    headers: {
+      ...authHeaders(),
+      ...(init?.headers || {}),
+    },
+  });
+  captureSessionFromResponse(response);
+  return response;
 }
 
 async function parseError(response: Response): Promise<string> {
@@ -97,9 +96,8 @@ export async function uploadCircular(file: File): Promise<Circular> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${API_URL}/api/circulars/upload`, {
+  const response = await apiFetch(`${API_URL}/api/circulars/upload`, {
     method: "POST",
-    headers: authHeaders(),
     body: formData,
   });
 
@@ -108,20 +106,11 @@ export async function uploadCircular(file: File): Promise<Circular> {
   }
 
   const data = await response.json();
-  if (!getStoredToken()) {
-    rememberLocalCircular(data.circularId);
-  }
   return data.circular;
 }
 
 export async function listCirculars(): Promise<CircularListResponse> {
-  const token = getStoredToken();
-  const query = token
-    ? ""
-    : `?ids=${encodeURIComponent(getLocalCircularIds().join(","))}`;
-
-  const response = await fetch(`${API_URL}/api/circulars${query}`, {
-    headers: authHeaders(),
+  const response = await apiFetch(`${API_URL}/api/circulars`, {
     cache: "no-store",
   });
 
@@ -133,8 +122,7 @@ export async function listCirculars(): Promise<CircularListResponse> {
 }
 
 export async function fetchCircular(id: string): Promise<Circular> {
-  const response = await fetch(`${API_URL}/api/circulars/${id}`, {
-    headers: authHeaders(),
+  const response = await apiFetch(`${API_URL}/api/circulars/${id}`, {
     cache: "no-store",
   });
 
@@ -149,9 +137,8 @@ export async function fetchCircular(id: string): Promise<Circular> {
 export async function extractCircularText(
   id: string,
 ): Promise<{ circular: Circular; error?: string }> {
-  const response = await fetch(`${API_URL}/api/circulars/${id}/extract`, {
+  const response = await apiFetch(`${API_URL}/api/circulars/${id}/extract`, {
     method: "POST",
-    headers: authHeaders(),
   });
 
   const data = await response.json().catch(() => ({}));
@@ -169,12 +156,9 @@ export async function saveCircularText(
   id: string,
   text: string,
 ): Promise<Circular> {
-  const response = await fetch(`${API_URL}/api/circulars/${id}/text`, {
+  const response = await apiFetch(`${API_URL}/api/circulars/${id}/text`, {
     method: "PATCH",
-    headers: {
-      ...authHeaders(),
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
   });
 
@@ -189,9 +173,8 @@ export async function saveCircularText(
 export async function processCircular(
   id: string,
 ): Promise<{ circular: Circular; cached?: boolean; guardrailWarnings?: string[] }> {
-  const response = await fetch(`${API_URL}/api/circulars/${id}/process`, {
+  const response = await apiFetch(`${API_URL}/api/circulars/${id}/process`, {
     method: "POST",
-    headers: authHeaders(),
   });
 
   const data = await response.json().catch(() => ({}));
@@ -207,10 +190,19 @@ export function displayText(circular: Circular): string {
 }
 
 export function workflowStep(circular: Circular): number {
-  if (circular.status === "uploaded") return 2;
-  if (circular.status === "extracted" || circular.status === "failed") return 3;
-  if (circular.status === "processing") return 4;
-  return 4;
+  switch (circular.status) {
+    case "uploaded":
+      return 2;
+    case "extracted":
+    case "failed":
+      return 3;
+    case "processing":
+      return 4;
+    case "completed":
+      return 5; // all workflow steps complete
+    default:
+      return 1;
+  }
 }
 
 export function statusLabel(status: CircularStatus): string {

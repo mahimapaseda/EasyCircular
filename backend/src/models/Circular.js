@@ -40,6 +40,11 @@ const circularSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    sessionId: {
+      type: String,
+      default: null,
+      index: true,
+    },
     originalFilename: { type: String, required: true },
     filePath: { type: String, required: true },
     contentHash: { type: String, default: "", index: true },
@@ -63,9 +68,12 @@ const circularSchema = new mongoose.Schema(
       durationMs: { type: Number, default: 0 },
       cached: { type: Boolean, default: false },
       guardrailWarnings: { type: [String], default: [] },
+      chunkCount: { type: Number, default: 1 },
     },
   },
   { timestamps: true },
 );
+
+circularSchema.index({ sessionId: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Circular", circularSchema);

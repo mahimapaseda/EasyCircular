@@ -61,13 +61,10 @@ def _extract_regex_entities(text: str) -> list[Entity]:
 
 def _extract_spacy_entities(text: str) -> list[Entity]:
     try:
-        import spacy
-    except ImportError:
-        return []
+        from app.nlp_models import get_spacy_nlp
 
-    try:
-        nlp = spacy.load("en_core_web_sm")
-    except OSError:
+        nlp = get_spacy_nlp()
+    except (ImportError, OSError):
         return []
 
     doc = nlp(text[:100000])

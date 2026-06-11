@@ -2,6 +2,8 @@ import json
 import re
 from typing import Any
 
+from app.chunking import split_text
+from app.config import settings
 from app.guardrails import verify_summary_dates
 from app.llm import active_model_name, get_chat_model, llm_is_configured
 
@@ -100,16 +102,38 @@ def _parse_llm_json(content: str) -> dict[str, Any]:
     return json.loads(content)
 
 
-def llm_summarize(
-    text: str,
-    entities: list[dict[str, Any]],
-) -> tuple[dict[str, Any], int]:
+def _llm_messages(system_prompt: str, user_prompt: str):
     from langchain_core.messages import HumanMessage, SystemMessage
 
-    entity_summary = json.dumps(entities[:80], ensure_ascii=False)
-    source_excerpt = text[:12000]
+    return [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
 
-    system_prompt = """You summarize Sri Lankan Ministry of Education circulars for school administrators.
+
+def _token_usage(response) -> int:
+    metadata = getattr(response, "response_metadata", {}) or {}
+    usage = metadata.get("token_usage") or metadata.get("usage") or {}
+    return int(usage.get("total_tokens") or usage.get("totalTokens") or 0)
+
+
+def _summarize_chunk(
+    chunk: str,
+    entities: list[dict[str, Any]],
+    *,
+    is_reduce: bool = False,
+) -> tuple[dict[str, Any], int]:
+    entity_summary = json.dumps(entities[:80], ensure_ascii=False)
+
+    if is_reduce:
+        system_prompt = """You merge partial summaries of one Sri Lankan MOE circular into a single JSON summary.
+Return ONLY valid JSON:
+{"title":"string","sections":[{"heading":"string","content":"string"}],"actionItems":["string"]}
+Rules: preserve legal meaning; do not invent dates; deduplicate sections."""
+        user_prompt = f"""Partial summaries to merge:
+{chunk}
+
+Extracted entities:
+{entity_summary}"""
+    else:
+        system_prompt = """You summarize Sri Lankan Ministry of Education circulars for school administrators.
 Return ONLY valid JSON with this schema:
 {
   "title": "string",
@@ -122,9 +146,8 @@ Rules:
 - Use sections: Purpose, Key requirements, Deadlines & dates, Responsible parties (omit empty sections).
 - actionItems: concrete steps for school staff.
 - Be concise and faithful to the source."""
-
-    user_prompt = f"""Source circular text:
-{source_excerpt}
+        user_prompt = f"""Source circular text:
+{chunk}
 
 Extracted entities (JSON):
 {entity_summary}
@@ -132,9 +155,7 @@ Extracted entities (JSON):
 Produce the JSON summary."""
 
     llm = get_chat_model()
-    response = llm.invoke(
-        [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
-    )
+    response = llm.invoke(_llm_messages(system_prompt, user_prompt))
 
     content = response.content
     if isinstance(content, list):
@@ -146,12 +167,31 @@ Produce the JSON summary."""
     parsed = _parse_llm_json(str(content))
     parsed["mode"] = "llm"
     parsed["rawMarkdown"] = _build_markdown(parsed)
+    return parsed, _token_usage(response)
 
-    metadata = getattr(response, "response_metadata", {}) or {}
-    usage = metadata.get("token_usage") or metadata.get("usage") or {}
-    tokens = int(usage.get("total_tokens") or usage.get("totalTokens") or 0)
 
-    return parsed, tokens
+def llm_summarize(
+    text: str,
+    entities: list[dict[str, Any]],
+) -> tuple[dict[str, Any], int, int]:
+    chunks = split_text(text)
+    chunk_count = len(chunks)
+
+    if chunk_count == 1:
+        summary, tokens = _summarize_chunk(chunks[0], entities)
+        return summary, tokens, chunk_count
+
+    partials: list[str] = []
+    total_tokens = 0
+
+    for chunk in chunks:
+        partial, tokens = _summarize_chunk(chunk, entities)
+        total_tokens += tokens
+        partials.append(json.dumps(partial, ensure_ascii=False))
+
+    merged_blob = "\n\n---\n\n".join(partials)
+    summary, reduce_tokens = _summarize_chunk(merged_blob, entities, is_reduce=True)
+    return summary, total_tokens + reduce_tokens, chunk_count
 
 
 def summarize_text(
@@ -159,18 +199,26 @@ def summarize_text(
     entities: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     entities = entities or []
+    chunk_count = len(split_text(text)) if len(text) > settings.map_reduce_threshold else 1
 
     if llm_is_configured():
-        summary, tokens = llm_summarize(text, entities)
+        summary, tokens, chunk_count = llm_summarize(text, entities)
         meta = {
             "model": active_model_name(),
             "tokensUsed": tokens,
             "mode": "llm",
             "provider": __import__("os").getenv("LLM_PROVIDER", "openai"),
+            "chunkCount": chunk_count,
         }
     else:
         summary = fallback_summarize(text, entities)
-        meta = {"model": "extractive-fallback", "tokensUsed": 0, "mode": "fallback", "provider": "none"}
+        meta = {
+            "model": "extractive-fallback",
+            "tokensUsed": 0,
+            "mode": "fallback",
+            "provider": "none",
+            "chunkCount": 1,
+        }
 
     warnings = verify_summary_dates(text, entities, summary)
     return {
