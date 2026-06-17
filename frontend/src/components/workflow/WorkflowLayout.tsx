@@ -17,52 +17,68 @@ export default function WorkflowLayout({
   children,
 }: WorkflowLayoutProps) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+    <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+      {/* ── Sidebar ─────────────────────────────────────────────── */}
       <aside className="space-y-4">
-        <div className="panel">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-ink-400">
-            Document
-          </p>
-          <h2 className="mt-2 break-words text-base font-bold text-ink-900 dark:text-white">
-            {circular.originalFilename}
-          </h2>
-          <div className="mt-3">
-            <StatusBadge status={circular.status} />
+        {/* Document info card */}
+        <div className="overflow-hidden rounded-2xl border-2 border-brand-100 bg-gradient-to-b from-brand-50/60 to-white shadow-panel dark:border-ink-800 dark:from-brand-950/20 dark:to-ink-900">
+          {/* Header bar */}
+          <div className="bg-gradient-to-r from-brand-500 to-fuchsia-600 px-4 py-2">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/80">
+              Document
+            </p>
           </div>
-          {circular.processingMeta.pageCount > 0 && (
-            <dl className="mt-4 space-y-2 text-xs text-ink-500 dark:text-ink-400">
-              <div className="flex justify-between gap-2">
-                <dt>Pages</dt>
-                <dd className="font-medium text-ink-700 dark:text-ink-300">
-                  {circular.processingMeta.pageCount}
-                </dd>
+
+          <div className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-100 to-fuchsia-100 dark:from-brand-950/50 dark:to-fuchsia-950/30">
+                <svg className="h-5 w-5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
-              {circular.processingMeta.ocrUsed && (
-                <div className="flex justify-between gap-2">
-                  <dt>OCR</dt>
-                  <dd className="font-medium text-ink-700 dark:text-ink-300">
-                    {circular.processingMeta.ocrLang || "enabled"}
-                  </dd>
+              <div className="min-w-0 flex-1">
+                <h2 className="break-words text-sm font-black leading-tight text-ink-900 dark:text-white">
+                  {circular.originalFilename}
+                </h2>
+                <div className="mt-2">
+                  <StatusBadge status={circular.status} />
                 </div>
-              )}
-              {circular.processingMeta.model && circular.status === "completed" && (
-                <div className="flex justify-between gap-2">
-                  <dt>Model</dt>
-                  <dd className="truncate font-medium text-ink-700 dark:text-ink-300">
-                    {circular.processingMeta.model}
-                  </dd>
-                </div>
-              )}
-            </dl>
-          )}
+              </div>
+            </div>
+
+            {circular.processingMeta.pageCount > 0 && (
+              <dl className="mt-4 space-y-2">
+                {[
+                  { label: "Pages", value: circular.processingMeta.pageCount.toString() },
+                  ...(circular.processingMeta.ocrUsed
+                    ? [{ label: "OCR", value: circular.processingMeta.ocrLang || "enabled" }]
+                    : []),
+                  ...(circular.processingMeta.model && circular.status === "completed"
+                    ? [{ label: "Model", value: circular.processingMeta.model }]
+                    : []),
+                ].map(({ label, value }) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-brand-50/60 px-3 py-1.5 dark:bg-ink-800/40"
+                  >
+                    <dt className="text-xs font-semibold text-ink-500 dark:text-ink-400">{label}</dt>
+                    <dd className="truncate text-xs font-bold text-ink-800 dark:text-ink-200">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
         </div>
 
+        {/* Vertical stepper (desktop) */}
         <div className="hidden lg:block">
           <WorkflowStepper currentStep={currentStep} orientation="vertical" />
         </div>
       </aside>
 
+      {/* ── Main content ────────────────────────────────────────── */}
       <div className="min-w-0 space-y-6">
+        {/* Horizontal stepper (mobile) */}
         <div className="lg:hidden">
           <WorkflowStepper currentStep={currentStep} />
         </div>

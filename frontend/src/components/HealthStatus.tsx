@@ -3,13 +3,56 @@
 import { useEffect, useState } from "react";
 import { fetchBackendHealth, type HealthCheck } from "@/lib/api";
 
-function StatusDot({ ok }: { ok: boolean }) {
+type ServiceStatus = "ok" | "degraded" | "offline" | "checking";
+
+function ServiceRow({
+  label,
+  status,
+  detail,
+}: {
+  label: string;
+  status: ServiceStatus;
+  detail?: string;
+}) {
+  const config = {
+    ok: {
+      dot: "bg-emerald-400 shadow-emerald-400/60",
+      ring: "ring-emerald-200 dark:ring-emerald-800",
+      text: "text-emerald-700 dark:text-emerald-400",
+      bg: "bg-emerald-50 dark:bg-emerald-950/30",
+      label: "Online",
+    },
+    degraded: {
+      dot: "bg-amber-400 shadow-amber-400/60",
+      ring: "ring-amber-200 dark:ring-amber-800",
+      text: "text-amber-700 dark:text-amber-400",
+      bg: "bg-amber-50 dark:bg-amber-950/30",
+      label: "Degraded",
+    },
+    offline: {
+      dot: "bg-rose-400 shadow-rose-400/60",
+      ring: "ring-rose-200 dark:ring-rose-800",
+      text: "text-rose-700 dark:text-rose-400",
+      bg: "bg-rose-50 dark:bg-rose-950/30",
+      label: "Offline",
+    },
+    checking: {
+      dot: "bg-ink-300 animate-pulse",
+      ring: "ring-ink-200 dark:ring-ink-700",
+      text: "text-ink-500 dark:text-ink-400",
+      bg: "bg-ink-50 dark:bg-ink-800/30",
+      label: "Checking…",
+    },
+  }[status];
+
   return (
-    <span
-      className={`inline-block h-2 w-2 rounded-full ${
-        ok ? "bg-emerald-500" : "bg-rose-500"
-      }`}
-    />
+    <li className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 ${config.bg}`}>
+      <span className="text-sm font-semibold text-ink-700 dark:text-ink-300">{label}</span>
+      <span className={`flex items-center gap-2 rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ${config.ring} ${config.text}`}>
+        <span className={`h-2 w-2 rounded-full shadow-sm ${config.dot}`} />
+        {detail || config.label}
+      </span>
+    </li>
   );
 }
 
@@ -53,85 +96,63 @@ export default function HealthStatus({ compact = false }: HealthStatusProps) {
     };
   }, []);
 
-  if (compact) {
-    const allOk = health?.status === "ok";
+  const apiStatus: ServiceStatus = loading
+    ? "checking"
+    : error
+    ? "offline"
+    : health?.status === "ok"
+    ? "ok"
+    : "degraded";
 
-    return (
-      <div className="panel p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-ink-400">
-          System status
-        </p>
-        {loading ? (
-          <p className="mt-2 text-sm text-ink-500 dark:text-ink-400">Checking…</p>
-        ) : error ? (
-          <p className="mt-2 flex items-center gap-2 text-sm text-rose-600 dark:text-rose-400">
-            <StatusDot ok={false} />
-            Services offline
-          </p>
-        ) : (
-          <ul className="mt-3 space-y-2 text-sm text-ink-600 dark:text-ink-300">
-            <li className="flex items-center justify-between gap-3">
-              <span>API</span>
-              <span className="flex items-center gap-2">
-                <StatusDot ok={allOk} />
-                {health?.status}
-              </span>
-            </li>
-            <li className="flex items-center justify-between gap-3">
-              <span>Database</span>
-              <span className="flex items-center gap-2">
-                <StatusDot ok={health?.mongodb === "connected"} />
-                {health?.mongodb ?? "—"}
-              </span>
-            </li>
-            <li className="flex items-center justify-between gap-3">
-              <span>AI</span>
-              <span className="flex items-center gap-2">
-                <StatusDot ok={health?.aiService === "ok"} />
-                {health?.aiService ?? "—"}
-              </span>
-            </li>
-          </ul>
-        )}
-      </div>
-    );
-  }
+  const dbStatus: ServiceStatus = loading
+    ? "checking"
+    : health?.mongodb === "connected"
+    ? "ok"
+    : health?.mongodb
+    ? "degraded"
+    : "offline";
 
-  if (loading) {
-    return <p className="text-sm text-ink-500 dark:text-ink-400">Checking services…</p>;
-  }
+  const aiStatus: ServiceStatus = loading
+    ? "checking"
+    : health?.aiService === "ok"
+    ? "ok"
+    : health?.aiService
+    ? "degraded"
+    : "offline";
 
-  if (error) {
-    return (
-      <p className="text-sm font-medium text-rose-700 dark:text-rose-300">{error}</p>
-    );
-  }
-
-  if (!health) return null;
+  const allOk = apiStatus === "ok" && dbStatus === "ok" && aiStatus === "ok";
 
   return (
-    <ul className="space-y-2 text-sm text-ink-600 dark:text-ink-300">
-      <li className="flex items-center justify-between gap-3">
-        <span>API</span>
-        <span className="flex items-center gap-2">
-          <StatusDot ok={health.status === "ok"} />
-          {health.status}
-        </span>
-      </li>
-      <li className="flex items-center justify-between gap-3">
-        <span>Database</span>
-        <span className="flex items-center gap-2">
-          <StatusDot ok={health.mongodb === "connected"} />
-          {health.mongodb}
-        </span>
-      </li>
-      <li className="flex items-center justify-between gap-3">
-        <span>AI service</span>
-        <span className="flex items-center gap-2">
-          <StatusDot ok={health.aiService === "ok"} />
-          {health.aiService}
-        </span>
-      </li>
-    </ul>
+    <div>
+      {/* Overall badge */}
+      <div
+        className={`mb-4 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold ${
+          loading
+            ? "bg-ink-100 text-ink-500 dark:bg-ink-800 dark:text-ink-400"
+            : allOk
+            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+            : "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+        }`}
+      >
+        <span
+          className={`h-2 w-2 rounded-full ${
+            loading ? "bg-ink-400 animate-pulse" : allOk ? "bg-emerald-500 animate-pulse-glow" : "bg-amber-500"
+          }`}
+        />
+        {loading ? "Connecting to services…" : allOk ? "All systems operational" : "Some services degraded"}
+      </div>
+
+      <ul className="space-y-2">
+        <ServiceRow label="Backend API" status={apiStatus} detail={health?.status} />
+        <ServiceRow label="MongoDB" status={dbStatus} detail={health?.mongodb} />
+        <ServiceRow label="AI Service" status={aiStatus} detail={health?.aiService} />
+      </ul>
+
+      {!loading && (
+        <p className="mt-3 text-right text-[11px] font-medium text-ink-400 dark:text-ink-600">
+          Refreshes every 15s
+        </p>
+      )}
+    </div>
   );
 }
