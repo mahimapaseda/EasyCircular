@@ -8,7 +8,7 @@ type WorkflowStepperProps = {
 };
 
 const STEP_COLORS = [
-  { active: "from-brand-500 to-brand-600", glow: "shadow-brand-500/40", ring: "ring-brand-300 dark:ring-brand-600" },
+  { active: "from-brand-500 to-indigo-600", glow: "shadow-brand-500/40", ring: "ring-brand-300 dark:ring-brand-600" },
   { active: "from-fuchsia-500 to-violet-600", glow: "shadow-fuchsia-500/40", ring: "ring-fuchsia-300 dark:ring-fuchsia-600" },
   { active: "from-amber-400 to-orange-500", glow: "shadow-amber-500/40", ring: "ring-amber-300 dark:ring-amber-600" },
   { active: "from-emerald-500 to-teal-600", glow: "shadow-emerald-500/40", ring: "ring-emerald-300 dark:ring-emerald-600" },
@@ -21,67 +21,81 @@ export default function WorkflowStepper({
   const isVertical = orientation === "vertical";
 
   return (
-    <nav aria-label="Workflow progress">
-      <ol className={isVertical ? "flex flex-col gap-2" : "grid grid-cols-2 gap-3 lg:grid-cols-4"}>
+    <nav aria-label="Workflow progress" className="relative">
+      <ol className={isVertical ? "flex flex-col gap-6" : "grid grid-cols-2 gap-4 lg:grid-cols-4"}>
         {WORKFLOW_STEPS.map((step, index) => {
           const done = currentStep > step.id;
           const active = currentStep === step.id;
+          const isPending = currentStep < step.id;
           const colors = STEP_COLORS[index % STEP_COLORS.length];
 
           return (
             <li
               key={step.key}
-              className={`rounded-2xl border-2 transition-all duration-300 ${
-                active
-                  ? `border-brand-200 bg-gradient-to-br from-brand-50 to-fuchsia-50/60 shadow-panel dark:border-brand-700/60 dark:from-brand-950/40 dark:to-fuchsia-950/20`
-                  : done
-                  ? "border-emerald-200/80 bg-gradient-to-br from-emerald-50/60 to-white dark:border-emerald-900/60 dark:from-emerald-950/20 dark:to-ink-900"
-                  : "border-ink-100 bg-ink-50/60 dark:border-ink-800 dark:bg-ink-900/60"
+              className={`relative group transition-all duration-500 ${
+                active ? "scale-105" : ""
               }`}
             >
-              <div className="flex items-center gap-3 px-4 py-3.5">
-                {/* Step number / check */}
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-sm font-black transition-all duration-300 ${
+              <div
+                className={`relative z-10 flex ${isVertical ? "items-start gap-4" : "flex-col items-start gap-3"} rounded-3xl border border-transparent p-4 transition-all duration-300 ${
+                  active
+                    ? `border-brand-200/60 bg-white/80 shadow-xl shadow-brand-900/10 backdrop-blur-xl dark:border-brand-800/50 dark:bg-ink-950/80`
+                    : done
+                    ? "bg-white/40 dark:bg-ink-900/40"
+                    : "opacity-60 grayscale-[50%]"
+                }`}
+              >
+                {/* Step Icon */}
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-black transition-all duration-500 ${
                     done
-                      ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-500/30"
+                      ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-500/30 ring-2 ring-white dark:ring-ink-950"
                       : active
-                      ? `bg-gradient-to-br ${colors.active} text-white shadow-md ${colors.glow}`
+                      ? `bg-gradient-to-br ${colors.active} text-white shadow-lg ${colors.glow} ring-2 ring-white dark:ring-ink-950 scale-110`
                       : "bg-ink-100 text-ink-400 dark:bg-ink-800 dark:text-ink-500"
                   }`}
                 >
                   {done ? (
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
                     step.id
                   )}
-                </span>
+                </div>
 
-                {/* Labels */}
-                <div className="min-w-0">
+                {/* Text Content */}
+                <div className="min-w-0 flex-1">
                   <p
-                    className={`text-sm font-bold leading-tight ${
+                    className={`text-sm font-black leading-tight tracking-tight ${
                       active
-                        ? "text-brand-800 dark:text-brand-200"
+                        ? "text-brand-900 dark:text-white"
                         : done
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-ink-600 dark:text-ink-400"
+                        ? "text-emerald-800 dark:text-emerald-300"
+                        : "text-ink-500 dark:text-ink-400"
                     }`}
                   >
                     {step.label}
                   </p>
-                  <p className="mt-0.5 text-xs font-medium text-ink-500 dark:text-ink-500">
+                  <p className="mt-1 text-xs font-semibold text-ink-500/80 dark:text-ink-400/80">
                     {step.description}
                   </p>
                 </div>
               </div>
 
-              {/* Active progress bar */}
+              {/* Active animated glow underneath */}
               {active && (
-                <div className="relative mx-4 mb-3 h-1.5 overflow-hidden rounded-full bg-brand-100 dark:bg-brand-950">
-                  <div className="absolute inset-y-0 w-1/3 animate-pulsebar rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500" />
+                <div className="absolute inset-0 -z-10 blur-xl transition-all duration-500 opacity-40">
+                  <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${colors.active}`} />
+                </div>
+              )}
+              
+              {/* Connector Lines (only if vertical) */}
+              {isVertical && index < WORKFLOW_STEPS.length - 1 && (
+                <div className="absolute left-[35px] top-[60px] h-[calc(100%-20px)] w-0.5 rounded-full bg-ink-200/50 dark:bg-ink-800/50">
+                   {done && (
+                     <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-emerald-400 to-emerald-500" />
+                   )}
                 </div>
               )}
             </li>
