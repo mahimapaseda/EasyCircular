@@ -4,11 +4,11 @@ import { exportSummaryAsMarkdown, exportSummaryAsTxt } from "@/lib/exportSummary
 import type { Circular } from "@/lib/circulars";
 
 const ENTITY_PILL: Record<string, string> = {
-  DATE: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
-  PERSON: "bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800",
-  ORG: "bg-brand-100 text-brand-800 border-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:border-brand-800",
-  LAW: "bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-800",
-  OTHER: "bg-ink-100 text-ink-700 border-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:border-ink-700",
+  DATE: "bg-amber-50 text-amber-800 ring-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800",
+  PERSON: "bg-sky-50 text-sky-800 ring-sky-200/80 dark:bg-sky-950/40 dark:text-sky-300 dark:ring-sky-800",
+  ORG: "bg-brand-50 text-brand-800 ring-brand-200/80 dark:bg-brand-950/40 dark:text-brand-300 dark:ring-brand-800",
+  LAW: "bg-violet-50 text-violet-800 ring-violet-200/80 dark:bg-violet-950/40 dark:text-violet-300 dark:ring-violet-800",
+  OTHER: "bg-slate-100 text-ink-700 ring-ink-200/80 dark:bg-ink-800 dark:text-ink-300 dark:ring-ink-700",
 };
 
 type SummaryPanelProps = {
@@ -25,6 +25,7 @@ export default function SummaryPanel({
   const summary = circular.summary;
   const meta = circular.processingMeta;
   const hasText = Boolean(circular.extractedText || circular.editedText);
+  const topEntities = circular.entities.slice(0, 8);
 
   function handleExport(format: "txt" | "md") {
     if (format === "txt") exportSummaryAsTxt(circular);
@@ -39,173 +40,141 @@ export default function SummaryPanel({
     onExport?.("txt");
   }
 
-  const topEntities = circular.entities.slice(0, 6);
-
   return (
-    <section className="ws-card flex flex-col overflow-hidden">
-      <div className="ws-card-header flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-ink-900 dark:text-white">Document Summary</h3>
-            <p className="text-xs text-ink-500">Purpose · requirements · deadlines · actions</p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+    <section className="ws-card overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 px-5 py-3 dark:border-ink-800">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-ink-400">AI Summary</span>
+          {summary?.mode === "llm" && (
+            <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold uppercase text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+              AI
+            </span>
+          )}
+          {summary?.mode === "fallback" && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+              Extractive
+            </span>
+          )}
           {meta.cached && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-ink-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-ink-500 dark:border-ink-700 dark:bg-ink-950">
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
-              </svg>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-ink-500 dark:bg-ink-800 dark:text-ink-400">
               Cached
             </span>
           )}
-          {summary && (
-            <>
-              <button type="button" onClick={() => void handleCopy()} className="btn-ghost text-xs">
-                Copy
-              </button>
-              <button type="button" onClick={() => handleExport("md")} className="btn-ghost text-xs">
-                Export
-              </button>
-            </>
-          )}
         </div>
+        {summary && (
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => void handleCopy()} className="btn-ghost text-xs">
+              Copy
+            </button>
+            <button type="button" onClick={() => handleExport("md")} className="btn-ghost text-xs">
+              Export
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="flex-1 space-y-4 p-5">
-        {/* Guardrails */}
+      <div className="p-5 sm:p-6">
         {meta.guardrailWarnings && meta.guardrailWarnings.length > 0 && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+          <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50/80 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/20">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
               Review suggested
             </p>
-            <ul className="space-y-1">
+            <ul className="mt-2 space-y-1">
               {meta.guardrailWarnings.map((w) => (
-                <li key={w} className="text-xs text-amber-900 dark:text-amber-200">• {w}</li>
+                <li key={w} className="text-sm text-amber-900 dark:text-amber-200">• {w}</li>
               ))}
             </ul>
           </div>
         )}
 
-        {/* Processing meta */}
-        {meta.model && circular.status === "completed" && (
-          <div className="flex flex-wrap gap-1.5">
-            {[meta.model, meta.cached && "Cached", meta.durationMs && `${(meta.durationMs / 1000).toFixed(1)}s`, meta.chunkCount && meta.chunkCount > 1 && `${meta.chunkCount} chunks`]
-              .filter(Boolean)
-              .map((label) => (
-                <span key={String(label)} className="rounded-md bg-ink-100 px-2 py-0.5 text-[10px] font-semibold text-ink-600 dark:bg-ink-800 dark:text-ink-400">
-                  {label}
-                </span>
-              ))}
-          </div>
-        )}
-
-        {/* Empty */}
         {!summary && !processing && circular.status !== "processing" && (
-          <div className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-dashed border-ink-200 bg-slate-50/80 p-6 text-center dark:border-ink-700 dark:bg-ink-950/40">
-            <svg className="mb-3 h-10 w-10 text-ink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            <p className="text-sm font-semibold text-ink-700 dark:text-ink-300">No summary yet</p>
-            <p className="mt-1 text-xs text-ink-500">
-              {hasText ? "Use Generate AI Summary below." : "Extract text first."}
+          <div className="flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed border-ink-200 bg-slate-50/50 p-8 text-center dark:border-ink-700 dark:bg-ink-950/30">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-950/40">
+              <svg className="h-7 w-7 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <p className="text-base font-semibold text-ink-800 dark:text-ink-200">No summary yet</p>
+            <p className="mt-1 max-w-sm text-sm text-ink-500">
+              {hasText
+                ? "Generate a structured summary with purpose, deadlines, and action items."
+                : "Extract text from the PDF first."}
             </p>
           </div>
         )}
 
-        {/* Processing */}
         {(processing || circular.status === "processing") && (
-          <div className="rounded-lg border border-brand-200 bg-brand-50/50 p-4 dark:border-brand-800 dark:bg-brand-950/20">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
-              <div>
-                <p className="text-sm font-bold text-ink-900 dark:text-white">Building summary…</p>
-                <p className="text-xs text-ink-500">NER · entities · structured output</p>
-              </div>
+          <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 py-8">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+            <div className="text-center">
+              <p className="font-semibold text-ink-900 dark:text-white">Building summary…</p>
+              <p className="mt-0.5 text-sm text-ink-500">Analyzing entities and structure</p>
             </div>
           </div>
         )}
 
-        {/* Summary body */}
         {summary && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <h4 className="text-base font-bold text-ink-900 dark:text-white">{summary.title}</h4>
-              {summary.mode === "llm" && (
-                <span className="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                  AI
-                </span>
-              )}
-              {summary.mode === "fallback" && (
-                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                  Extractive
-                </span>
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold leading-snug text-ink-900 dark:text-white sm:text-2xl">
+                {summary.title}
+              </h2>
+              {meta.model && circular.status === "completed" && (
+                <p className="mt-1.5 text-xs text-ink-400">
+                  {[meta.model, meta.durationMs && `${(meta.durationMs / 1000).toFixed(1)}s`]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
               )}
             </div>
 
-            {/* Entity pills — mockup style */}
             {topEntities.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {topEntities.map((e, i) => (
                   <span
                     key={`${e.start}-${i}`}
-                    className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-semibold ${ENTITY_PILL[e.label] || ENTITY_PILL.OTHER}`}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${ENTITY_PILL[e.label] || ENTITY_PILL.OTHER}`}
                   >
-                    {e.label === "DATE" && (
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                      </svg>
-                    )}
-                    {e.label === "PERSON" && (
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
-                      </svg>
-                    )}
                     {e.text}
                   </span>
                 ))}
-                {circular.entities.length > 6 && (
-                  <span className="text-[11px] font-medium text-ink-400">+{circular.entities.length - 6} more</span>
+                {circular.entities.length > 8 && (
+                  <span className="self-center text-xs text-ink-400">
+                    +{circular.entities.length - 8} more
+                  </span>
                 )}
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {summary.sections.map((section) => (
-                <div
-                  key={section.heading}
-                  className="rounded-lg border border-ink-100 bg-slate-50/80 p-4 dark:border-ink-800 dark:bg-ink-950/40"
-                >
-                  <h5 className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-400">
+                <article key={section.heading}>
+                  <h3 className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">
                     {section.heading}
-                  </h5>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-800 dark:text-ink-200">
+                  </h3>
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink-800 dark:text-ink-200">
                     {section.content}
                   </p>
-                </div>
+                </article>
               ))}
             </div>
 
             {summary.actionItems.length > 0 && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-4 dark:border-emerald-800/60 dark:bg-emerald-950/20">
-                <h5 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+              <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-5 dark:border-emerald-800/50 dark:bg-emerald-950/20">
+                <h3 className="mb-3 text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
                   Action items
-                </h5>
-                <ul className="space-y-2">
+                </h3>
+                <ol className="space-y-2.5">
                   {summary.actionItems.map((item, i) => (
-                    <li key={item} className="flex gap-2 text-sm text-ink-800 dark:text-ink-200">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                    <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink-800 dark:text-ink-200">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
                         {i + 1}
                       </span>
                       {item}
                     </li>
                   ))}
-                </ul>
+                </ol>
               </div>
             )}
           </div>

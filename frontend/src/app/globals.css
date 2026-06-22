@@ -303,7 +303,7 @@
 
   /* Workspace admin console */
   .ws-shell-bg {
-    @apply bg-[#eef2f7] dark:bg-ink-950;
+    @apply bg-slate-100 dark:bg-ink-950;
   }
 
   .ws-card {
