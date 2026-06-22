@@ -7,16 +7,27 @@ const authRoutes = require("./routes/auth");
 const circularRoutes = require("./routes/circulars");
 const { attachSession } = require("./middleware/session");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
+const { securityHeaders, requestLogger } = require("./middleware/security");
 const { healthCheck } = require("./services/aiClient");
 
 const PORT = Number(process.env.PORT) || 4000;
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/easycircular";
+const CORS_ORIGINS = process.env.CORS_ORIGINS;
 
 const app = express();
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
 
-app.use(cors({ exposedHeaders: ["X-Session-Id"] }));
-app.use(express.json());
+app.use(securityHeaders);
+app.use(requestLogger);
+app.use(
+  cors({
+    origin: CORS_ORIGINS ? CORS_ORIGINS.split(",").map((o) => o.trim()) : true,
+    exposedHeaders: ["X-Session-Id", "X-Request-Id"],
+  }),
+);
+app.use(express.json({ limit: "1mb" }));
 app.use(attachSession);
 
 mongoose.connection.on("disconnected", () => {
@@ -94,9 +105,25 @@ async function start() {
     console.error("MongoDB connection failed:", error.message);
   }
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`Backend listening on http://localhost:${PORT}`);
   });
+
+  async function shutdown(signal) {
+    console.log(`\n${signal} received — shutting down gracefully`);
+    server.close(() => console.log("HTTP server closed"));
+    try {
+      await mongoose.connection.close();
+      console.log("MongoDB connection closed");
+    } catch (error) {
+      console.error("Error closing MongoDB:", error.message);
+    } finally {
+      process.exit(0);
+    }
+  }
+
+  process.on("SIGINT", () => void shutdown("SIGINT"));
+  process.on("SIGTERM", () => void shutdown("SIGTERM"));
 }
 
 start();

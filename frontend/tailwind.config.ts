@@ -10,33 +10,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary brand: Vibrant indigo-violet
+        // Primary brand: Confident professional azure-blue
         brand: {
-          50: "#eef2ff",
-          100: "#e0e7ff",
-          200: "#c7d2fe",
-          300: "#a5b4fc",
-          400: "#818cf8",
-          500: "#6366f1",
-          600: "#4f46e5",
-          700: "#4338ca",
-          800: "#3730a3",
-          900: "#312e81",
-          950: "#1e1b4b",
+          50: "#eff6ff",
+          100: "#dbeafe",
+          200: "#bfdbfe",
+          300: "#93c5fd",
+          400: "#60a5fa",
+          500: "#3b82f6",
+          600: "#2563eb",
+          700: "#1d4ed8",
+          800: "#1e40af",
+          900: "#1e3a8a",
+          950: "#172554",
         },
-        // Secondary accent: Vivid fuchsia/pink
+        // Secondary accent: Refined violet (paired with brand in gradients)
         fuchsia: {
-          50: "#fdf4ff",
-          100: "#fae8ff",
-          200: "#f5d0fe",
-          300: "#f0abfc",
-          400: "#e879f9",
-          500: "#d946ef",
-          600: "#c026d3",
-          700: "#a21caf",
-          800: "#86198f",
-          900: "#701a75",
-          950: "#4a044e",
+          50: "#f5f3ff",
+          100: "#ede9fe",
+          200: "#ddd6fe",
+          300: "#c4b5fd",
+          400: "#a78bfa",
+          500: "#8b5cf6",
+          600: "#7c3aed",
+          700: "#6d28d9",
+          800: "#5b21b6",
+          900: "#4c1d95",
+          950: "#2e1065",
         },
         // Warm amber accent
         amber: {
@@ -81,11 +81,11 @@ const config: Config = {
           900: "#0f172a",
           950: "#020617",
         },
-        // Light mode surface warm white
+        // Light mode surface cool white
         surface: {
           DEFAULT: "#ffffff",
-          warm: "#fdfcfb",
-          muted: "#f5f3ff",
+          warm: "#fbfcfe",
+          muted: "#f1f5fb",
         },
         // Vivid rose/red for errors
         rose: {
@@ -136,22 +136,22 @@ const config: Config = {
         mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       backgroundImage: {
-        "gradient-brand": "linear-gradient(135deg, #6366f1 0%, #c026d3 100%)",
+        "gradient-brand": "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
         "gradient-warm": "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
-        "gradient-hero": "linear-gradient(135deg, #eef2ff 0%, #fdf4ff 50%, #fff1f2 100%)",
-        "gradient-hero-dark": "linear-gradient(135deg, #1e1b4b 0%, #4a044e 50%, #1e1b4b 100%)",
-        "gradient-card": "linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(238,242,255,0.6) 100%)",
-        "gradient-mesh": "radial-gradient(at 20% 30%, rgba(99,102,241,0.15) 0px, transparent 50%), radial-gradient(at 80% 70%, rgba(192,38,211,0.12) 0px, transparent 50%), radial-gradient(at 50% 50%, rgba(251,191,36,0.08) 0px, transparent 50%)",
+        "gradient-hero": "linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%)",
+        "gradient-hero-dark": "linear-gradient(180deg, #020617 0%, #0f172a 100%)",
+        "gradient-card": "linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(239,246,255,0.6) 100%)",
+        "gradient-mesh": "radial-gradient(at 20% 30%, rgba(37,99,235,0.10) 0px, transparent 50%), radial-gradient(at 80% 70%, rgba(124,58,237,0.08) 0px, transparent 50%)",
       },
       boxShadow: {
-        panel: "0 1px 3px rgba(99,102,241,0.08), 0 4px 16px rgba(99,102,241,0.06)",
-        "panel-hover": "0 4px 24px rgba(99,102,241,0.15), 0 8px 40px rgba(192,38,211,0.08)",
-        card: "0 2px 8px rgba(15,23,42,0.06), 0 12px 32px rgba(15,23,42,0.04)",
-        lift: "0 16px 48px -8px rgba(99,102,241,0.4)",
-        "lift-fuchsia": "0 16px 48px -8px rgba(192,38,211,0.3)",
-        glow: "0 0 0 3px rgba(99,102,241,0.25)",
-        "glow-fuchsia": "0 0 0 3px rgba(192,38,211,0.25)",
-        "inner-brand": "inset 0 2px 8px rgba(99,102,241,0.12)",
+        panel: "0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.05)",
+        "panel-hover": "0 4px 24px rgba(37,99,235,0.10), 0 8px 40px rgba(15,23,42,0.06)",
+        card: "0 1px 2px rgba(15,23,42,0.05), 0 8px 24px rgba(15,23,42,0.05)",
+        lift: "0 16px 48px -8px rgba(37,99,235,0.35)",
+        "lift-fuchsia": "0 16px 48px -8px rgba(124,58,237,0.28)",
+        glow: "0 0 0 3px rgba(37,99,235,0.22)",
+        "glow-fuchsia": "0 0 0 3px rgba(124,58,237,0.22)",
+        "inner-brand": "inset 0 2px 8px rgba(37,99,235,0.10)",
         toast: "0 8px 32px rgba(15,23,42,0.16), 0 2px 8px rgba(15,23,42,0.08)",
       },
       borderRadius: {

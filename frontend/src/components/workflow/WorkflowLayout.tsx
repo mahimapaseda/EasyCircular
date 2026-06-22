@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import WorkflowStepper from "@/components/workflow/WorkflowStepper";
+import WorkflowSlider from "@/components/workflow/WorkflowSlider";
 import StatusBadge from "@/components/ui/StatusBadge";
 import type { Circular } from "@/lib/circulars";
 
@@ -22,19 +22,19 @@ export default function WorkflowLayout({
         {/* ── Sidebar ─────────────────────────────────────────────── */}
         <aside className="space-y-6">
           {/* Document info card */}
-          <div className="overflow-hidden rounded-3xl border border-brand-200/50 bg-white/70 shadow-xl shadow-brand-900/5 backdrop-blur-xl dark:border-ink-800/60 dark:bg-ink-950/50">
-            <div className="border-b border-brand-100/50 bg-gradient-to-r from-brand-50/50 to-transparent p-5 dark:border-ink-800/50 dark:from-brand-950/20">
+          <div className="overflow-hidden rounded-xl border border-ink-200 bg-white shadow-panel dark:border-ink-800 dark:bg-ink-900">
+            <div className="border-b border-ink-200 p-5 dark:border-ink-800">
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-fuchsia-600 shadow-md shadow-brand-500/20">
-                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-600">
+                  <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                   </svg>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-brand-500 dark:text-brand-400 mb-1">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">
                     Workspace
                   </p>
-                  <h2 className="break-words text-sm font-black leading-tight text-ink-900 dark:text-white">
+                  <h2 className="break-words text-sm font-bold leading-tight text-ink-900 dark:text-white">
                     {circular.originalFilename}
                   </h2>
                   <div className="mt-2.5">
@@ -58,10 +58,10 @@ export default function WorkflowLayout({
                   ].map(({ label, value }) => (
                     <div
                       key={label}
-                      className="col-span-1 rounded-2xl bg-ink-50/50 p-3 ring-1 ring-inset ring-brand-100/50 dark:bg-ink-900/30 dark:ring-ink-800/50"
+                      className="col-span-1 rounded-lg border border-ink-200 bg-ink-50 p-3 dark:border-ink-800 dark:bg-ink-950/50"
                     >
                       <dt className="text-[10px] font-bold uppercase tracking-wider text-ink-400 dark:text-ink-500">{label}</dt>
-                      <dd className="mt-1 truncate text-xs font-black text-ink-800 dark:text-ink-200">{value}</dd>
+                      <dd className="mt-1 truncate text-xs font-bold text-ink-800 dark:text-ink-200">{value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -69,18 +69,25 @@ export default function WorkflowLayout({
             )}
           </div>
 
-          {/* Vertical stepper (desktop) */}
-          <div className="hidden xl:block overflow-hidden rounded-3xl border border-brand-200/50 bg-white/70 p-5 shadow-xl shadow-brand-900/5 backdrop-blur-xl dark:border-ink-800/60 dark:bg-ink-950/50">
-             <h3 className="text-xs font-black uppercase tracking-widest text-ink-400 dark:text-ink-500 mb-6 ml-2">Workflow Status</h3>
-             <WorkflowStepper currentStep={currentStep} orientation="vertical" />
+          {/* Workflow slider (desktop) */}
+          <div className="hidden xl:block overflow-hidden rounded-xl border border-ink-200 bg-white p-5 shadow-panel dark:border-ink-800 dark:bg-ink-900">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-ink-400 dark:text-ink-500">
+                Workflow Status
+              </h3>
+              <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+                {Math.min(Math.max(currentStep, 1), 4)} / 4
+              </span>
+            </div>
+            <WorkflowSlider currentStep={currentStep} orientation="vertical" />
           </div>
         </aside>
 
         {/* ── Main content ────────────────────────────────────────── */}
         <div className="min-w-0 space-y-6">
-          {/* Horizontal stepper (mobile) */}
-          <div className="xl:hidden">
-            <WorkflowStepper currentStep={currentStep} />
+          {/* Horizontal slider (mobile) */}
+          <div className="rounded-xl border border-ink-200 bg-white p-5 shadow-panel xl:hidden dark:border-ink-800 dark:bg-ink-900">
+            <WorkflowSlider currentStep={currentStep} orientation="horizontal" />
           </div>
           {children}
         </div>

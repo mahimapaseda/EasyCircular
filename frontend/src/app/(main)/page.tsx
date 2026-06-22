@@ -75,11 +75,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-mesh">
       {/* ─── Hero ────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-hero bg-dots dark:bg-gradient-hero-dark">
-        {/* Decorative blobs */}
-        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-400/20 blur-3xl dark:bg-brand-600/10" />
-        <div className="pointer-events-none absolute -right-32 top-0 h-80 w-80 rounded-full bg-fuchsia-400/15 blur-3xl dark:bg-fuchsia-600/8" />
-        <div className="pointer-events-none absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-amber-300/10 blur-3xl" />
+      <section className="relative overflow-hidden border-b border-ink-200/70 bg-gradient-hero bg-dots dark:border-ink-800 dark:bg-gradient-hero-dark">
+        {/* Subtle decorative glow */}
+        <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-brand-400/10 blur-3xl dark:bg-brand-600/10" />
+        <div className="pointer-events-none absolute -right-40 -top-20 h-80 w-80 rounded-full bg-fuchsia-400/8 blur-3xl dark:bg-fuchsia-600/8" />
 
         <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-24">
           {/* Left: Copy */}
@@ -173,15 +172,15 @@ export default function HomePage() {
           {FEATURES.map((feature, i) => (
             <div
               key={feature.title}
-              className={`panel-hover animate-fade-up rounded-2xl border ${feature.border} bg-gradient-to-br ${feature.bg} p-5 dark:border-ink-800 dark:from-ink-900 dark:to-ink-800`}
+              className="panel-hover animate-fade-up rounded-xl border border-ink-200 bg-white p-5 dark:border-ink-800 dark:bg-ink-900"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <div
-                className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color} text-white shadow-md`}
+                className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br ${feature.color} text-white shadow-sm`}
               >
                 {feature.icon}
               </div>
-              <h3 className="font-black text-ink-900 dark:text-white">{feature.title}</h3>
+              <h3 className="font-bold text-ink-900 dark:text-white">{feature.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-ink-600 dark:text-ink-400">
                 {feature.desc}
               </p>

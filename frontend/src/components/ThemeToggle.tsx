@@ -39,7 +39,7 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label={ariaLabel}
       suppressHydrationWarning
-      className="relative flex h-9 w-9 items-center justify-center rounded-xl border-2 border-brand-100 bg-white text-ink-600 transition-all duration-200 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-300 dark:hover:border-brand-600 dark:hover:text-brand-400"
+      className="relative flex h-9 w-9 items-center justify-center rounded-md border border-ink-200 bg-white text-ink-600 transition-all duration-200 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-300 dark:hover:border-brand-600 dark:hover:text-brand-400"
     >
       {mounted && isDark ? (
         /* Sun icon for dark mode */

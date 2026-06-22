@@ -96,7 +96,7 @@ export default function EntityHighlight({
     parts.push(
       <mark
         key={`e-${index}-${entity.start}`}
-        className={`group relative inline-flex cursor-default items-baseline rounded-xl px-1.5 py-0.5 mx-0.5 font-bold transition-all duration-300 hover:scale-[1.03] hover:shadow-lg ${cfg.glow} ${cfg.light} ${cfg.dark}`}
+        className={`group relative inline-flex cursor-default items-baseline rounded-md px-1.5 py-0.5 mx-0.5 font-semibold transition-colors duration-200 ${cfg.light} ${cfg.dark}`}
       >
         {text.slice(entity.start, entity.end)}
         
