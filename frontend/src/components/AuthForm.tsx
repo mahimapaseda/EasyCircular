@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
+  returnTo?: string;
   onSubmit: (data: {
     name?: string;
     email: string;
@@ -35,7 +36,7 @@ function GoogleIcon() {
   );
 }
 
-export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
+export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -68,8 +69,8 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
         </h1>
         <p className="mt-1.5 text-sm font-medium text-ink-500 dark:text-ink-400">
           {isSignUp
-            ? "Sign up to save and manage your circulars across devices"
-            : "Sign in to continue to EasyCircular"}
+            ? "Create an account to upload and manage your circulars"
+            : "Sign in to upload and manage your circulars"}
         </p>
       </div>
 
@@ -235,14 +236,20 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
         {isSignUp ? (
           <>
             Already have an account?{" "}
-            <Link href="/sign-in" className="font-bold text-brand-600 hover:underline dark:text-brand-400">
+            <Link
+              href={returnTo ? `/sign-in?returnTo=${encodeURIComponent(returnTo)}` : "/sign-in"}
+              className="font-bold text-brand-600 hover:underline dark:text-brand-400"
+            >
               Sign in
             </Link>
           </>
         ) : (
           <>
             Don&apos;t have an account?{" "}
-            <Link href="/sign-up" className="font-bold text-brand-600 hover:underline dark:text-brand-400">
+            <Link
+              href={returnTo ? `/sign-up?returnTo=${encodeURIComponent(returnTo)}` : "/sign-up"}
+              className="font-bold text-brand-600 hover:underline dark:text-brand-400"
+            >
               Sign up free
             </Link>
           </>

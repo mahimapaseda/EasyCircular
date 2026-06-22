@@ -239,8 +239,22 @@ function toPlainMeta(meta) {
   return meta?.toObject?.() ?? meta ?? {};
 }
 
+async function claimSessionCirculars(user, sessionId) {
+  if (!user?.id || !sessionId) {
+    return { claimed: 0 };
+  }
+
+  const result = await Circular.updateMany(
+    { userId: null, sessionId },
+    { $set: { userId: user.id }, $unset: { sessionId: 1 } },
+  );
+
+  return { claimed: result.modifiedCount };
+}
+
 module.exports = {
   canAccess,
+  claimSessionCirculars,
   createFromUpload,
   extractText,
   hashText,

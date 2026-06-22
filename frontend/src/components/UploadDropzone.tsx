@@ -2,9 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
+import AuthButtonGroup from "@/components/AuthButtonGroup";
+import { useAuth } from "@/context/AuthContext";
 import { uploadCircular } from "@/lib/circulars";
 
 const MAX_SIZE = 20 * 1024 * 1024;
+
+export const UPLOAD_RETURN_TO = "/#upload";
 
 type UploadDropzoneProps = {
   disabled?: boolean;
@@ -12,13 +16,14 @@ type UploadDropzoneProps = {
 
 export default function UploadDropzone({ disabled = false }: UploadDropzoneProps) {
   const router = useRouter();
+  const { user, loading } = useAuth();
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleUpload = useCallback(
     async (file: File) => {
-      if (disabled || uploading) return;
+      if (disabled || uploading || !user) return;
 
       if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
         setError("Please choose a PDF file.");
@@ -41,16 +46,43 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
         setUploading(false);
       }
     },
-    [disabled, uploading, router],
+    [disabled, uploading, router, user],
   );
 
   const onFile = useCallback(
     (file: File | undefined) => {
-      if (!file || disabled || uploading) return;
+      if (!file || disabled || uploading || !user) return;
       void handleUpload(file);
     },
-    [disabled, uploading, handleUpload],
+    [disabled, uploading, handleUpload, user],
   );
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[280px] items-center justify-center rounded-2xl border-2 border-dashed border-brand-200 bg-brand-50/40 dark:border-ink-700 dark:bg-ink-900/40">
+        <p className="text-sm font-medium text-ink-500">Loading…</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="rounded-2xl border-2 border-brand-200 bg-gradient-to-r from-brand-50 via-white to-fuchsia-50/80 p-8 text-center shadow-panel dark:border-brand-800/60 dark:from-brand-950/40 dark:via-ink-950 dark:to-fuchsia-950/20 sm:p-10">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-fuchsia-600 text-white shadow-md shadow-brand-500/25">
+          <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-black text-ink-900 dark:text-white">Sign in to upload</h3>
+        <p className="mx-auto mt-2 max-w-md text-sm text-ink-600 dark:text-ink-400">
+          Create a free account or sign in first, then you can upload your Ministry of Education circular.
+        </p>
+        <div className="mt-6 flex justify-center">
+          <AuthButtonGroup returnTo={UPLOAD_RETURN_TO} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="group relative">

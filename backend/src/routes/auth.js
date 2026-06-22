@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { authRequired, JWT_SECRET } = require("../middleware/auth");
+const { claimSessionCirculars } = require("../services/circularService");
 
 const router = express.Router();
 
@@ -90,6 +91,16 @@ router.get("/me", authRequired, async (req, res) => {
   } catch (error) {
     console.error("Me error:", error.message);
     res.status(500).json({ error: "Could not load account" });
+  }
+});
+
+router.post("/claim-session", authRequired, async (req, res) => {
+  try {
+    const result = await claimSessionCirculars(req.user, req.sessionId);
+    res.json(result);
+  } catch (error) {
+    console.error("Claim session error:", error.message);
+    res.status(500).json({ error: "Could not save your circulars to your account" });
   }
 });
 

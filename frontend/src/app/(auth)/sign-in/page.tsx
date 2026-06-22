@@ -1,19 +1,30 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
 import AuthForm from "@/components/AuthForm";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
-export default function SignInPage() {
+function safeReturnTo(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/#upload";
+  }
+  return value;
+}
+
+function SignInContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = safeReturnTo(searchParams.get("returnTo"));
   const { user, loading, signIn } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/circulars");
+      router.replace(returnTo);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, returnTo]);
 
   if (loading || user) {
     return <p className="text-center text-sm text-ink-500">Loading…</p>;
@@ -22,10 +33,20 @@ export default function SignInPage() {
   return (
     <AuthForm
       mode="sign-in"
+      returnTo={returnTo}
       onSubmit={async ({ email, password }) => {
         await signIn(email, password);
-        router.push("/circulars");
+        showToast("Signed in — you can now upload your circular.", "success");
+        router.push(returnTo);
       }}
     />
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<p className="text-center text-sm text-ink-500">Loading…</p>}>
+      <SignInContent />
+    </Suspense>
   );
 }

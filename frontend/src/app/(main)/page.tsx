@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import HealthStatus from "@/components/HealthStatus";
-import UploadDropzone from "@/components/UploadDropzone";
+import UploadDropzone, { UPLOAD_RETURN_TO } from "@/components/UploadDropzone";
 import WorkflowStepper from "@/components/workflow/WorkflowStepper";
+import { useAuth } from "@/context/AuthContext";
 
 const FEATURES = [
   {
@@ -57,6 +58,9 @@ const FEATURES = [
 ];
 
 export default function HomePage() {
+  const { user, loading } = useAuth();
+  const uploadHref = user ? "#upload" : `/sign-in?returnTo=${encodeURIComponent(UPLOAD_RETURN_TO)}`;
+
   return (
     <div className="min-h-screen bg-mesh">
       {/* ─── Hero ────────────────────────────────────────────────── */}
@@ -93,11 +97,11 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="#upload" className="btn-primary text-base px-6 py-3">
+              <Link href={loading ? "#upload" : uploadHref} className="btn-primary text-base px-6 py-3">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A3.375 3.375 0 006.75 21h10.5a3.375 3.375 0 003.375-3.375V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                Upload circular
+                {user ? "Upload circular" : "Sign in to upload"}
               </Link>
               <Link href="/circulars" className="btn-secondary text-base px-6 py-3">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -208,7 +212,7 @@ export default function HomePage() {
               Upload a circular
             </h2>
             <p className="mt-2 text-sm font-medium text-ink-500 dark:text-ink-400">
-              PDF only · up to 20 MB · digital or scanned documents supported (Sinhala + Tamil + English)
+              PDF only · up to 20 MB · sign in or create an account to upload
             </p>
           </div>
           <UploadDropzone />

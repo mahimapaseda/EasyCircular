@@ -170,6 +170,18 @@ export async function saveCircularText(
   return data.circular;
 }
 
+export async function claimSessionCirculars(): Promise<{ claimed: number }> {
+  const response = await apiFetch(`${API_URL}/api/auth/claim-session`, {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  return response.json();
+}
+
 export async function processCircular(
   id: string,
 ): Promise<{ circular: Circular; cached?: boolean; guardrailWarnings?: string[] }> {

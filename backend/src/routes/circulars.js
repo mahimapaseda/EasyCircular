@@ -4,7 +4,7 @@ const path = require("path");
 const crypto = require("crypto");
 const multer = require("multer");
 const Circular = require("../models/Circular");
-const { authOptional } = require("../middleware/auth");
+const { authOptional, authRequired } = require("../middleware/auth");
 const { rateLimit } = require("../middleware/rateLimit");
 const { SESSION_HEADER } = require("../middleware/session");
 const {
@@ -69,7 +69,7 @@ function denyUnlessOwner(circular, req, res) {
   return true;
 }
 
-router.post("/upload", authOptional, upload.single("file"), async (req, res, next) => {
+router.post("/upload", authRequired, upload.single("file"), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "PDF file is required" });

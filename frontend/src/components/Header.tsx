@@ -160,7 +160,9 @@ export default function Header() {
 
         {/* Right controls */}
         <div className="flex shrink-0 items-center gap-3">
-          {!loading && !user && <AuthButtonGroup className="hidden sm:inline-flex" />}
+          {!loading && !user && pathname !== "/" && (
+            <AuthButtonGroup className="hidden sm:inline-flex" />
+          )}
           {!loading && user && <UserMenu />}
           <div className="hidden sm:block">
             <ThemeToggle />
@@ -197,8 +199,8 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            {!loading && !user && (
-              <div className="mt-2 pt-2 border-t border-brand-100 dark:border-ink-800">
+            {!loading && !user && pathname !== "/" && (
+              <div className="mt-2 border-t border-brand-100 pt-2 dark:border-ink-800">
                 <AuthButtonGroup className="w-full" />
               </div>
             )}
