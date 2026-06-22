@@ -1,4 +1,4 @@
-const CACHE = "easycircular-v1";
+const CACHE = "easycircular-v2";
 const PRECACHE = ["/", "/circulars", "/icon.svg", "/icon-maskable.svg"];
 
 self.addEventListener("install", (event) => {

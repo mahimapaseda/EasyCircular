@@ -97,8 +97,13 @@ function UserMenu() {
 export default function Header() {
   const pathname = usePathname();
   const { user, loading } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -106,9 +111,12 @@ export default function Header() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const showAuthControls = mounted && !loading;
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4 sm:px-6 sm:pt-6 transition-all duration-300">
@@ -160,10 +168,10 @@ export default function Header() {
 
         {/* Right controls */}
         <div className="flex shrink-0 items-center gap-3">
-          {!loading && !user && pathname !== "/" && (
+          {showAuthControls && !user && pathname !== "/" && (
             <AuthButtonGroup className="hidden sm:inline-flex" />
           )}
-          {!loading && user && <UserMenu />}
+          {showAuthControls && user && <UserMenu />}
           <div className="hidden sm:block">
             <ThemeToggle />
           </div>
@@ -199,7 +207,7 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            {!loading && !user && pathname !== "/" && (
+            {showAuthControls && !user && pathname !== "/" && (
               <div className="mt-2 border-t border-brand-100 pt-2 dark:border-ink-800">
                 <AuthButtonGroup className="w-full" />
               </div>

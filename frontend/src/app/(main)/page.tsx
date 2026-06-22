@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import HealthStatus from "@/components/HealthStatus";
 import UploadDropzone, { UPLOAD_RETURN_TO } from "@/components/UploadDropzone";
 import WorkflowStepper from "@/components/workflow/WorkflowStepper";
@@ -59,7 +60,17 @@ const FEATURES = [
 
 export default function HomePage() {
   const { user, loading } = useAuth();
-  const uploadHref = user ? "#upload" : `/sign-in?returnTo=${encodeURIComponent(UPLOAD_RETURN_TO)}`;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const showUserState = mounted && !loading;
+  const uploadHref =
+    showUserState && user
+      ? "#upload"
+      : `/sign-in?returnTo=${encodeURIComponent(UPLOAD_RETURN_TO)}`;
 
   return (
     <div className="min-h-screen bg-mesh">
@@ -97,11 +108,11 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href={loading ? "#upload" : uploadHref} className="btn-primary text-base px-6 py-3">
+              <Link href={uploadHref} className="btn-primary text-base px-6 py-3">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A3.375 3.375 0 006.75 21h10.5a3.375 3.375 0 003.375-3.375V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                {user ? "Upload circular" : "Sign in to upload"}
+                {showUserState && user ? "Upload circular" : "Sign in to upload"}
               </Link>
               <Link href="/circulars" className="btn-secondary text-base px-6 py-3">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
