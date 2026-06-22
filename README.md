@@ -109,7 +109,7 @@ EasyCircular/
 - [x] Environment templates (`.env.example`)
 - [x] Root README with run instructions
 - [x] Phase 1 verification script (`npm run verify:phase1`)
-- [ ] Sample MOE circular PDFs in `docs/sample-circulars/` (collect before Phase 2)
+- [x] Sample MOE circular PDFs in `docs/sample-circulars/` (`03-2014I`, `23-2026-Ta`, `Dengue_Sinhala`)
 
 ## Phase 2 — Document ingestion
 
@@ -122,7 +122,7 @@ EasyCircular/
 
 **MongoDB must be running** before upload works (`docker compose up mongodb -d` or local MongoDB on port 27017).
 
-Place test PDFs in `docs/sample-circulars/` (see README there).
+Place test PDFs in `docs/sample-circulars/` (see README there). A local copy of your `sample circulars/` folder is synced there for development.
 
 ### Sinhala & Tamil OCR (Windows)
 
