@@ -8,6 +8,7 @@ class Settings:
     llm_provider: str
     llm_model: str
     gemini_model: str
+    groq_model: str
     llm_temperature: float
     spacy_model: str
     ocr_languages: str
@@ -22,6 +23,7 @@ class Settings:
             llm_provider=os.getenv("LLM_PROVIDER", "openai").lower(),
             llm_model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
             gemini_model=os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-3.5-flash")),
+            groq_model=os.getenv("GROQ_MODEL", os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")),
             llm_temperature=float(os.getenv("LLM_TEMPERATURE", "0.2")),
             spacy_model=os.getenv("SPACY_MODEL", "en_core_web_sm"),
             ocr_languages=os.getenv("OCR_LANGUAGES", "sin+eng+tam"),

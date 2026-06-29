@@ -150,7 +150,7 @@ Set `OPENAI_API_KEY` in `ai-service/.env` for LLM summaries; otherwise an extrac
 - [x] Toast notifications + **Retry** on errors
 - [x] Circular list with status badges, entity counts, summary preview
 - [x] Mobile-responsive workflow layout
-- [x] `LLM_PROVIDER=openai|gemini` (set `OPENAI_API_KEY` or `GOOGLE_API_KEY`)
+- [x] `LLM_PROVIDER=openai|gemini|groq` (set `OPENAI_API_KEY`, `GOOGLE_API_KEY`, or `GROQ_API_KEY`)
 
 Verify the MVP flow:
 

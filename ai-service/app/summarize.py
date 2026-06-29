@@ -5,7 +5,7 @@ from typing import Any
 from app.chunking import split_text
 from app.config import settings
 from app.guardrails import verify_summary_dates
-from app.llm import active_model_name, get_chat_model, llm_is_configured
+from app.llm import active_model_name, active_provider, get_chat_model, llm_is_configured
 from app.moe_text import (
     build_summary_title,
     collect_valid_dates,
@@ -224,7 +224,7 @@ def summarize_text(
             "model": active_model_name(),
             "tokensUsed": tokens,
             "mode": "llm",
-            "provider": __import__("os").getenv("LLM_PROVIDER", "openai"),
+            "provider": active_provider(),
             "chunkCount": chunk_count,
         }
     else:

@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.llm import active_model_name, llm_is_configured
+from app.llm import SUPPORTED_PROVIDERS, active_model_name, active_provider, llm_is_configured
 from app.routes_v1 import router as v1_router
 
 load_dotenv()
@@ -58,15 +58,15 @@ app.include_router(v1_router)
 
 @app.get("/health")
 def health():
-    provider = os.getenv("LLM_PROVIDER", "openai")
     return {
         "service": "ai-service",
         "status": "ok",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "apiVersion": "v1",
-        "llm_provider": provider,
+        "llm_provider": active_provider(),
         "llm_model": active_model_name(),
         "llm_configured": llm_is_configured(),
+        "llm_providers_supported": list(SUPPORTED_PROVIDERS),
     }
 
 
