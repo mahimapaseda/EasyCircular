@@ -2,6 +2,7 @@ import io
 import re
 from dataclasses import dataclass
 
+from app.moe_text import normalize_moe_text
 from app.ocr_languages import resolve_ocr_settings
 
 TEXT_DENSITY_THRESHOLD = 50
@@ -18,10 +19,7 @@ class ParseResult:
 
 
 def _normalize_text(text: str) -> str:
-    text = text.replace("\x00", "")
-    text = re.sub(r"[ \t]+\n", "\n", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
+    return normalize_moe_text(text)
 
 
 def _average_density(text: str, pages: int) -> float:

@@ -158,6 +158,14 @@ Verify the MVP flow:
 npm run verify:phase4
 ```
 
+Tune and evaluate against local sample circulars:
+
+```bash
+npm run evaluate:samples
+```
+
+Uses PDFs in `sample circulars/` and `docs/sample-circulars/`. See [docs/sample-circulars/README.md](./docs/sample-circulars/README.md).
+
 ## System redesign (v0.2)
 
 | Layer | Changes |

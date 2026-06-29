@@ -2,6 +2,8 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
+from app.moe_text import ED_REF_PATTERN, is_valid_date_text
+
 EntityLabel = Literal["DATE", "PERSON", "ORG", "LAW", "OTHER"]
 
 SPACY_TO_LABEL: dict[str, EntityLabel] = {
@@ -14,18 +16,37 @@ SPACY_TO_LABEL: dict[str, EntityLabel] = {
 }
 
 REGEX_RULES: list[tuple[str, EntityLabel]] = [
+    (r"\b\d{4}\.\d{2}\.\d{2}\b", "DATE"),
+    (r"\b\d{1,2}\.\d{2}\.\d{4}\b", "DATE"),
     (r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b", "DATE"),
     (r"\b\d{4}-\d{2}-\d{2}\b", "DATE"),
+    (r"\b\d{1,2}(?:st|nd|rd|th)?\s+of\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b", "DATE"),
+    (r"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b", "DATE"),
     (r"\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b", "DATE"),
-    (r"(?:Circular|Circ\.?)\s*No\.?\s*[\d]+[/\-][\d]+", "LAW"),
-    (r"(?:චක්‍රලේඛ|සැකසුම්)\s*(?:අංක|නಂ\.?)?\s*[\d]+[/\-]?[\d]*", "LAW"),
+    (r"(?:Circular|Circ\.?)\s*(?:Number|No\.?)\s*[:\-]?\s*\d{1,4}\s*/\s*\d{2,4}(?:\s*\([a-z]\))?", "LAW"),
+    (r"(?:Circular|Circ\.?)\s*No\.?\s*\d{4}\s*/\s*\d{1,4}(?:\s*\([a-z]\))?", "LAW"),
+    (r"(?:චක්‍රලේඛ|සැකසුම්)\s*(?:අංක|නං\.?)?\s*[\d]+[/\-]?[\d]*(?:\s*\([a-z]\))?", "LAW"),
+    (r"\bED/\d{2}(?:/\d{2}){1,4}(?:/\d{3})?\b", "LAW"),
     (r"Education\s+Ordinance(?:\s+No\.?\s*\d+)?", "LAW"),
-    (r"Section\s+\d+(?:\s*\([a-z]\))?", "LAW"),
-    (r"Ministry\s+of\s+Education", "ORG"),
+    (r"(?:the\s+)?Establishments?\s+Code", "LAW"),
+    (r"(?:the\s+)?Appropriation\s+Act\s+No\.?\s*\d+", "LAW"),
+    (r"Section\s+\d+(?:\.\d+)?(?:\s*\([a-z]\))?", "LAW"),
+    (r"Chapter\s+\d+(?:\.\d+)?", "LAW"),
+    (r"Ministry\s+of\s+Education(?:,\s*Higher\s+Education\s+and\s+Vocational\s+Education)?", "ORG"),
     (r"Department\s+of\s+Examinations", "ORG"),
+    (r"National\s+Institute\s+of\s+Education", "ORG"),
+    (r"Commissioner\s+General\s+of\s+Examinations", "ORG"),
+    (r"Provincial\s+(?:Education\s+)?Secretar(?:y|ies)", "ORG"),
+    (r"Zonal\s+Directors?\s+of\s+Education", "ORG"),
+    (r"Divisional\s+Directors?\s+of\s+Education", "ORG"),
 ]
 
 LABEL_PRIORITY = {"LAW": 4, "DATE": 3, "ORG": 2, "PERSON": 1, "OTHER": 0}
+
+NOISE_ORG_PATTERN = re.compile(
+    r"^(?:the\s+)?(?:educational institutions|educational institution|vesak day)$",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -117,6 +138,22 @@ def _merge_entities(entities: list[Entity]) -> list[Entity]:
     return sorted(merged, key=lambda e: e.start)
 
 
+def _filter_entities(entities: list[Entity]) -> list[Entity]:
+    filtered: list[Entity] = []
+    for entity in entities:
+        text = entity.text.strip()
+        if not text:
+            continue
+        if entity.label == "DATE" and not is_valid_date_text(text):
+            continue
+        if entity.label == "ORG" and NOISE_ORG_PATTERN.match(text):
+            continue
+        if entity.label == "DATE" and ED_REF_PATTERN.search(text):
+            continue
+        filtered.append(entity)
+    return filtered
+
+
 def extract_entities(text: str) -> list[dict]:
     if not text or not text.strip():
         return []
@@ -124,4 +161,5 @@ def extract_entities(text: str) -> list[dict]:
     regex_entities = _extract_regex_entities(text)
     spacy_entities = _extract_spacy_entities(text)
     merged = _merge_entities(regex_entities + spacy_entities)
-    return [entity.to_dict() for entity in merged]
+    filtered = _filter_entities(merged)
+    return [entity.to_dict() for entity in filtered]

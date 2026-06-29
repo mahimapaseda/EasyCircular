@@ -1,22 +1,44 @@
 # Sample MOE circulars (Phase 2+ test data)
 
-Local copies live in this folder for upload, extraction, and evaluation. PDFs are **gitignored** — keep them on your machine only.
+Local copies live in this folder and in `sample circulars/` at the repo root for upload, extraction, and evaluation. PDFs are **gitignored** — keep them on your machine only.
 
 ## Included samples
 
-Copied from the project `sample circulars/` folder:
+| File | Language / type | Good for |
+|------|-----------------|----------|
+| `10-2026-En.pdf` | English digital | Drug-free schools policy; subject-line extraction |
+| `12-2026-En-1.pdf` | English (long) | Financial delegation; map-reduce / long docs |
+| `15-2026-En.pdf` | English digital | Vesak Week instructions; date extraction |
+| `23-2026-En.pdf` | English form | Annexure / register form (non-standard layout) |
+| `44-2006i-En-1.pdf` | English digital | Amendment circular; legal refs |
+| `44-2025-En.pdf` | English scanned/OCR | Duty hours policy |
+| `03-2014I.pdf` | Sinhala / mixed | OCR + Sinhala circular refs |
+| `23-2026-Ta.pdf` | Tamil | Multilingual OCR (`sin+eng+tam`) |
+| `Dengue_Sinhala.pdf` | Sinhala | Sinhala OCR and mixed-script circulars |
+| `test-digital.pdf` | Copy of `03-2014I` | `npm run verify:phase4` |
 
-| File | Language / type | Size | Good for |
-|------|-----------------|------|----------|
-| `03-2014I.pdf` | English (digital text) | ~0.7 MB | Default text extraction; also copied as `test-digital.pdf` for `npm run verify:phase4` |
-| `23-2026-Ta.pdf` | Tamil | ~3.5 MB | Multilingual OCR (`sin+eng+tam`) |
-| `Dengue_Sinhala.pdf` | Sinhala | ~0.2 MB | Sinhala OCR and mixed-script circulars |
+## Evaluate tuned pipeline
+
+With the AI service venv active:
+
+```bash
+npm run evaluate:samples
+```
+
+Writes `scripts/sample-evaluation.json` and prints subject/title quality per file.
+
+Unit tests (MOE heuristics):
+
+```bash
+cd ai-service
+pytest tests/ -q
+```
 
 ## How to test in the app
 
 1. Start all services (`docker compose up` or local dev).
 2. Sign in at http://localhost:3002
-3. Upload any PDF from this folder (Home → Upload, or Library).
+3. Upload any PDF from `sample circulars/` or this folder.
 4. Run **Extract text** → **Review** → **Summarize**.
 
 For scanned Tamil/Sinhala circulars, install Tesseract languages first:
@@ -27,25 +49,11 @@ For scanned Tamil/Sinhala circulars, install Tesseract languages first:
 
 Then restart the AI service and use **Re-extract** on the circular page.
 
-## Where to find more circulars
-
-- [MOE Sri Lanka — Circulars](https://www.moe.gov.lk/)
-- School administration portals or your institution’s circular archive
-- Saved copies from email or printed circular scans
-
-## File naming
-
-Use descriptive names when adding more samples, for example:
-
-```
-2024-term-fees-circular.pdf
-2023-exam-schedule-scan.pdf
-```
-
 ## Git
 
 Do **not** commit copyrighted or sensitive circulars to a public repository unless you have permission.
 
 ```
 docs/sample-circulars/*.pdf
+sample circulars/*.pdf
 ```

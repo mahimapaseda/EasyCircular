@@ -6,6 +6,14 @@ from app.chunking import split_text
 from app.config import settings
 from app.guardrails import verify_summary_dates
 from app.llm import active_model_name, get_chat_model, llm_is_configured
+from app.moe_text import (
+    build_summary_title,
+    collect_valid_dates,
+    extract_action_items,
+    extract_key_requirements,
+    extract_subject,
+    top_org_entities,
+)
 
 
 def _entity_lines(entities: list[dict[str, Any]], label: str) -> list[str]:
@@ -43,21 +51,31 @@ def _build_markdown(summary: dict[str, Any]) -> str:
 
 
 def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, Any]:
-    dates = _entity_lines(entities, "DATE")
-    orgs = _entity_lines(entities, "ORG")
+    dates = collect_valid_dates(text, entities)
+    orgs = top_org_entities(entities)
     laws = _entity_lines(entities, "LAW")
     people = _entity_lines(entities, "PERSON")
 
-    purpose = _first_paragraph(text)
+    subject = extract_subject(text)
+    purpose = subject or _first_paragraph(text)
     sections = [
         {"heading": "Purpose", "content": purpose or "See the circular text for full context."},
     ]
+
+    requirements = extract_key_requirements(text)
+    if requirements:
+        sections.append(
+            {
+                "heading": "Key requirements",
+                "content": "\n".join(f"• {item}" for item in requirements),
+            }
+        )
 
     if laws:
         sections.append(
             {
                 "heading": "Legal & circular references",
-                "content": "\n".join(f"• {item}" for item in laws),
+                "content": "\n".join(f"• {item}" for item in laws[:12]),
             }
         )
 
@@ -74,17 +92,14 @@ def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, A
         sections.append(
             {
                 "heading": "Responsible parties",
-                "content": "\n".join(f"• {item}" for item in parties),
+                "content": "\n".join(f"• {item}" for item in parties[:10]),
             }
         )
 
-    action_items = []
-    if dates:
-        action_items.append(f"Note key dates: {', '.join(dates[:5])}.")
-    action_items.append("Review the full circular text and confirm requirements with the original PDF.")
+    action_items = extract_action_items(text, entities)
 
     summary = {
-        "title": "MOE circular summary (extractive)",
+        "title": build_summary_title(text),
         "sections": sections,
         "actionItems": action_items,
         "rawMarkdown": "",
@@ -143,8 +158,10 @@ Return ONLY valid JSON with this schema:
 Rules:
 - Preserve legal meaning; do not invent rules, dates, or deadlines.
 - Every date in the summary MUST appear in the source text or entity list.
+- Skip letterhead and recipient distribution lists; focus on the policy subject and operative instructions.
 - Use sections: Purpose, Key requirements, Deadlines & dates, Responsible parties (omit empty sections).
-- actionItems: concrete steps for school staff.
+- Purpose should state the circular subject in plain language, not a list of recipients.
+- actionItems: concrete steps for principals and school staff.
 - Be concise and faithful to the source."""
         user_prompt = f"""Source circular text:
 {chunk}
