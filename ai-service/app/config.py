@@ -21,7 +21,7 @@ class Settings:
             port=int(os.getenv("PORT", "5000")),
             llm_provider=os.getenv("LLM_PROVIDER", "openai").lower(),
             llm_model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
-            gemini_model=os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-2.0-flash")),
+            gemini_model=os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-3.5-flash")),
             llm_temperature=float(os.getenv("LLM_TEMPERATURE", "0.2")),
             spacy_model=os.getenv("SPACY_MODEL", "en_core_web_sm"),
             ocr_languages=os.getenv("OCR_LANGUAGES", "sin+eng+tam"),

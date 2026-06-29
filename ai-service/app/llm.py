@@ -21,7 +21,7 @@ def get_chat_model(temperature: float | None = None) -> BaseChatModel:
         if not api_key:
             raise RuntimeError("GOOGLE_API_KEY is required when LLM_PROVIDER=gemini")
 
-        model = os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-2.0-flash"))
+        model = os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-3.5-flash"))
         return ChatGoogleGenerativeAI(model=model, temperature=temp, google_api_key=api_key)
 
     from langchain_openai import ChatOpenAI
@@ -37,5 +37,5 @@ def get_chat_model(temperature: float | None = None) -> BaseChatModel:
 def active_model_name() -> str:
     provider = os.getenv("LLM_PROVIDER", "openai").lower()
     if provider == "gemini":
-        return os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-2.0-flash"))
+        return os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-3.5-flash"))
     return os.getenv("LLM_MODEL", "gpt-4o-mini")
