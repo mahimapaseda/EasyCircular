@@ -8,13 +8,16 @@ import WorkflowLayout from "@/components/workflow/WorkflowLayout";
 import { extractionConfidence } from "@/components/workspace/workspaceUtils";
 import { useToast } from "@/context/ToastContext";
 import {
+  cloneSummary,
   displayText,
   extractCircularText,
   fetchCircular,
   processCircular,
+  saveCircularSummary,
   saveCircularText,
   workflowStep,
   type Circular,
+  type CircularSummary,
 } from "@/lib/circulars";
 
 type CircularWorkflowProps = {
@@ -31,6 +34,9 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   const [loading, setLoading] = useState(true);
   const [extracting, setExtracting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingSummary, setSavingSummary] = useState(false);
+  const [editingSummary, setEditingSummary] = useState(false);
+  const [draftSummary, setDraftSummary] = useState<CircularSummary | null>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
@@ -42,6 +48,9 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
       const data = await fetchCircular(id);
       setCircular(data);
       setDraftText(displayText(data));
+      if (data.summary) setDraftSummary(cloneSummary(data.summary));
+      else setDraftSummary(null);
+      setEditingSummary(false);
       if (data.entities.length > 0) setTextView("highlights");
       setSourceExpanded(!data.summary && Boolean(data.extractedText || data.editedText));
     } catch (err) {
@@ -79,6 +88,36 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
     }
   }
 
+  async function handleSaveSummary() {
+    if (!draftSummary) return;
+    setSavingSummary(true);
+    setError(null);
+    try {
+      const updated = await saveCircularSummary(id, draftSummary);
+      setCircular(updated);
+      if (updated.summary) setDraftSummary(cloneSummary(updated.summary));
+      setEditingSummary(false);
+      showToast("Summary updated.", "success");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not save summary";
+      setError(message);
+      showToast(message, "error");
+    } finally {
+      setSavingSummary(false);
+    }
+  }
+
+  function handleStartSummaryEdit() {
+    if (!circular?.summary) return;
+    setDraftSummary(cloneSummary(circular.summary));
+    setEditingSummary(true);
+  }
+
+  function handleCancelSummaryEdit() {
+    if (circular?.summary) setDraftSummary(cloneSummary(circular.summary));
+    setEditingSummary(false);
+  }
+
   async function handleSave() {
     setSaving(true);
     setError(null);
@@ -103,6 +142,10 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
       const result = await processCircular(id);
       setCircular(result.circular);
       setDraftText(displayText(result.circular));
+      if (result.circular.summary) {
+        setDraftSummary(cloneSummary(result.circular.summary));
+      }
+      setEditingSummary(false);
       if (result.circular.entities.length > 0) setTextView("highlights");
       setSourceExpanded(false);
       showToast(
@@ -188,6 +231,13 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         <SummaryPanel
           circular={circular}
           processing={processing}
+          editing={editingSummary}
+          saving={savingSummary}
+          draftSummary={draftSummary}
+          onEditStart={handleStartSummaryEdit}
+          onEditCancel={handleCancelSummaryEdit}
+          onDraftChange={setDraftSummary}
+          onSave={() => void handleSaveSummary()}
           onExport={(format) =>
             showToast(`Summary exported as ${format.toUpperCase()}.`, "success")
           }

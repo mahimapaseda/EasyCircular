@@ -124,6 +124,88 @@ async function extractText(circular) {
   return circular;
 }
 
+function buildSummaryMarkdown(summary) {
+  const lines = [`# ${summary.title || "Circular summary"}`, ""];
+  for (const section of summary.sections || []) {
+    lines.push(`## ${section.heading || "Section"}`);
+    lines.push(section.content || "");
+    lines.push("");
+  }
+  const actions = summary.actionItems || [];
+  if (actions.length > 0) {
+    lines.push("## Action items");
+    for (const item of actions) {
+      lines.push(`- ${item}`);
+    }
+  }
+  return lines.join("\n").trim();
+}
+
+function normalizeSummaryInput(summary) {
+  if (!summary || typeof summary !== "object") {
+    const error = new Error("summary object is required");
+    error.status = 400;
+    throw error;
+  }
+
+  const title = typeof summary.title === "string" ? summary.title.trim() : "";
+  if (!title) {
+    const error = new Error("summary title is required");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!Array.isArray(summary.sections) || summary.sections.length === 0) {
+    const error = new Error("At least one summary section is required");
+    error.status = 400;
+    throw error;
+  }
+
+  const sections = summary.sections.map((section, index) => {
+    const heading =
+      typeof section?.heading === "string" && section.heading.trim()
+        ? section.heading.trim()
+        : `Section ${index + 1}`;
+    const content =
+      typeof section?.content === "string" ? section.content.trim() : "";
+    return { heading, content };
+  });
+
+  const actionItems = Array.isArray(summary.actionItems)
+    ? summary.actionItems
+        .map((item) => (typeof item === "string" ? item.trim() : ""))
+        .filter(Boolean)
+    : [];
+
+  const normalized = {
+    title,
+    sections,
+    actionItems,
+    rawMarkdown: "",
+    mode: typeof summary.mode === "string" ? summary.mode : "edited",
+  };
+  normalized.rawMarkdown = buildSummaryMarkdown(normalized);
+  return normalized;
+}
+
+async function saveEditedSummary(circular, summary) {
+  if (!circular.summary) {
+    const error = new Error("Generate a summary before editing");
+    error.status = 400;
+    throw error;
+  }
+
+  const normalized = normalizeSummaryInput({
+    ...summary,
+    mode: summary?.mode || circular.summary.mode || "edited",
+  });
+
+  circular.summary = normalized;
+  circular.status = "completed";
+  await circular.save();
+  return circular;
+}
+
 async function saveEditedText(circular, text) {
   if (circular.status === "uploaded") {
     const error = new Error("Extract text from the PDF before saving edits");
@@ -260,6 +342,7 @@ module.exports = {
   hashText,
   listFilter,
   processCircular,
+  saveEditedSummary,
   saveEditedText,
   serializeCircular,
   workingText,

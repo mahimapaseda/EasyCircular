@@ -13,6 +13,7 @@ const {
   extractText,
   listFilter,
   processCircular,
+  saveEditedSummary,
   saveEditedText,
   serializeCircular,
 } = require("../services/circularService");
@@ -177,6 +178,30 @@ router.patch("/:id/text", authOptional, async (req, res, next) => {
     if (!denyUnlessOwner(circular, req, res)) return;
 
     await saveEditedText(circular, text);
+    setSessionHeader(res, req);
+    res.json({ circular: serializeCircular(circular) });
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    next(error);
+  }
+});
+
+router.patch("/:id/summary", authOptional, async (req, res, next) => {
+  try {
+    const { summary } = req.body;
+    if (!summary || typeof summary !== "object") {
+      return res.status(400).json({ error: "summary object is required" });
+    }
+
+    const circular = await Circular.findById(req.params.id);
+    if (!circular) {
+      return res.status(404).json({ error: "Circular not found" });
+    }
+    if (!denyUnlessOwner(circular, req, res)) return;
+
+    await saveEditedSummary(circular, summary);
     setSessionHeader(res, req);
     res.json({ circular: serializeCircular(circular) });
   } catch (error) {

@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { exportSummaryAsMarkdown, exportSummaryAsTxt } from "@/lib/exportSummary";
-import type { Circular } from "@/lib/circulars";
+import type { Circular, CircularSummary } from "@/lib/circulars";
 
 const ENTITY_PILL: Record<string, string> = {
   DATE: "bg-amber-50 text-amber-800 ring-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800",
@@ -14,18 +15,50 @@ const ENTITY_PILL: Record<string, string> = {
 type SummaryPanelProps = {
   circular: Circular;
   processing: boolean;
+  editing: boolean;
+  saving: boolean;
+  draftSummary: CircularSummary | null;
+  onEditStart: () => void;
+  onEditCancel: () => void;
+  onDraftChange: (summary: CircularSummary) => void;
+  onSave: () => void;
   onExport?: (format: "txt" | "md") => void;
 };
+
+function actionItemsToText(items: string[]): string {
+  return items.join("\n");
+}
+
+function textToActionItems(text: string): string[] {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
 
 export default function SummaryPanel({
   circular,
   processing,
+  editing,
+  saving,
+  draftSummary,
+  onEditStart,
+  onEditCancel,
+  onDraftChange,
+  onSave,
   onExport,
 }: SummaryPanelProps) {
   const summary = circular.summary;
   const meta = circular.processingMeta;
   const hasText = Boolean(circular.extractedText || circular.editedText);
   const topEntities = circular.entities.slice(0, 8);
+  const [actionItemsDraft, setActionItemsDraft] = useState("");
+
+  useEffect(() => {
+    if (editing && draftSummary) {
+      setActionItemsDraft(actionItemsToText(draftSummary.actionItems));
+    }
+  }, [editing, draftSummary]);
 
   function handleExport(format: "txt" | "md") {
     if (format === "txt") exportSummaryAsTxt(circular);
@@ -34,36 +67,65 @@ export default function SummaryPanel({
   }
 
   async function handleCopy() {
-    const text = summary?.rawMarkdown || summary?.sections.map((s) => `${s.heading}\n${s.content}`).join("\n\n") || "";
+    const text =
+      summary?.rawMarkdown ||
+      summary?.sections.map((s) => `${s.heading}\n${s.content}`).join("\n\n") ||
+      "";
     if (!text) return;
     await navigator.clipboard.writeText(text);
     onExport?.("txt");
   }
 
+  function updateDraft(patch: Partial<CircularSummary>) {
+    if (!draftSummary) return;
+    onDraftChange({ ...draftSummary, ...patch });
+  }
+
+  function updateSection(index: number, patch: Partial<{ heading: string; content: string }>) {
+    if (!draftSummary) return;
+    const sections = draftSummary.sections.map((section, i) =>
+      i === index ? { ...section, ...patch } : section,
+    );
+    onDraftChange({ ...draftSummary, sections });
+  }
+
+  function commitActionItems(text: string) {
+    setActionItemsDraft(text);
+    if (!draftSummary) return;
+    onDraftChange({ ...draftSummary, actionItems: textToActionItems(text) });
+  }
+
   return (
     <section className="ws-card overflow-hidden">
-      {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 px-5 py-3 dark:border-ink-800">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-ink-400">AI Summary</span>
-          {summary?.mode === "llm" && (
+          {summary?.mode === "llm" && !editing && (
             <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold uppercase text-brand-700 dark:bg-brand-950 dark:text-brand-300">
               AI
             </span>
           )}
-          {summary?.mode === "fallback" && (
+          {summary?.mode === "fallback" && !editing && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-700 dark:bg-amber-950 dark:text-amber-300">
               Extractive
             </span>
           )}
-          {meta.cached && (
+          {(summary?.mode === "edited" || editing) && (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+              Edited
+            </span>
+          )}
+          {meta.cached && !editing && (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-ink-500 dark:bg-ink-800 dark:text-ink-400">
               Cached
             </span>
           )}
         </div>
-        {summary && (
+        {summary && !editing && (
           <div className="flex items-center gap-1">
+            <button type="button" onClick={onEditStart} className="btn-ghost text-xs">
+              Edit
+            </button>
             <button type="button" onClick={() => void handleCopy()} className="btn-ghost text-xs">
               Copy
             </button>
@@ -72,10 +134,20 @@ export default function SummaryPanel({
             </button>
           </div>
         )}
+        {summary && editing && (
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={onEditCancel} className="btn-ghost text-xs" disabled={saving}>
+              Cancel
+            </button>
+            <button type="button" onClick={onSave} className="btn-primary py-1.5 text-xs" disabled={saving}>
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="p-5 sm:p-6">
-        {meta.guardrailWarnings && meta.guardrailWarnings.length > 0 && (
+        {meta.guardrailWarnings && meta.guardrailWarnings.length > 0 && !editing && (
           <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50/80 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/20">
             <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
               Review suggested
@@ -114,7 +186,7 @@ export default function SummaryPanel({
           </div>
         )}
 
-        {summary && (
+        {summary && !editing && (
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-bold leading-snug text-ink-900 dark:text-white sm:text-2xl">
@@ -177,6 +249,72 @@ export default function SummaryPanel({
                 </ol>
               </div>
             )}
+          </div>
+        )}
+
+        {summary && editing && draftSummary && (
+          <div className="space-y-5">
+            <p className="text-sm text-ink-500">
+              Refine the summary before export. Changes are saved to your document only.
+            </p>
+
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-ink-500">
+                Title
+              </span>
+              <input
+                type="text"
+                value={draftSummary.title}
+                onChange={(e) => updateDraft({ title: e.target.value })}
+                className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-base font-semibold text-ink-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-ink-700 dark:bg-ink-900 dark:text-white"
+              />
+            </label>
+
+            <div className="space-y-4">
+              {draftSummary.sections.map((section, index) => (
+                <div
+                  key={`${section.heading}-${index}`}
+                  className="rounded-xl border border-ink-200 bg-slate-50/50 p-4 dark:border-ink-700 dark:bg-ink-950/30"
+                >
+                  <label className="mb-3 block">
+                    <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">
+                      Section heading
+                    </span>
+                    <input
+                      type="text"
+                      value={section.heading}
+                      onChange={(e) => updateSection(index, { heading: e.target.value })}
+                      className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm font-semibold text-ink-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-ink-700 dark:bg-ink-900 dark:text-white"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-ink-500">
+                      Content
+                    </span>
+                    <textarea
+                      value={section.content}
+                      onChange={(e) => updateSection(index, { content: e.target.value })}
+                      rows={Math.max(4, Math.min(12, section.content.split("\n").length + 1))}
+                      className="w-full resize-y rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm leading-relaxed text-ink-800 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-200"
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+                Action items
+              </span>
+              <span className="mb-2 block text-xs text-ink-500">One item per line</span>
+              <textarea
+                value={actionItemsDraft}
+                onChange={(e) => commitActionItems(e.target.value)}
+                rows={5}
+                placeholder="Enter each action on its own line"
+                className="w-full resize-y rounded-lg border border-emerald-200 bg-emerald-50/30 px-3 py-2 text-sm leading-relaxed text-ink-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-ink-200"
+              />
+            </label>
           </div>
         )}
       </div>

@@ -152,6 +152,34 @@ export async function extractCircularText(
   return { circular: data.circular };
 }
 
+export function cloneSummary(summary: CircularSummary): CircularSummary {
+  return {
+    title: summary.title,
+    sections: summary.sections.map((section) => ({ ...section })),
+    actionItems: [...summary.actionItems],
+    rawMarkdown: summary.rawMarkdown,
+    mode: summary.mode,
+  };
+}
+
+export async function saveCircularSummary(
+  id: string,
+  summary: CircularSummary,
+): Promise<Circular> {
+  const response = await apiFetch(`${API_URL}/api/circulars/${id}/summary`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ summary }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  const data = await response.json();
+  return data.circular;
+}
+
 export async function saveCircularText(
   id: string,
   text: string,
