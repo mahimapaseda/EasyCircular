@@ -27,7 +27,7 @@ function SignUpContent() {
   }, [user, loading, router, returnTo]);
 
   if (loading || user) {
-    return <p className="text-center text-sm text-ink-500">Loading…</p>;
+    return <p className="text-center text-sm text-slate-400">Loading…</p>;
   }
 
   return (
@@ -45,7 +45,7 @@ function SignUpContent() {
 
 export default function SignUpPage() {
   return (
-    <Suspense fallback={<p className="text-center text-sm text-ink-500">Loading…</p>}>
+    <Suspense fallback={<p className="text-center text-sm text-slate-400">Loading…</p>}>
       <SignUpContent />
     </Suspense>
   );

@@ -24,42 +24,43 @@ export default function AuthLayout({
           frequencyY={1.8}
           interactive={true}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30" />
+        <div className="absolute inset-0 bg-black/60" />
       </div>
-      {/* Left panel – decorative gradient */}
-      <div className="relative hidden w-1/2 overflow-hidden lg:flex lg:flex-col lg:justify-between border-r border-white/10 bg-white/5 backdrop-blur-xl">
-        {/* Mesh background */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-dots opacity-20" />
-          <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute -right-24 bottom-16 h-80 w-80 rounded-full bg-fuchsia-300/20 blur-3xl" />
-          <div className="pointer-events-none absolute left-1/3 top-1/2 h-64 w-64 rounded-full bg-violet-300/15 blur-3xl" />
-        </div>
+
+      {/* Left panel – branding */}
+      <div className="relative hidden w-1/2 overflow-hidden border-r border-white/10 lg:flex lg:flex-col lg:justify-between">
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+        <div className="pointer-events-none absolute -left-20 top-20 h-64 w-64 rounded-full bg-cyan-500/10 blur-[80px]" />
+        <div className="pointer-events-none absolute bottom-20 right-10 h-72 w-72 rounded-full bg-blue-600/10 blur-[100px]" />
 
         {/* Top logo */}
         <div className="relative px-10 pt-10">
           <Link href="/" className="inline-flex items-center gap-3 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-lg ring-1 ring-white/30 transition-transform group-hover:scale-105">
-              <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 shadow-lg shadow-blue-500/25 transition-transform group-hover:scale-105">
+              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-xl font-black text-white tracking-tight">EasyCircular</span>
+            <span className="text-xl font-black text-white tracking-tight">
+              Easy<span className="text-cyan-300">Circular</span>
+            </span>
           </Link>
         </div>
 
         {/* Center copy */}
-        <div className="relative flex-1 flex flex-col items-center justify-center px-10 text-center">
-          <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/15 backdrop-blur-sm ring-1 ring-white/25 shadow-xl">
-            <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        <div className="relative flex flex-1 flex-col items-center justify-center px-10 text-center">
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-white/15 bg-white/5 shadow-xl backdrop-blur-xl">
+            <svg className="h-10 w-10 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
           </div>
-          <h2 className="text-3xl font-black text-white leading-tight">
+          <h2 className="text-3xl font-black leading-tight text-white">
             Turn circulars into <br />
-            <span className="text-amber-300">clear insights</span>
+            <span className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">
+              clear insights
+            </span>
           </h2>
-          <p className="mt-4 max-w-xs text-sm font-medium leading-relaxed text-white/70">
+          <p className="mt-4 max-w-xs text-sm font-medium leading-relaxed text-slate-300">
             AI-powered summaries, entity highlighting, and human review — all in one workflow.
           </p>
 
@@ -68,7 +69,7 @@ export default function AuthLayout({
             {["Smart OCR", "NER Highlights", "AI Summaries", "Human Review"].map((feat) => (
               <span
                 key={feat}
-                className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white/90 ring-1 ring-white/20 backdrop-blur-sm"
+                className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-200 backdrop-blur-sm"
               >
                 {feat}
               </span>
@@ -76,11 +77,11 @@ export default function AuthLayout({
           </div>
 
           {/* Quote */}
-          <div className="mt-10 rounded-2xl bg-white/10 p-5 ring-1 ring-white/20 backdrop-blur-sm text-left max-w-sm">
-            <p className="text-sm font-medium text-white/80 leading-relaxed">
+          <div className="mt-10 max-w-sm rounded-2xl border border-white/10 bg-black/30 p-5 text-left backdrop-blur-xl">
+            <p className="text-sm font-medium leading-relaxed text-slate-200">
               &ldquo;This tool saves us hours every time a new circular arrives from the ministry.&rdquo;
             </p>
-            <p className="mt-3 text-xs font-bold text-white/60">
+            <p className="mt-3 text-xs font-semibold text-slate-400">
               — School Principal, Western Province
             </p>
           </div>
@@ -88,7 +89,7 @@ export default function AuthLayout({
 
         {/* Bottom */}
         <div className="relative px-10 pb-8">
-          <p className="text-xs font-medium text-white/40">
+          <p className="text-xs font-medium text-slate-500">
             University of Bedfordshire · Y3 Dissertation · Phase 4
           </p>
         </div>
@@ -96,22 +97,24 @@ export default function AuthLayout({
 
       {/* Right panel – form */}
       <div className="relative flex w-full flex-col lg:w-1/2">
-        {/* Top bar */}
-        <div className="flex items-center px-6 py-5 sm:px-10">
-          <Link href="/" className="flex items-center gap-2.5 group lg:hidden">
+        {/* Mobile logo */}
+        <div className="flex items-center px-6 py-5 sm:px-10 lg:hidden">
+          <Link href="/" className="flex items-center gap-2.5 group">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-110">
               <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-sm font-bold text-white">Easy<span className="text-cyan-300">Circular</span></span>
+            <span className="text-sm font-bold text-white">
+              Easy<span className="text-cyan-300">Circular</span>
+            </span>
           </Link>
         </div>
 
         {/* Form area */}
         <div className="flex flex-1 items-center justify-center px-6 pb-10 sm:px-10">
           <div className="w-full max-w-md animate-fade-up">
-            <div className="rounded-2xl border border-white/15 bg-white/5 p-8 backdrop-blur-2xl">
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-8 shadow-2xl backdrop-blur-2xl">
               {children}
             </div>
           </div>

@@ -15,10 +15,7 @@ type AuthFormProps = {
 
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
-    <label
-      htmlFor={htmlFor}
-      className="mb-2 block text-sm font-bold text-ink-800 dark:text-ink-200"
-    >
+    <label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold text-slate-200">
       {children}
       <span className="ml-1 text-rose-400">*</span>
     </label>
@@ -35,6 +32,9 @@ function GoogleIcon() {
     </svg>
   );
 }
+
+const inputClass =
+  "w-full rounded-xl border border-white/15 bg-white/5 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400/40 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/20";
 
 export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
   const [name, setName] = useState("");
@@ -63,11 +63,11 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
   return (
     <div>
       {/* Title */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-black tracking-tight text-ink-900 dark:text-white">
+      <div className="mb-7">
+        <h1 className="text-2xl font-black tracking-tight text-white">
           {isSignUp ? "Create your account" : "Welcome back!"}
         </h1>
-        <p className="mt-1.5 text-sm font-medium text-ink-500 dark:text-ink-400">
+        <p className="mt-1.5 text-sm text-slate-400">
           {isSignUp
             ? "Create an account to upload and manage your circulars"
             : "Sign in to upload and manage your circulars"}
@@ -79,8 +79,8 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
           <div>
             <FieldLabel htmlFor="name">Full name</FieldLabel>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-400">
-                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
               </span>
@@ -91,7 +91,7 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
                 autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="input-field py-3 pl-11 pr-4"
+                className={`${inputClass} pl-11 pr-4`}
                 placeholder="Your full name"
               />
             </div>
@@ -101,8 +101,8 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
         <div>
           <FieldLabel htmlFor="email">Email address</FieldLabel>
           <div className="relative">
-            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-400">
-              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
               </svg>
             </span>
@@ -113,7 +113,7 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input-field py-3 pl-11 pr-4"
+              className={`${inputClass} pl-11 pr-4`}
               placeholder="you@example.com"
             />
           </div>
@@ -122,8 +122,8 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
         <div>
           <FieldLabel htmlFor="password">Password</FieldLabel>
           <div className="relative">
-            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-400">
-              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
               </svg>
             </span>
@@ -135,21 +135,21 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
               autoComplete={isSignUp ? "new-password" : "current-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input-field py-3 pl-11 pr-12"
+              className={`${inputClass} pl-11 pr-12`}
               placeholder={isSignUp ? "Min. 8 characters" : "Enter your password"}
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 transition hover:text-brand-600 dark:hover:text-brand-400"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-white"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
-                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
                 </svg>
               ) : (
-                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -160,18 +160,18 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
 
         {!isSignUp && (
           <div className="flex items-center justify-between">
-            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-ink-600 dark:text-ink-400">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-400">
               <input
                 type="checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                className="h-4 w-4 rounded border-brand-200 text-brand-600 accent-brand-600 focus:ring-brand-500"
+                className="h-4 w-4 rounded border-white/20 bg-white/5 accent-cyan-400"
               />
               Remember me
             </label>
             <Link
               href="#"
-              className="text-sm font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400"
+              className="text-sm font-semibold text-cyan-400 hover:text-cyan-300"
               onClick={(e) => e.preventDefault()}
             >
               Forgot password?
@@ -180,7 +180,7 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
         )}
 
         {error && (
-          <div className="flex items-center gap-2 rounded-xl border-2 border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-700 dark:border-rose-800/50 dark:bg-rose-950/30 dark:text-rose-300">
+          <div className="flex items-center gap-2 rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 py-2.5 text-sm font-medium text-rose-300">
             <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
@@ -191,7 +191,7 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
         <button
           type="submit"
           disabled={submitting}
-          className="btn-primary w-full py-3 text-base"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-bold text-slate-900 shadow-lg shadow-white/10 transition-all hover:scale-[1.02] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? (
             <>
@@ -211,10 +211,10 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
       {/* Divider */}
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t-2 border-brand-100 dark:border-ink-800" />
+          <div className="w-full border-t border-white/10" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-white px-3 text-xs font-bold uppercase tracking-widest text-ink-400 dark:bg-ink-900 dark:text-ink-600">
+          <span className="bg-black/40 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
             Or continue with
           </span>
         </div>
@@ -225,20 +225,20 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
         type="button"
         disabled
         title="Google sign-in coming soon"
-        className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-ink-200 bg-white py-3 text-sm font-bold text-ink-500 opacity-60 transition hover:border-brand-200 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-400"
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-slate-400 opacity-60 transition hover:bg-white/10"
       >
         <GoogleIcon />
         Continue with Google
       </button>
 
       {/* Switch mode */}
-      <p className="mt-7 text-center text-sm font-medium text-ink-500 dark:text-ink-400">
+      <p className="mt-7 text-center text-sm text-slate-400">
         {isSignUp ? (
           <>
             Already have an account?{" "}
             <Link
               href={returnTo ? `/sign-in?returnTo=${encodeURIComponent(returnTo)}` : "/sign-in"}
-              className="font-bold text-brand-600 hover:underline dark:text-brand-400"
+              className="font-bold text-cyan-400 hover:text-cyan-300"
             >
               Sign in
             </Link>
@@ -248,7 +248,7 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
             Don&apos;t have an account?{" "}
             <Link
               href={returnTo ? `/sign-up?returnTo=${encodeURIComponent(returnTo)}` : "/sign-up"}
-              className="font-bold text-brand-600 hover:underline dark:text-brand-400"
+              className="font-bold text-cyan-400 hover:text-cyan-300"
             >
               Sign up free
             </Link>

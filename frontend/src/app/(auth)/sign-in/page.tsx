@@ -27,7 +27,7 @@ function SignInContent() {
   }, [user, loading, router, returnTo]);
 
   if (loading || user) {
-    return <p className="text-center text-sm text-ink-500">Loading…</p>;
+    return <p className="text-center text-sm text-slate-400">Loading…</p>;
   }
 
   return (
@@ -45,7 +45,7 @@ function SignInContent() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<p className="text-center text-sm text-ink-500">Loading…</p>}>
+    <Suspense fallback={<p className="text-center text-sm text-slate-400">Loading…</p>}>
       <SignInContent />
     </Suspense>
   );
