@@ -236,9 +236,8 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left: Source text / extraction */}
-        <div className="space-y-5">
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <div className="space-y-5 lg:sticky lg:top-[168px]">
           <SourceTextPanel
             circular={circular}
             draftText={draftText}
@@ -257,9 +256,33 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
             onSave={() => void handleSave()}
             onReset={() => setDraftText(circular.extractedText ?? "")}
           />
+
+          {!circular.summary && canProcess && hasText && (
+            <div className="relative overflow-hidden rounded-2xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/10 via-blue-500/5 to-transparent p-6 text-center">
+              <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-400/20 blur-3xl" />
+              <div className="relative flex flex-col items-center gap-3">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
+                  Next step
+                </span>
+                <p className="text-sm font-semibold text-white">
+                  Text is ready — generate a structured summary
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void handleProcess()}
+                  disabled={processing || circular.status === "processing"}
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-slate-900 shadow-lg shadow-black/20 transition hover:scale-[1.02]"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                  Generate AI Summary
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Right: Summary */}
         <div className="space-y-5">
           <SummaryPanel
             circular={circular}
@@ -275,22 +298,6 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
               showToast(`Summary exported as ${format.toUpperCase()}.`, "success")
             }
           />
-
-          {!circular.summary && canProcess && hasText && (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-cyan-400/30 bg-cyan-400/5 p-8 text-center">
-              <p className="text-sm font-semibold text-white">
-                Text is ready — generate a structured summary
-              </p>
-              <button
-                type="button"
-                onClick={() => void handleProcess()}
-                disabled={processing || circular.status === "processing"}
-                className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-slate-900 shadow-md transition hover:scale-[1.02]"
-              >
-                Generate AI Summary
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </WorkflowLayout>

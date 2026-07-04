@@ -1,16 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { exportSummaryAsMarkdown, exportSummaryAsTxt } from "@/lib/exportSummary";
 import type { Circular, CircularSummary } from "@/lib/circulars";
 
-const ENTITY_PILL: Record<string, string> = {
-  DATE: "border-amber-400/30 bg-amber-400/10 text-amber-300",
-  PERSON: "border-sky-400/30 bg-sky-400/10 text-sky-300",
-  ORG: "border-cyan-400/30 bg-cyan-400/10 text-cyan-300",
-  LAW: "border-purple-400/30 bg-purple-400/10 text-purple-300",
-  OTHER: "border-white/15 bg-white/5 text-slate-300",
+const ENTITY_STYLE: Record<string, { pill: string; dot: string; label: string }> = {
+  DATE: {
+    pill: "border-amber-400/25 bg-amber-400/10 text-amber-200",
+    dot: "bg-amber-400",
+    label: "Dates",
+  },
+  PERSON: {
+    pill: "border-sky-400/25 bg-sky-400/10 text-sky-200",
+    dot: "bg-sky-400",
+    label: "People",
+  },
+  ORG: {
+    pill: "border-cyan-400/25 bg-cyan-400/10 text-cyan-200",
+    dot: "bg-cyan-400",
+    label: "Organizations",
+  },
+  LAW: {
+    pill: "border-purple-400/25 bg-purple-400/10 text-purple-200",
+    dot: "bg-purple-400",
+    label: "References",
+  },
+  OTHER: {
+    pill: "border-white/10 bg-white/5 text-slate-300",
+    dot: "bg-slate-400",
+    label: "Other",
+  },
 };
+
+function entityStyle(label: string) {
+  return ENTITY_STYLE[label] || ENTITY_STYLE.OTHER;
+}
 
 type SummaryPanelProps = {
   circular: Circular;
@@ -54,8 +78,10 @@ export default function SummaryPanel({
   const summary = circular.summary;
   const meta = circular.processingMeta;
   const hasText = Boolean(circular.extractedText || circular.editedText);
-  const topEntities = circular.entities.slice(0, 8);
   const [actionItemsDraft, setActionItemsDraft] = useState("");
+
+  const visibleEntities = useMemo(() => circular.entities.slice(0, 10), [circular.entities]);
+  const hiddenEntityCount = Math.max(0, circular.entities.length - visibleEntities.length);
 
   useEffect(() => {
     if (editing && draftSummary) {
@@ -98,75 +124,118 @@ export default function SummaryPanel({
     onDraftChange({ ...draftSummary, actionItems: textToActionItems(text) });
   }
 
+  const modeTag = (() => {
+    if (editing || summary?.mode === "edited") {
+      return { text: "Edited", cls: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" };
+    }
+    if (summary?.mode === "fallback") {
+      return { text: "Extractive", cls: "border-amber-400/30 bg-amber-400/10 text-amber-300" };
+    }
+    if (summary?.mode === "llm") {
+      return { text: "AI", cls: "border-cyan-400/30 bg-cyan-400/10 text-cyan-300" };
+    }
+    return null;
+  })();
+
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/10 bg-black/30 backdrop-blur-xl">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">AI Summary</span>
-          {summary?.mode === "llm" && !editing && (
-            <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-bold uppercase text-cyan-300">
-              AI
+    <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-xl shadow-black/20 backdrop-blur-xl">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+        <div className="flex items-center gap-2.5">
+          <span className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 shadow-md shadow-cyan-500/30">
+            <span className="absolute inset-px rounded-[7px] bg-gradient-to-br from-white/30 to-transparent" />
+            <svg className="relative h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+          </span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              AI Summary
             </span>
-          )}
-          {summary?.mode === "fallback" && !editing && (
-            <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-300">
-              Extractive
-            </span>
-          )}
-          {(summary?.mode === "edited" || editing) && (
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-300">
-              Edited
-            </span>
-          )}
-          {meta.cached && !editing && (
-            <span className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-slate-400">
-              Cached
-            </span>
-          )}
+            <div className="mt-0.5 flex items-center gap-1.5">
+              {modeTag && (
+                <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${modeTag.cls}`}>
+                  {modeTag.text}
+                </span>
+              )}
+              {meta.cached && !editing && (
+                <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+                  Cached
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         {summary && !editing && (
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={onEditStart} className="rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-white/10 hover:text-white">
+          <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+            <button
+              type="button"
+              onClick={onEditStart}
+              className="rounded-md px-2.5 py-1 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white"
+            >
               Edit
             </button>
-            <button type="button" onClick={() => void handleCopy()} className="rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-white/10 hover:text-white">
+            <button
+              type="button"
+              onClick={() => void handleCopy()}
+              className="rounded-md px-2.5 py-1 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white"
+            >
               Copy
             </button>
-            <button type="button" onClick={() => handleExport("md")} className="rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-white/10 hover:text-white">
+            <button
+              type="button"
+              onClick={() => handleExport("md")}
+              className="rounded-md px-2.5 py-1 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white"
+            >
               Export
             </button>
           </div>
         )}
         {summary && editing && (
           <div className="flex items-center gap-2">
-            <button type="button" onClick={onEditCancel} className="rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-white/10 hover:text-white" disabled={saving}>
+            <button
+              type="button"
+              onClick={onEditCancel}
+              className="rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-white/10 hover:text-white"
+              disabled={saving}
+            >
               Cancel
             </button>
-            <button type="button" onClick={onSave} className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-slate-900" disabled={saving}>
+            <button
+              type="button"
+              onClick={onSave}
+              className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-slate-900 shadow-md disabled:opacity-60"
+              disabled={saving}
+            >
               {saving ? "Saving…" : "Save changes"}
             </button>
           </div>
         )}
       </div>
 
-      <div className="p-5 sm:p-6">
+      <div className="border-t border-white/10 p-5 sm:p-6">
         {meta.guardrailWarnings && meta.guardrailWarnings.length > 0 && !editing && (
-          <div className="mb-5 rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-wider text-amber-300">
+          <div className="mb-6 rounded-xl border border-amber-400/25 bg-gradient-to-br from-amber-400/10 to-amber-400/5 px-4 py-3">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-amber-300">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+              </svg>
               Review suggested
             </p>
             <ul className="mt-2 space-y-1">
               {meta.guardrailWarnings.map((w) => (
-                <li key={w} className="text-sm text-amber-200">• {w}</li>
+                <li key={w} className="text-sm text-amber-100/90">• {w}</li>
               ))}
             </ul>
           </div>
         )}
 
         {!summary && !processing && circular.status !== "processing" && (
-          <div className="flex min-h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/5 p-8 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
-              <svg className="h-7 w-7 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
+            <div className="relative mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/25 to-blue-600/10 ring-1 ring-white/10">
+              <div className="absolute inset-px rounded-[15px] bg-gradient-to-br from-white/10 to-transparent" />
+              <svg className="relative h-7 w-7 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
             </div>
@@ -180,8 +249,11 @@ export default function SummaryPanel({
         )}
 
         {(processing || circular.status === "processing") && (
-          <div className="flex min-h-[240px] flex-col items-center justify-center gap-4 py-8">
-            <div className="h-10 w-10 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+          <div className="flex min-h-[280px] flex-col items-center justify-center gap-4 py-8">
+            <div className="relative flex h-14 w-14 items-center justify-center">
+              <span className="absolute inset-0 animate-ping rounded-full bg-cyan-400/20" />
+              <div className="h-12 w-12 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+            </div>
             <div className="text-center">
               <p className="font-semibold text-white">Building summary…</p>
               <p className="mt-0.5 text-sm text-slate-400">Analyzing entities and structure</p>
@@ -190,42 +262,62 @@ export default function SummaryPanel({
         )}
 
         {summary && !editing && (
-          <div className="space-y-6">
+          <div className="space-y-7">
             <div>
-              <h2 className="text-xl font-bold leading-snug text-white sm:text-2xl">
+              <h2 className="text-xl font-bold leading-snug tracking-tight text-white sm:text-[22px]">
                 {summary.title}
               </h2>
-              {meta.model && circular.status === "completed" && (
-                <p className="mt-1.5 text-xs text-slate-500">
-                  {[meta.model, meta.durationMs && `${(meta.durationMs / 1000).toFixed(1)}s`]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
+              <div className="mt-3 h-px w-16 bg-gradient-to-r from-cyan-400 to-transparent" />
+              {(meta.model || meta.durationMs) && circular.status === "completed" && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-slate-500">
+                  {meta.model && (
+                    <span className="inline-flex items-center gap-1">
+                      <svg className="h-3 w-3 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      {meta.model}
+                    </span>
+                  )}
+                  {meta.durationMs && (
+                    <>
+                      <span className="h-0.5 w-0.5 rounded-full bg-slate-600" />
+                      <span>{(meta.durationMs / 1000).toFixed(1)}s</span>
+                    </>
+                  )}
+                </div>
               )}
             </div>
 
-            {topEntities.length > 0 && (
+            {visibleEntities.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {topEntities.map((e, i) => (
-                  <span
-                    key={`${e.start}-${i}`}
-                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${ENTITY_PILL[e.label] || ENTITY_PILL.OTHER}`}
-                  >
-                    {e.text}
-                  </span>
-                ))}
-                {circular.entities.length > 8 && (
-                  <span className="self-center text-xs text-slate-500">
-                    +{circular.entities.length - 8} more
+                {visibleEntities.map((e, i) => {
+                  const s = entityStyle(e.label);
+                  return (
+                    <span
+                      key={`${e.start}-${i}`}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${s.pill}`}
+                      title={e.label}
+                    >
+                      <span className={`h-1 w-1 rounded-full ${s.dot}`} />
+                      {e.text}
+                    </span>
+                  );
+                })}
+                {hiddenEntityCount > 0 && (
+                  <span className="self-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-slate-400">
+                    +{hiddenEntityCount} more
                   </span>
                 )}
               </div>
             )}
 
-            <div className="space-y-4">
-              {summary.sections.map((section) => (
-                <article key={section.heading}>
-                  <h3 className="mb-2 text-[11px] font-bold uppercase tracking-widest text-cyan-400">
+            <div className="space-y-6">
+              {summary.sections.map((section, index) => (
+                <article key={section.heading} className="relative pl-8">
+                  <span className="absolute left-0 top-0 flex h-5 w-5 items-center justify-center rounded-md border border-cyan-400/30 bg-cyan-400/10 text-[10px] font-black text-cyan-300">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-300">
                     {section.heading}
                   </h3>
                   <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-200">
@@ -236,20 +328,26 @@ export default function SummaryPanel({
             </div>
 
             {summary.actionItems.length > 0 && (
-              <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-5">
-                <h3 className="mb-3 text-[11px] font-bold uppercase tracking-widest text-emerald-400">
-                  Action items
-                </h3>
-                <ol className="space-y-2.5">
-                  {summary.actionItems.map((item, i) => (
-                    <li key={item} className="flex gap-3 text-sm leading-relaxed text-slate-200">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">
-                        {i + 1}
-                      </span>
-                      {item}
-                    </li>
-                  ))}
-                </ol>
+              <div className="relative overflow-hidden rounded-xl border border-emerald-400/25 bg-gradient-to-br from-emerald-400/10 via-emerald-400/[0.03] to-transparent p-5">
+                <div className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-emerald-400/10 blur-2xl" />
+                <div className="relative">
+                  <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Action items
+                  </h3>
+                  <ol className="space-y-2.5">
+                    {summary.actionItems.map((item, i) => (
+                      <li key={item} className="flex gap-3 text-sm leading-relaxed text-slate-100">
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-[10px] font-bold text-white shadow-sm shadow-emerald-500/30">
+                          {i + 1}
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
               </div>
             )}
           </div>
@@ -277,8 +375,11 @@ export default function SummaryPanel({
               {draftSummary.sections.map((section, index) => (
                 <div
                   key={`${section.heading}-${index}`}
-                  className="rounded-xl border border-white/10 bg-white/5 p-4"
+                  className="relative rounded-xl border border-white/10 bg-white/5 p-4"
                 >
+                  <span className="absolute -left-2 -top-2 flex h-5 w-5 items-center justify-center rounded-md border border-cyan-400/30 bg-slate-900 text-[10px] font-black text-cyan-300">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
                   <label className="mb-3 block">
                     <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-cyan-400">
                       Section heading

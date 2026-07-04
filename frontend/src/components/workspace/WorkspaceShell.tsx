@@ -25,40 +25,63 @@ function SidebarContent({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-4 py-5">
-        <Link href="/" onClick={onNavigate} className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 shadow-lg shadow-blue-500/25 transition-transform group-hover:scale-105">
-            <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <div className="px-5 py-6">
+        <Link href="/" onClick={onNavigate} className="group flex items-center gap-2.5">
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 shadow-lg shadow-cyan-500/20 transition-transform group-hover:scale-105">
+            <div className="absolute inset-px rounded-[10px] bg-gradient-to-br from-white/25 to-transparent" />
+            <svg className="relative h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <span className="text-sm font-bold text-white">
-            Easy<span className="text-cyan-300">Circular</span>
-          </span>
+          <div className="flex flex-col leading-none">
+            <span className="text-sm font-bold tracking-tight text-white">
+              Easy<span className="text-cyan-300">Circular</span>
+            </span>
+            <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.15em] text-slate-500">
+              AI Workspace
+            </span>
+          </div>
         </Link>
       </div>
 
-      <nav className="space-y-1 px-3">
+      <div className="px-5 pb-2">
         <Link
           href="/#upload"
           onClick={onNavigate}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-md transition hover:scale-[1.02]"
+          className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-lg shadow-black/20 transition hover:scale-[1.02]"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           New Analysis
         </Link>
+      </div>
+
+      <div className="mt-4 px-5">
+        <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+          Workspace
+        </p>
+      </div>
+      <nav className="space-y-0.5 px-3">
         <Link
           href="/circulars"
           onClick={onNavigate}
-          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+          className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
             onDocuments
-              ? "border border-white/15 bg-white/10 text-white"
+              ? "bg-white/10 text-white"
               : "text-slate-400 hover:bg-white/5 hover:text-white"
           }`}
         >
-          <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+          {onDocuments && (
+            <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-r-full bg-cyan-400" />
+          )}
+          <svg
+            className={`h-[18px] w-[18px] transition ${onDocuments ? "text-cyan-300" : "text-slate-500 group-hover:text-slate-300"}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.75}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
           </svg>
           Documents
@@ -66,13 +89,15 @@ function SidebarContent({
       </nav>
 
       {user && (
-        <div className="mt-auto border-t border-white/10 p-3">
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xs font-bold text-white">
+        <div className="mt-auto p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xs font-bold text-white shadow-md shadow-cyan-500/20">
               {user.name.charAt(0).toUpperCase()}
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-black/60 bg-emerald-400" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">{user.name.split(" ")[0]}</p>
+              <p className="truncate text-xs font-semibold text-white">{user.name.split(" ")[0]}</p>
+              <p className="truncate text-[10px] text-slate-500">Signed in</p>
             </div>
             <button
               type="button"
@@ -81,9 +106,9 @@ function SidebarContent({
                 onNavigate?.();
               }}
               aria-label="Sign out"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/10 hover:text-white"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
               </svg>
             </button>
@@ -117,7 +142,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[200px] flex-col border-r border-white/10 bg-black/40 backdrop-blur-2xl lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[220px] flex-col border-r border-white/10 bg-black/50 backdrop-blur-2xl lg:flex">
         <SidebarContent pathname={pathname} user={user} onSignOut={signOut} />
       </aside>
 
@@ -130,7 +155,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[200px] flex-col border-r border-white/10 bg-black/80 backdrop-blur-2xl transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[220px] flex-col border-r border-white/10 bg-black/80 backdrop-blur-2xl transition-transform duration-300 lg:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -142,7 +167,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         />
       </aside>
 
-      <div className="flex min-h-screen flex-1 flex-col lg:pl-[200px]">
+      <div className="flex min-h-screen flex-1 flex-col lg:pl-[220px]">
         <div className="flex h-12 items-center gap-3 border-b border-white/10 bg-black/30 px-4 backdrop-blur-xl lg:hidden">
           <button
             type="button"
