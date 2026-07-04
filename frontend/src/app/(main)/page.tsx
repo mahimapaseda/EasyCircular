@@ -151,8 +151,8 @@ export default function HomePage() {
               <div className="relative h-72 w-72 rounded-full border border-white/10 bg-gradient-to-br from-white/5 to-white/0">
                 <div className="absolute inset-4 rounded-full border border-white/10 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 backdrop-blur-sm" />
                 <div className="absolute inset-12 flex items-center justify-center rounded-full border border-cyan-400/20 bg-black/40 backdrop-blur-xl">
-                  <svg className="h-16 w-16 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg className="h-16 w-16 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
                   </svg>
                 </div>
               </div>
@@ -162,10 +162,6 @@ export default function HomePage() {
                 <p className="text-xs font-bold text-white">Multi-language OCR</p>
               </div>
 
-              {/* Floating badge: Middle right */}
-              <div className="absolute -right-2 top-1/2 rounded-xl border border-white/15 bg-black/60 px-4 py-2.5 backdrop-blur-xl shadow-xl animate-float-delayed">
-                <p className="text-xs font-bold text-white">Gemini & GPT-4o</p>
-              </div>
 
               {/* Floating badge: Bottom */}
               <div className="absolute bottom-16 right-12 rounded-xl border border-white/15 bg-black/60 px-4 py-2.5 backdrop-blur-xl shadow-xl animate-float">
