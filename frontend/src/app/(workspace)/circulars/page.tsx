@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DocumentCard from "@/components/workspace/DocumentCard";
-import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { listCirculars, type Circular } from "@/lib/circulars";
@@ -78,58 +77,52 @@ export default function DocumentsPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Top bar */}
-      <header className="sticky top-0 z-10 border-b border-ink-200/80 bg-white/95 px-4 py-4 backdrop-blur-md sm:px-6 dark:border-ink-800 dark:bg-ink-900/95">
+      <header className="sticky top-0 z-10 border-b border-white/10 bg-black/50 px-4 py-4 backdrop-blur-2xl sm:px-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-ink-900 dark:text-white">Documents</h1>
-            <p className="text-sm text-ink-500">Your MOE circular analyses</p>
+            <h1 className="text-xl font-bold text-white">Documents</h1>
+            <p className="text-sm text-slate-400">Your MOE circular analyses</p>
           </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <button
-              type="button"
-              onClick={() => void load()}
-              disabled={loading}
-              aria-label="Refresh documents"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-ink-200 text-ink-500 transition hover:bg-slate-50 dark:border-ink-700 dark:hover:bg-ink-800"
-            >
-              <svg className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-              </svg>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => void load()}
+            disabled={loading}
+            aria-label="Refresh documents"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+          >
+            <svg className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+          </button>
         </div>
       </header>
 
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
         {!authLoading && !user && (
-          <p className="mb-5 rounded-lg border border-brand-200 bg-brand-50/50 px-4 py-3 text-sm text-ink-700 dark:border-brand-800 dark:bg-brand-950/20 dark:text-ink-300">
-            <Link href="/sign-in" className="font-semibold text-brand-600 dark:text-brand-400">
+          <p className="mb-5 rounded-xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-slate-300">
+            <Link href="/sign-in" className="font-semibold text-cyan-400 hover:text-cyan-300">
               Sign in
             </Link>{" "}
             to sync documents across devices.
           </p>
         )}
 
-        {/* Stats */}
         <dl className="mb-6 grid grid-cols-3 gap-3">
           {[
             { label: "Total", value: stats.total },
             { label: "Summarized", value: stats.completed },
             { label: "In progress", value: stats.active },
           ].map(({ label, value }) => (
-            <div key={label} className="ws-stat px-4 py-3">
-              <dt className="text-[10px] font-bold uppercase tracking-wider text-ink-400">{label}</dt>
-              <dd className="mt-1 text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{value}</dd>
+            <div key={label} className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 backdrop-blur-xl">
+              <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</dt>
+              <dd className="mt-1 text-2xl font-bold tabular-nums text-white">{value}</dd>
             </div>
           ))}
         </dl>
 
-        {/* Search + filters */}
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-md flex-1">
-            <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
             <input
@@ -137,16 +130,20 @@ export default function DocumentsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search documents…"
-              className="input-field pl-9"
+              className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-9 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
             />
           </div>
-          <div className="ws-segment">
+          <div className="inline-flex rounded-lg border border-white/10 bg-white/5 p-0.5">
             {FILTERS.map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setFilter(key)}
-                className={`ws-segment-btn ${filter === key ? "ws-segment-active" : "ws-segment-idle"}`}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                  filter === key
+                    ? "bg-white/15 text-white"
+                    : "text-slate-400 hover:text-white"
+                }`}
               >
                 {label}
               </button>
@@ -155,9 +152,13 @@ export default function DocumentsPage() {
         </div>
 
         {error && (
-          <div className="mb-5 flex items-center justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm dark:border-rose-800 dark:bg-rose-950/30">
-            <span className="text-rose-800 dark:text-rose-200">{error}</span>
-            <button type="button" onClick={() => void load()} className="btn-secondary text-xs">
+          <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-300">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white"
+            >
               Retry
             </button>
           </div>
@@ -170,28 +171,28 @@ export default function DocumentsPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center rounded-xl border border-dashed border-ink-200 py-20 text-center dark:border-ink-700">
+          <div className="flex flex-col items-center rounded-2xl border border-dashed border-white/15 py-20 text-center">
             {items.length === 0 ? (
               <>
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-950/40">
-                  <svg className="h-7 w-7 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
+                  <svg className="h-7 w-7 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H18A2.25 2.25 0 0120.25 6v12m-8.5-3h7.5m-7.5 3H12" />
                   </svg>
                 </div>
-                <p className="font-semibold text-ink-800 dark:text-ink-200">No documents yet</p>
-                <p className="mt-1 text-sm text-ink-500">Use New Analysis in the sidebar to upload a circular.</p>
+                <p className="font-semibold text-white">No documents yet</p>
+                <p className="mt-1 text-sm text-slate-400">Use New Analysis in the sidebar to upload a circular.</p>
               </>
             ) : (
               <>
-                <p className="font-semibold text-ink-800 dark:text-ink-200">No matches</p>
-                <p className="mt-1 text-sm text-ink-500">Try a different search or filter.</p>
+                <p className="font-semibold text-white">No matches</p>
+                <p className="mt-1 text-sm text-slate-400">Try a different search or filter.</p>
                 <button
                   type="button"
                   onClick={() => {
                     setQuery("");
                     setFilter("all");
                   }}
-                  className="btn-ghost mt-3 text-sm"
+                  className="mt-3 rounded-lg px-3 py-1.5 text-sm font-medium text-cyan-400 hover:text-cyan-300"
                 >
                   Clear filters
                 </button>

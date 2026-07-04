@@ -25,22 +25,24 @@ function SidebarContent({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 px-5 py-5">
-        <Link href="/" onClick={onNavigate} className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
-            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="px-4 py-5">
+        <Link href="/" onClick={onNavigate} className="flex items-center gap-2.5 group">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 shadow-lg shadow-blue-500/25 transition-transform group-hover:scale-105">
+            <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <p className="text-sm font-bold tracking-tight text-white">EasyCircular AI</p>
+          <span className="text-sm font-bold text-white">
+            Easy<span className="text-cyan-300">Circular</span>
+          </span>
         </Link>
       </div>
 
-      <div className="space-y-1 px-3">
+      <nav className="space-y-1 px-3">
         <Link
           href="/#upload"
           onClick={onNavigate}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/15 border border-white/20 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-white/25"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-md transition hover:scale-[1.02]"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -52,8 +54,8 @@ function SidebarContent({
           onClick={onNavigate}
           className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
             onDocuments
-              ? "bg-white/15 text-white border border-white/15"
-              : "text-white/50 hover:bg-white/10 hover:text-white"
+              ? "border border-white/15 bg-white/10 text-white"
+              : "text-slate-400 hover:bg-white/5 hover:text-white"
           }`}
         >
           <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -61,16 +63,16 @@ function SidebarContent({
           </svg>
           Documents
         </Link>
-      </div>
+      </nav>
 
       {user && (
-        <div className="mt-auto border-t border-white/10 p-4">
-          <div className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
+        <div className="mt-auto border-t border-white/10 p-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xs font-bold text-white">
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">{user.name}</p>
+              <p className="truncate text-sm font-semibold text-white">{user.name.split(" ")[0]}</p>
             </div>
             <button
               type="button"
@@ -78,10 +80,10 @@ function SidebarContent({
                 onSignOut?.();
                 onNavigate?.();
               }}
-              aria-label="Logout"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-blue-100/70 transition hover:bg-white/10 hover:text-white"
+              aria-label="Sign out"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
             >
-              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
               </svg>
             </button>
@@ -103,7 +105,6 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
 
   return (
     <div className="relative flex min-h-screen">
-      {/* Full-screen LiquidChrome background */}
       <div className="fixed inset-0 -z-10">
         <LiquidChrome
           baseColor={[0.04, 0.12, 0.35]}
@@ -113,50 +114,49 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
           frequencyY={1.8}
           interactive={true}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30" />
+        <div className="absolute inset-0 bg-black/60" />
       </div>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[220px] flex-col border-r border-white/10 bg-white/5 backdrop-blur-2xl lg:flex">
-        <div className="flex h-full flex-col">
-          <SidebarContent pathname={pathname} user={user} onSignOut={signOut} />
-        </div>
+
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[200px] flex-col border-r border-white/10 bg-black/40 backdrop-blur-2xl lg:flex">
+        <SidebarContent pathname={pathname} user={user} onSignOut={signOut} />
       </aside>
 
       {mobileOpen && (
         <button
           type="button"
           aria-label="Close menu"
-          className="fixed inset-0 z-40 bg-ink-950/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[220px] flex-col border-r border-white/10 bg-black/60 backdrop-blur-2xl transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[200px] flex-col border-r border-white/10 bg-black/80 backdrop-blur-2xl transition-transform duration-300 lg:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-full flex-col">
-          <SidebarContent
-            pathname={pathname}
-            user={user}
-            onNavigate={() => setMobileOpen(false)}
-            onSignOut={signOut}
-          />
-        </div>
+        <SidebarContent
+          pathname={pathname}
+          user={user}
+          onNavigate={() => setMobileOpen(false)}
+          onSignOut={signOut}
+        />
       </aside>
 
-      <div className="flex min-h-screen flex-1 flex-col lg:pl-[220px]">
-        <div className="flex h-14 items-center gap-3 border-b border-white/10 bg-white/5 px-4 backdrop-blur-xl lg:hidden">
+      <div className="flex min-h-screen flex-1 flex-col lg:pl-[200px]">
+        <div className="flex h-12 items-center gap-3 border-b border-white/10 bg-black/30 px-4 backdrop-blur-xl lg:hidden">
           <button
             type="button"
             aria-label="Open menu"
             onClick={() => setMobileOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/10"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white"
           >
-            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-sm font-bold text-white">EasyCircular</span>
+          <span className="text-sm font-bold text-white">
+            Easy<span className="text-cyan-300">Circular</span>
+          </span>
         </div>
         {children}
       </div>

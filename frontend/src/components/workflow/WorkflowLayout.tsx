@@ -3,7 +3,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import StatusBadge from "@/components/ui/StatusBadge";
-import ThemeToggle from "@/components/ThemeToggle";
 import { WORKFLOW_STEPS } from "@/lib/contracts";
 import { formatRelativeTime, wordCount } from "@/components/workspace/workspaceUtils";
 import type { Circular } from "@/lib/circulars";
@@ -28,28 +27,27 @@ export default function WorkflowLayout({
     circular.processingMeta.pageCount > 0 && `${circular.processingMeta.pageCount} pages`,
     words > 0 && `${words.toLocaleString()} words`,
     circular.entities.length > 0 && `${circular.entities.length} entities`,
-    circular.processingMeta.ocrUsed && (circular.processingMeta.ocrLang || "OCR"),
   ].filter(Boolean);
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-20 border-b border-ink-200/80 bg-white/95 backdrop-blur-md dark:border-ink-800 dark:bg-ink-900/95">
-        <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <header className="sticky top-0 z-20 border-b border-white/10 bg-black/50 backdrop-blur-2xl">
+        <div className="flex items-start justify-between gap-4 px-4 py-4 sm:px-6">
           <div className="min-w-0 flex-1">
-            <nav className="flex items-center gap-1.5 text-xs text-ink-400">
-              <Link href="/circulars" className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">
+            <nav className="flex items-center gap-1.5 text-xs text-slate-400">
+              <Link href="/circulars" className="font-medium text-cyan-400 hover:text-cyan-300">
                 Documents
               </Link>
               <span>/</span>
               <span className="truncate">{circular.originalFilename}</span>
             </nav>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-lg font-bold text-ink-900 dark:text-white sm:text-xl">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h1 className="truncate text-lg font-bold text-white sm:text-xl">
                 {circular.originalFilename}
               </h1>
               <StatusBadge status={circular.status} />
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-400">
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
               <span>Updated {formatRelativeTime(circular.updatedAt)}</span>
               {stats.length > 0 && (
                 <>
@@ -59,25 +57,23 @@ export default function WorkflowLayout({
               )}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {actions}
-            <ThemeToggle />
-          </div>
+          {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
         </div>
 
-        <div className="flex gap-1 overflow-x-auto border-t border-ink-100 px-4 py-2 sm:px-6 dark:border-ink-800">
+        {/* Workflow steps */}
+        <div className="flex gap-1 overflow-x-auto border-t border-white/5 px-4 py-2.5 sm:px-6">
           {WORKFLOW_STEPS.map((step) => {
             const done = clamped > step.id;
             const active = clamped === step.id;
             return (
               <span
                 key={step.key}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
                   active
-                    ? "bg-brand-600 text-white"
+                    ? "bg-white text-slate-900 shadow-sm"
                     : done
-                      ? "bg-brand-100 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300"
-                      : "bg-slate-100 text-ink-400 dark:bg-ink-800 dark:text-ink-500"
+                      ? "border border-cyan-400/30 bg-cyan-400/10 text-cyan-300"
+                      : "border border-white/10 bg-white/5 text-slate-500"
                 }`}
               >
                 {done && !active && (
@@ -92,7 +88,7 @@ export default function WorkflowLayout({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">{children}</main>
     </div>
   );
 }
