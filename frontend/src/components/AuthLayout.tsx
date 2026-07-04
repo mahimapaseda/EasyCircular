@@ -1,5 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import ThemeToggle from "@/components/ThemeToggle";
+import dynamic from "next/dynamic";
+
+const LiquidChrome = dynamic(() => import("@/components/LiquidChrome"), {
+  ssr: false,
+});
 
 export default function AuthLayout({
   children,
@@ -7,9 +13,21 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="relative flex min-h-screen">
+      {/* Full-screen LiquidChrome background */}
+      <div className="fixed inset-0 -z-10">
+        <LiquidChrome
+          baseColor={[0.04, 0.12, 0.35]}
+          speed={0.25}
+          amplitude={0.5}
+          frequencyX={2.5}
+          frequencyY={1.8}
+          interactive={true}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30" />
+      </div>
       {/* Left panel – decorative gradient */}
-      <div className="relative hidden w-1/2 overflow-hidden lg:flex lg:flex-col lg:justify-between bg-gradient-to-br from-brand-600 via-fuchsia-600 to-violet-700">
+      <div className="relative hidden w-1/2 overflow-hidden lg:flex lg:flex-col lg:justify-between border-r border-white/10 bg-white/5 backdrop-blur-xl">
         {/* Mesh background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-dots opacity-20" />
@@ -77,25 +95,23 @@ export default function AuthLayout({
       </div>
 
       {/* Right panel – form */}
-      <div className="relative flex w-full flex-col bg-gradient-to-b from-brand-50/30 to-white dark:from-ink-950 dark:to-ink-950 lg:w-1/2">
+      <div className="relative flex w-full flex-col lg:w-1/2">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-5 sm:px-10">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-fuchsia-600 text-white shadow-md shadow-brand-500/30 transition-transform group-hover:scale-105">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="flex items-center px-6 py-5 sm:px-10">
+          <Link href="/" className="flex items-center gap-2.5 group lg:hidden">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-110">
+              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-base font-black text-ink-900 dark:text-white">EasyCircular</span>
+            <span className="text-sm font-bold text-white">Easy<span className="text-cyan-300">Circular</span></span>
           </Link>
-          <ThemeToggle />
         </div>
 
         {/* Form area */}
         <div className="flex flex-1 items-center justify-center px-6 pb-10 sm:px-10">
           <div className="w-full max-w-md animate-fade-up">
-            {/* Form card */}
-            <div className="rounded-3xl border-2 border-brand-100 bg-white p-8 shadow-panel dark:border-ink-800 dark:bg-ink-900">
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-8 backdrop-blur-2xl">
               {children}
             </div>
           </div>

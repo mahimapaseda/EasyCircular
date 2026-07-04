@@ -186,7 +186,11 @@ const config: Config = {
         },
         float: {
           "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-6px)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
+        "float-delayed": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
         },
         "spin-slow": {
           from: { transform: "rotate(0deg)" },
@@ -210,6 +214,7 @@ const config: Config = {
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         shimmer: "shimmer 2s linear infinite",
         float: "float 3s ease-in-out infinite",
+        "float-delayed": "float-delayed 4s ease-in-out 1s infinite",
         "spin-slow": "spin-slow 8s linear infinite",
         "bounce-in": "bounce-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },

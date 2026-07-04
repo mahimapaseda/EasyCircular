@@ -59,22 +59,22 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
 
   if (loading) {
     return (
-      <div className="flex min-h-[280px] items-center justify-center rounded-2xl border-2 border-dashed border-brand-200 bg-brand-50/40 dark:border-ink-700 dark:bg-ink-900/40">
-        <p className="text-sm font-medium text-ink-500">Loading…</p>
+      <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+        <p className="text-sm font-medium text-white/40">Loading…</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="rounded-2xl border-2 border-brand-200 bg-gradient-to-r from-brand-50 via-white to-fuchsia-50/80 p-8 text-center shadow-panel dark:border-brand-800/60 dark:from-brand-950/40 dark:via-ink-950 dark:to-fuchsia-950/20 sm:p-10">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-fuchsia-600 text-white shadow-md shadow-brand-500/25">
+      <div className="rounded-2xl border border-white/15 bg-white/5 p-8 text-center backdrop-blur-xl sm:p-10">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-xl shadow-blue-500/20">
           <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
           </svg>
         </div>
-        <h3 className="text-xl font-black text-ink-900 dark:text-white">Sign in to upload</h3>
-        <p className="mx-auto mt-2 max-w-md text-sm text-ink-600 dark:text-ink-400">
+        <h3 className="text-xl font-black text-white">Sign in to upload</h3>
+        <p className="mx-auto mt-2 max-w-md text-sm text-slate-300">
           Create a free account or sign in first, then you can upload your Ministry of Education circular.
         </p>
         <div className="mt-6 flex justify-center">
@@ -100,22 +100,18 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
         }}
         className={`relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed px-8 py-14 text-center transition-all duration-300 ${
           dragOver
-            ? "border-brand-400 bg-gradient-to-br from-brand-50 to-fuchsia-50 shadow-glow dark:border-brand-500 dark:from-brand-950/30 dark:to-fuchsia-950/20"
+            ? "border-cyan-400/60 bg-cyan-400/10"
             : uploading
-            ? "border-fuchsia-300 bg-fuchsia-50/40 dark:border-fuchsia-700 dark:bg-fuchsia-950/20"
-            : "border-brand-200 bg-gradient-to-br from-brand-50/60 to-fuchsia-50/30 hover:border-brand-400 hover:shadow-panel-hover dark:border-ink-700 dark:from-ink-900 dark:to-fuchsia-950/10"
+            ? "border-purple-400/40 bg-purple-400/10"
+            : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10"
         } ${disabled || uploading ? "cursor-not-allowed opacity-80" : ""}`}
       >
-        {/* Background decoration */}
-        <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-fuchsia-300/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-brand-300/10 blur-2xl" />
-
         {/* Icon */}
         <div
           className={`relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br transition-all duration-300 ${
             uploading
-              ? "from-fuchsia-500 to-violet-600 shadow-lg shadow-fuchsia-500/30"
-              : "from-brand-500 to-fuchsia-600 shadow-lg shadow-brand-500/30 group-hover:shadow-brand-500/45"
+              ? "from-purple-400 to-fuchsia-500 shadow-lg shadow-purple-500/30"
+              : "from-cyan-400 to-blue-600 shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/45"
           }`}
         >
           {uploading ? (
@@ -134,27 +130,26 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
           )}
         </div>
 
-        <p className="text-xl font-black tracking-tight text-ink-900 dark:text-white">
+        <p className="text-xl font-black tracking-tight text-white">
           {uploading ? "Uploading your circular…" : dragOver ? "Drop it here!" : "Drop PDF or browse"}
         </p>
-        <p className="mt-2 text-sm font-medium text-ink-500 dark:text-ink-400">
+        <p className="mt-2 text-sm font-medium text-slate-300">
           {uploading
             ? "Please wait while we store your document"
             : "Ministry of Education circulars · PDF · max 20 MB"}
         </p>
 
-        {/* File types */}
         {!uploading && (
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
             {["Sinhala", "Tamil", "English"].map((lang) => (
               <span
                 key={lang}
-                className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-brand-600 shadow-sm ring-1 ring-brand-100 dark:bg-ink-800 dark:text-brand-300 dark:ring-brand-800"
+                className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-bold text-white/70"
               >
                 {lang}
               </span>
             ))}
-            <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-fuchsia-600 shadow-sm ring-1 ring-fuchsia-100 dark:bg-ink-800 dark:text-fuchsia-300 dark:ring-fuchsia-800">
+            <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-xs font-bold text-cyan-300">
               OCR supported
             </span>
           </div>
@@ -170,7 +165,7 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
         )}
 
         {error && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-2.5 text-sm font-semibold text-rose-300">
             <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>

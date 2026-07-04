@@ -1,9 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+
+const LiquidChrome = dynamic(() => import("@/components/LiquidChrome"), {
+  ssr: false,
+});
 
 function SidebarContent({
   pathname,
@@ -35,7 +40,7 @@ function SidebarContent({
         <Link
           href="/#upload"
           onClick={onNavigate}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-brand-900 shadow-sm transition hover:bg-blue-50"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/15 border border-white/20 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-white/25"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -45,10 +50,10 @@ function SidebarContent({
         <Link
           href="/circulars"
           onClick={onNavigate}
-          className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
             onDocuments
-              ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
-              : "text-blue-100/70 hover:bg-white/8 hover:text-white"
+              ? "bg-white/15 text-white border border-white/15"
+              : "text-white/50 hover:bg-white/10 hover:text-white"
           }`}
         >
           <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -97,8 +102,20 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
   }, [pathname]);
 
   return (
-    <div className="ws-shell-bg flex min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[220px] flex-col bg-gradient-to-b from-brand-900 via-brand-900 to-brand-950 lg:flex">
+    <div className="relative flex min-h-screen">
+      {/* Full-screen LiquidChrome background */}
+      <div className="fixed inset-0 -z-10">
+        <LiquidChrome
+          baseColor={[0.04, 0.12, 0.35]}
+          speed={0.25}
+          amplitude={0.5}
+          frequencyX={2.5}
+          frequencyY={1.8}
+          interactive={true}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30" />
+      </div>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[220px] flex-col border-r border-white/10 bg-white/5 backdrop-blur-2xl lg:flex">
         <div className="flex h-full flex-col">
           <SidebarContent pathname={pathname} user={user} onSignOut={signOut} />
         </div>
@@ -113,7 +130,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[220px] flex-col bg-gradient-to-b from-brand-900 to-brand-950 transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[220px] flex-col border-r border-white/10 bg-black/60 backdrop-blur-2xl transition-transform duration-300 lg:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -128,18 +145,18 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col lg:pl-[220px]">
-        <div className="flex h-14 items-center gap-3 border-b border-ink-200/80 bg-white px-4 lg:hidden dark:border-ink-800 dark:bg-ink-900">
+        <div className="flex h-14 items-center gap-3 border-b border-white/10 bg-white/5 px-4 backdrop-blur-xl lg:hidden">
           <button
             type="button"
             aria-label="Open menu"
             onClick={() => setMobileOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-ink-200 dark:border-ink-700"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/10"
           >
-            <svg className="h-5 w-5 text-ink-700 dark:text-ink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-sm font-bold text-ink-900 dark:text-white">EasyCircular</span>
+          <span className="text-sm font-bold text-white">EasyCircular</span>
         </div>
         {children}
       </div>

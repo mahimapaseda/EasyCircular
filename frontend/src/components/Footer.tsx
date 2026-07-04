@@ -1,62 +1,58 @@
+"use client";
+
 import Link from "next/link";
-import HealthStatus from "@/components/HealthStatus";
 
 export default function Footer() {
   return (
-    <footer className="relative mt-auto border-t border-ink-200 bg-white dark:border-ink-800 dark:bg-ink-950">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
+    <footer className="relative mt-auto border-t border-white/10">
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+        <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
           {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600">
-                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="flex-1">
+            <div className="flex items-center justify-center gap-2.5 sm:justify-start">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 shadow-md shadow-blue-500/20">
+                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <span className="font-bold text-ink-900 dark:text-white">EasyCircular</span>
+              <span className="text-sm font-bold text-white">
+                Easy<span className="text-cyan-300">Circular</span>
+              </span>
             </div>
-            <p className="mt-3 max-w-md text-sm font-medium leading-relaxed text-ink-500 dark:text-ink-400">
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
               AI-powered document intelligence for Sri Lankan Ministry of Education circulars.
-              Helping school principals and administrative staff understand circulars faster.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link href="/" className="text-xs font-semibold text-ink-400 hover:text-brand-600 dark:text-ink-600 dark:hover:text-brand-400">
-                Home
-              </Link>
-              <span className="text-ink-200 dark:text-ink-800">·</span>
-              <Link href="/circulars" className="text-xs font-semibold text-ink-400 hover:text-brand-600 dark:text-ink-600 dark:hover:text-brand-400">
-                Library
-              </Link>
-              <span className="text-ink-200 dark:text-ink-800">·</span>
-              <Link href="/sign-in" className="text-xs font-semibold text-ink-400 hover:text-brand-600 dark:text-ink-600 dark:hover:text-brand-400">
-                Sign in
-              </Link>
-            </div>
-            <div className="mt-5 flex flex-wrap items-center gap-2">
-              {["Next.js 14", "FastAPI", "MongoDB", "LangChain"].map((tech) => (
-                <span
-                  key={tech}
-                  className="rounded-md border border-ink-200 bg-ink-50 px-2.5 py-0.5 text-[11px] font-semibold text-ink-600 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-400"
-                >
-                  {tech}
-                </span>
-              ))}
-            </div>
-            <p className="mt-5 text-xs font-medium text-ink-300 dark:text-ink-700">
-              University of Bedfordshire · Y3 Dissertation Project · Phase 4 MVP
             </p>
           </div>
 
-          {/* System health */}
-          <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-ink-400 dark:text-ink-600">
-              System Health
-            </p>
-            <div className="rounded-xl border border-ink-200 bg-white p-4 shadow-panel dark:border-ink-800 dark:bg-ink-900">
-              <HealthStatus compact />
-            </div>
+          {/* Links */}
+          <div className="flex gap-6">
+            <Link href="/" className="text-sm font-medium text-slate-400 transition hover:text-white">
+              Home
+            </Link>
+            <Link href="/circulars" className="text-sm font-medium text-slate-400 transition hover:text-white">
+              Library
+            </Link>
+            <Link href="/sign-in" className="text-sm font-medium text-slate-400 transition hover:text-white">
+              Sign in
+            </Link>
           </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/5 pt-6 sm:flex-row sm:justify-between">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {["Next.js", "FastAPI", "MongoDB", "LangChain"].map((tech) => (
+              <span
+                key={tech}
+                className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-slate-500"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+          <p className="text-[11px] text-slate-600">
+            University of Bedfordshire · Y3 Dissertation · Phase 4
+          </p>
         </div>
       </div>
     </footer>
