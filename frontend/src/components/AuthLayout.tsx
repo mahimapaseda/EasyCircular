@@ -41,7 +41,7 @@ export default function AuthLayout({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-xl font-black text-white tracking-tight">
+            <span className="font-display text-xl font-bold tracking-tight text-white">
               Easy<span className="text-cyan-300">Circular</span>
             </span>
           </Link>

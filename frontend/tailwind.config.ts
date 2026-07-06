@@ -131,9 +131,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-plus-jakarta)", "system-ui", "sans-serif"],
-        display: ["var(--font-plus-jakarta)", "system-ui", "sans-serif"],
-        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+        sans: ["var(--font-sans)", "Segoe UI", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "Times New Roman", "serif"],
+        mono: ["ui-monospace", "Consolas", "monospace"],
       },
       backgroundImage: {
         "gradient-brand": "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",

@@ -130,7 +130,7 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
           )}
         </div>
 
-        <p className="text-xl font-black tracking-tight text-white">
+        <p className="font-display text-xl font-bold tracking-tight text-white">
           {uploading ? "Uploading your circular…" : dragOver ? "Drop it here!" : "Drop PDF or browse"}
         </p>
         <p className="mt-2 text-sm font-medium text-slate-300">
