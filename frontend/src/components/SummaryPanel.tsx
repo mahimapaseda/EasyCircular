@@ -80,7 +80,7 @@ export default function SummaryPanel({
   const hasText = Boolean(circular.extractedText || circular.editedText);
   const [actionItemsDraft, setActionItemsDraft] = useState("");
 
-  const visibleEntities = useMemo(() => circular.entities.slice(0, 10), [circular.entities]);
+  const visibleEntities = useMemo(() => circular.entities.slice(0, 16), [circular.entities]);
   const hiddenEntityCount = Math.max(0, circular.entities.length - visibleEntities.length);
 
   useEffect(() => {
@@ -138,10 +138,10 @@ export default function SummaryPanel({
   })();
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-xl shadow-black/20 backdrop-blur-xl">
+    <section className="relative flex min-h-[min(72vh,720px)] w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-xl shadow-black/20 backdrop-blur-xl">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4 sm:px-6">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 shadow-md shadow-cyan-500/30">
             <span className="absolute inset-px rounded-[7px] bg-gradient-to-br from-white/30 to-transparent" />
@@ -214,7 +214,7 @@ export default function SummaryPanel({
         )}
       </div>
 
-      <div className="border-t border-white/10 p-5 sm:p-6">
+      <div className="flex-1 overflow-y-auto border-t border-white/5 p-5 sm:p-6 lg:p-8">
         {meta.guardrailWarnings && meta.guardrailWarnings.length > 0 && !editing && (
           <div className="mb-6 rounded-xl border border-amber-400/25 bg-gradient-to-br from-amber-400/10 to-amber-400/5 px-4 py-3">
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-amber-300">
@@ -232,7 +232,7 @@ export default function SummaryPanel({
         )}
 
         {!summary && !processing && circular.status !== "processing" && (
-          <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
+          <div className="flex min-h-[min(60vh,520px)] flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
             <div className="relative mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/25 to-blue-600/10 ring-1 ring-white/10">
               <div className="absolute inset-px rounded-[15px] bg-gradient-to-br from-white/10 to-transparent" />
               <svg className="relative h-7 w-7 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -249,7 +249,7 @@ export default function SummaryPanel({
         )}
 
         {(processing || circular.status === "processing") && (
-          <div className="flex min-h-[280px] flex-col items-center justify-center gap-4 py-8">
+          <div className="flex min-h-[min(60vh,520px)] flex-col items-center justify-center gap-4 py-8">
             <div className="relative flex h-14 w-14 items-center justify-center">
               <span className="absolute inset-0 animate-ping rounded-full bg-cyan-400/20" />
               <div className="h-12 w-12 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
@@ -262,12 +262,12 @@ export default function SummaryPanel({
         )}
 
         {summary && !editing && (
-          <div className="space-y-7">
+          <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold leading-snug tracking-tight text-white sm:text-[22px]">
+              <h2 className="font-display text-2xl font-bold leading-snug tracking-tight text-white sm:text-3xl lg:text-[2rem] lg:leading-tight">
                 {summary.title}
               </h2>
-              <div className="mt-3 h-px w-16 bg-gradient-to-r from-cyan-400 to-transparent" />
+              <div className="mt-4 h-px w-20 bg-gradient-to-r from-cyan-400 to-transparent" />
               {(meta.model || meta.durationMs) && circular.status === "completed" && (
                 <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-slate-500">
                   {meta.model && (
@@ -289,13 +289,13 @@ export default function SummaryPanel({
             </div>
 
             {visibleEntities.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {visibleEntities.map((e, i) => {
                   const s = entityStyle(e.label);
                   return (
                     <span
                       key={`${e.start}-${i}`}
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${s.pill}`}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${s.pill}`}
                       title={e.label}
                     >
                       <span className={`h-1 w-1 rounded-full ${s.dot}`} />
@@ -311,16 +311,16 @@ export default function SummaryPanel({
               </div>
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-5">
               {summary.sections.map((section, index) => (
-                <article key={section.heading} className="relative pl-8">
-                  <span className="absolute left-0 top-0 flex h-5 w-5 items-center justify-center rounded-md border border-cyan-400/30 bg-cyan-400/10 text-[10px] font-black text-cyan-300">
+                <article key={section.heading} className="relative rounded-xl border border-white/5 bg-white/[0.02] p-5 pl-12 sm:p-6 sm:pl-14">
+                  <span className="absolute left-4 top-5 flex h-6 w-6 items-center justify-center rounded-md border border-cyan-400/30 bg-cyan-400/10 text-[11px] font-bold text-cyan-300 sm:left-5">
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-300">
+                  <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">
                     {section.heading}
                   </h3>
-                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-200">
+                  <p className="whitespace-pre-wrap text-base leading-7 text-slate-200 sm:text-[17px]">
                     {section.content}
                   </p>
                 </article>
@@ -328,7 +328,7 @@ export default function SummaryPanel({
             </div>
 
             {summary.actionItems.length > 0 && (
-              <div className="relative overflow-hidden rounded-xl border border-emerald-400/25 bg-gradient-to-br from-emerald-400/10 via-emerald-400/[0.03] to-transparent p-5">
+              <div className="relative overflow-hidden rounded-xl border border-emerald-400/25 bg-gradient-to-br from-emerald-400/10 via-emerald-400/[0.03] to-transparent p-6 sm:p-7">
                 <div className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-emerald-400/10 blur-2xl" />
                 <div className="relative">
                   <h3 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
@@ -337,9 +337,9 @@ export default function SummaryPanel({
                     </svg>
                     Action items
                   </h3>
-                  <ol className="space-y-2.5">
+                  <ol className="grid gap-3 sm:grid-cols-2">
                     {summary.actionItems.map((item, i) => (
-                      <li key={item} className="flex gap-3 text-sm leading-relaxed text-slate-100">
+                      <li key={item} className="flex gap-3 rounded-lg border border-emerald-400/10 bg-black/20 p-3 text-sm leading-relaxed text-slate-100">
                         <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-[10px] font-bold text-white shadow-sm shadow-emerald-500/30">
                           {i + 1}
                         </span>

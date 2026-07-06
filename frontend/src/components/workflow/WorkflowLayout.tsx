@@ -32,7 +32,7 @@ export default function WorkflowLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-20 border-b border-white/10 bg-black/50 backdrop-blur-2xl">
-        <div className="mx-auto flex max-w-6xl items-start justify-between gap-4 px-4 py-5 sm:px-6">
+        <div className="mx-auto flex w-full max-w-[1600px] items-start justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
           <div className="min-w-0 flex-1">
             <nav className="flex items-center gap-1.5 text-[11px] font-medium">
               <Link href="/circulars" className="text-slate-500 transition hover:text-cyan-300">
@@ -72,7 +72,7 @@ export default function WorkflowLayout({
           {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
         </div>
 
-        <div className="mx-auto max-w-6xl overflow-x-auto border-t border-white/5 px-4 py-3 sm:px-6">
+        <div className="mx-auto w-full max-w-[1600px] overflow-x-auto border-t border-white/5 px-4 py-3 sm:px-6 lg:px-8">
           <ol className="flex items-center gap-1.5">
             {WORKFLOW_STEPS.map((step, i) => {
               const done = clamped > step.id;
@@ -122,7 +122,7 @@ export default function WorkflowLayout({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">{children}</main>
+      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 }

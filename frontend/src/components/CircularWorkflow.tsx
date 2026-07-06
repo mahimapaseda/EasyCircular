@@ -191,6 +191,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   const hasText = Boolean(displayText(circular));
   const sourceText = displayText(circular);
   const confidence = extractionConfidence(circular);
+  const hasSummary = Boolean(circular.summary);
   const canProcess =
     circular.status === "extracted" ||
     circular.status === "completed" ||
@@ -236,8 +237,18 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="space-y-5 lg:sticky lg:top-[168px]">
+      <div
+        className={
+          hasSummary
+            ? sourceExpanded
+              ? "grid w-full gap-5 xl:grid-cols-[minmax(340px,36%)_minmax(0,1fr)] xl:items-start"
+              : "grid w-full gap-5 xl:grid-cols-[minmax(260px,24%)_minmax(0,1fr)] xl:items-start"
+            : "mx-auto w-full max-w-3xl space-y-5"
+        }
+      >
+        <div
+          className={`space-y-5 ${hasSummary ? "order-2 xl:order-1 xl:sticky xl:top-[168px]" : ""}`}
+        >
           <SourceTextPanel
             circular={circular}
             draftText={draftText}
@@ -249,6 +260,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
             hasText={hasText}
             hasEntities={hasEntities}
             expanded={sourceExpanded}
+            compact={hasSummary}
             onToggle={() => setSourceExpanded((v) => !v)}
             onTextViewChange={setTextView}
             onDraftChange={setDraftText}
@@ -283,7 +295,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
           )}
         </div>
 
-        <div className="space-y-5">
+        <div className={`min-w-0 space-y-5 ${hasSummary ? "order-1 xl:order-2" : ""}`}>
           <SummaryPanel
             circular={circular}
             processing={processing}

@@ -16,6 +16,7 @@ type SourceTextPanelProps = {
   hasText: boolean;
   hasEntities: boolean;
   expanded: boolean;
+  compact?: boolean;
   onToggle: () => void;
   onTextViewChange: (view: TextView) => void;
   onDraftChange: (text: string) => void;
@@ -38,6 +39,7 @@ export default function SourceTextPanel({
   hasText,
   hasEntities,
   expanded,
+  compact = false,
   onToggle,
   onTextViewChange,
   onDraftChange,
@@ -118,8 +120,8 @@ export default function SourceTextPanel({
           : "text-amber-300";
 
   return (
-    <div className={panelClass}>
-      <div className="flex items-center gap-3 px-5 py-4">
+    <div className={`${panelClass} ${compact && !expanded ? "xl:max-w-none" : ""}`}>
+      <div className={`flex items-center gap-3 ${compact && !expanded ? "px-4 py-3" : "px-5 py-4"}`}>
         <button
           type="button"
           onClick={onToggle}
