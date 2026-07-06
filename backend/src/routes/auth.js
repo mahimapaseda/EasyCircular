@@ -1,11 +1,14 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const { authRequired, JWT_SECRET } = require("../middleware/auth");
 const { claimSessionCirculars } = require("../services/circularService");
 
 const router = express.Router();
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID?.trim() || "";
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 function signToken(user) {
   return jwt.sign(
@@ -68,6 +71,12 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
+    if (!user.passwordHash) {
+      return res.status(401).json({
+        error: "This account uses Google sign-in. Continue with Google instead.",
+      });
+    }
+
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       return res.status(401).json({ error: "Invalid email or password" });
@@ -78,6 +87,68 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     console.error("Login error:", error.message);
     res.status(500).json({ error: "Could not sign in" });
+  }
+});
+
+router.post("/google", async (req, res) => {
+  try {
+    if (!googleClient || !GOOGLE_CLIENT_ID) {
+      return res.status(503).json({ error: "Google sign-in is not configured" });
+    }
+
+    const { credential } = req.body;
+    if (!credential?.trim()) {
+      return res.status(400).json({ error: "Google credential is required" });
+    }
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch {
+      return res.status(401).json({ error: "Invalid or expired Google sign-in" });
+    }
+
+    const googleId = payload.sub;
+    const email = payload.email?.toLowerCase().trim();
+    const name = payload.name?.trim() || email?.split("@")[0] || "User";
+
+    if (!googleId || !email) {
+      return res.status(400).json({ error: "Google account email is required" });
+    }
+
+    if (payload.email_verified === false) {
+      return res.status(401).json({ error: "Google email address is not verified" });
+    }
+
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user) {
+        if (user.googleId && user.googleId !== googleId) {
+          return res.status(409).json({
+            error: "This email is linked to a different Google account",
+          });
+        }
+        user.googleId = googleId;
+        if (!user.name?.trim()) {
+          user.name = name;
+        }
+        await user.save();
+      } else {
+        user = await User.create({ name, email, googleId });
+      }
+    }
+
+    const token = signToken(user);
+    res.json({ user: formatUser(user), token });
+  } catch (error) {
+    console.error("Google auth error:", error.message);
+    res.status(500).json({ error: "Could not sign in with Google" });
   }
 });
 

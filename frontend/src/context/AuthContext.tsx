@@ -10,6 +10,7 @@ import {
 import {
   fetchCurrentUser,
   login as apiLogin,
+  loginWithGoogle as apiLoginWithGoogle,
   register as apiRegister,
   setStoredToken,
   type User,
@@ -20,6 +21,7 @@ type AuthContextValue = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: (credential: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => void;
 };
@@ -51,6 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await attachSessionCirculars();
   }, [attachSessionCirculars]);
 
+  const signInWithGoogle = useCallback(async (credential: string) => {
+    const { user: nextUser, token } = await apiLoginWithGoogle(credential);
+    setStoredToken(token);
+    setUser(nextUser);
+    await attachSessionCirculars();
+  }, [attachSessionCirculars]);
+
   const signUp = useCallback(
     async (name: string, email: string, password: string) => {
       const { user: nextUser, token } = await apiRegister(name, email, password);
@@ -67,7 +76,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{ user, loading, signIn, signInWithGoogle, signUp, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );

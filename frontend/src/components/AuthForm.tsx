@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
@@ -11,6 +12,7 @@ type AuthFormProps = {
     email: string;
     password: string;
   }) => Promise<void>;
+  onGoogleSignIn?: (credential: string) => Promise<void>;
 };
 
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
@@ -36,7 +38,7 @@ function GoogleIcon() {
 const inputClass =
   "w-full rounded-xl border border-white/15 bg-white/5 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400/40 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/20";
 
-export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
+export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: AuthFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,6 +46,7 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   const isSignUp = mode === "sign-up";
 
@@ -57,6 +60,19 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleGoogleCredential(credential: string) {
+    if (!onGoogleSignIn) return;
+    setError(null);
+    setGoogleSubmitting(true);
+    try {
+      await onGoogleSignIn(credential);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
+    } finally {
+      setGoogleSubmitting(false);
     }
   }
 
@@ -220,16 +236,22 @@ export default function AuthForm({ mode, returnTo, onSubmit }: AuthFormProps) {
         </div>
       </div>
 
-      {/* Google OAuth (placeholder) */}
-      <button
-        type="button"
-        disabled
-        title="Google sign-in coming soon"
-        className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-slate-400 opacity-60 transition hover:bg-white/10"
-      >
-        <GoogleIcon />
-        Continue with Google
-      </button>
+      {onGoogleSignIn ? (
+        <GoogleSignInButton
+          onCredential={handleGoogleCredential}
+          submitting={googleSubmitting}
+        />
+      ) : (
+        <button
+          type="button"
+          disabled
+          title="Google sign-in is not available"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-slate-400 opacity-60"
+        >
+          <GoogleIcon />
+          Continue with Google
+        </button>
+      )}
 
       {/* Switch mode */}
       <p className="mt-7 text-center text-sm text-slate-400">

@@ -17,7 +17,7 @@ function SignUpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = safeReturnTo(searchParams.get("returnTo"));
-  const { user, loading, signUp } = useAuth();
+  const { user, loading, signUp, signInWithGoogle } = useAuth();
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -37,6 +37,11 @@ function SignUpContent() {
       onSubmit={async ({ name, email, password }) => {
         await signUp(name!, email, password);
         showToast("Account created — you can now upload your circular.", "success");
+        router.push(returnTo);
+      }}
+      onGoogleSignIn={async (credential) => {
+        await signInWithGoogle(credential);
+        showToast("Signed in with Google — you can now upload your circular.", "success");
         router.push(returnTo);
       }}
     />

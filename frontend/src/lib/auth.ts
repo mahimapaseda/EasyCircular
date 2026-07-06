@@ -76,6 +76,13 @@ export async function login(
   });
 }
 
+export async function loginWithGoogle(credential: string): Promise<AuthResponse> {
+  return authRequest<AuthResponse>("/api/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ credential }),
+  });
+}
+
 export async function fetchCurrentUser(): Promise<User | null> {
   const token = getStoredToken();
   if (!token) return null;
