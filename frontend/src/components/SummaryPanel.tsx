@@ -268,22 +268,9 @@ export default function SummaryPanel({
                 {summary.title}
               </h2>
               <div className="mt-4 h-px w-20 bg-gradient-to-r from-cyan-400 to-transparent" />
-              {(meta.model || meta.durationMs) && circular.status === "completed" && (
-                <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-slate-500">
-                  {meta.model && (
-                    <span className="inline-flex items-center gap-1">
-                      <svg className="h-3 w-3 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      {meta.model}
-                    </span>
-                  )}
-                  {meta.durationMs && (
-                    <>
-                      <span className="h-0.5 w-0.5 rounded-full bg-slate-600" />
-                      <span>{(meta.durationMs / 1000).toFixed(1)}s</span>
-                    </>
-                  )}
+              {meta.durationMs && circular.status === "completed" && (
+                <div className="mt-3 text-[11px] font-medium text-slate-500">
+                  <span>{(meta.durationMs / 1000).toFixed(1)}s</span>
                 </div>
               )}
             </div>
