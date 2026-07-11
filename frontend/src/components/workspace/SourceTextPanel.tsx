@@ -220,7 +220,7 @@ export default function SourceTextPanel({
 
           <div className="px-5 pb-5">
             {textView === "highlights" && hasEntities ? (
-              <div className="max-h-[360px] overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-4 scrollbar-thin">
+              <div className="max-h-[min(50vh,360px)] overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-3 scrollbar-thin sm:max-h-[360px] sm:p-4">
                 <EntityHighlight text={sourceText} entities={circular.entities} />
               </div>
             ) : (
@@ -228,7 +228,7 @@ export default function SourceTextPanel({
                 value={draftText}
                 onChange={(e) => onDraftChange(e.target.value)}
                 disabled={!hasText && circular.status === "failed"}
-                className="min-h-[280px] w-full resize-y rounded-xl border border-white/15 bg-black/20 px-4 py-3 font-mono text-[13px] leading-relaxed text-slate-200 outline-none placeholder:text-slate-500 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
+                className="min-h-[200px] w-full resize-y rounded-xl border border-white/15 bg-black/20 px-3 py-3 font-mono text-[12px] leading-relaxed text-slate-200 outline-none placeholder:text-slate-500 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 sm:min-h-[280px] sm:px-4 sm:text-[13px]"
               />
             )}
 
@@ -237,7 +237,7 @@ export default function SourceTextPanel({
                 type="button"
                 onClick={onSave}
                 disabled={saving || !hasText || textView === "highlights"}
-                className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20 disabled:opacity-50"
+                className="min-h-10 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20 disabled:opacity-50"
               >
                 {saving ? "Saving…" : "Save edits"}
               </button>

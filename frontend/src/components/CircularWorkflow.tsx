@@ -219,7 +219,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         type="button"
         onClick={() => void handleProcess()}
         disabled={processing || circular.status === "processing"}
-        className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-md transition hover:scale-[1.02] disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-md transition hover:scale-[1.02] disabled:opacity-60 md:w-auto"
       >
         {processing || circular.status === "processing" ? (
           <>
@@ -256,13 +256,13 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         className={
           hasSummary
             ? sourceExpanded
-              ? "grid w-full gap-5 xl:grid-cols-[minmax(340px,36%)_minmax(0,1fr)] xl:items-start"
-              : "grid w-full gap-5 xl:grid-cols-[minmax(260px,24%)_minmax(0,1fr)] xl:items-start"
-            : "mx-auto w-full max-w-3xl space-y-5"
+              ? "grid w-full gap-4 md:gap-5 lg:grid-cols-[minmax(280px,38%)_minmax(0,1fr)] lg:items-start"
+              : "grid w-full gap-4 md:gap-5 lg:grid-cols-[minmax(220px,30%)_minmax(0,1fr)] lg:items-start"
+            : "mx-auto w-full max-w-3xl space-y-4 md:space-y-5"
         }
       >
         <div
-          className={`space-y-5 ${hasSummary ? "order-2 xl:order-1 xl:sticky xl:top-[168px]" : ""}`}
+          className={`space-y-4 md:space-y-5 ${hasSummary ? "order-2 lg:order-1 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto" : ""}`}
         >
           <SourceTextPanel
             circular={circular}
@@ -310,7 +310,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
           )}
         </div>
 
-        <div className={`min-w-0 space-y-5 ${hasSummary ? "order-1 xl:order-2" : ""}`}>
+        <div className={`min-w-0 space-y-4 md:space-y-5 ${hasSummary ? "order-1 lg:order-2" : ""}`}>
           <SummaryPanel
             circular={circular}
             processing={processing}

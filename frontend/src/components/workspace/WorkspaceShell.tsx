@@ -142,7 +142,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[220px] flex-col border-r border-white/10 bg-black/50 backdrop-blur-2xl lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[200px] flex-col border-r border-white/10 bg-black/50 backdrop-blur-2xl md:flex lg:w-[220px]">
         <SidebarContent pathname={pathname} user={user} onSignOut={signOut} />
       </aside>
 
@@ -150,12 +150,12 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         <button
           type="button"
           aria-label="Close menu"
-          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[220px] flex-col border-r border-white/10 bg-black/80 backdrop-blur-2xl transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(85vw,280px)] flex-col border-r border-white/10 bg-black/80 backdrop-blur-2xl transition-transform duration-300 md:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -167,8 +167,8 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         />
       </aside>
 
-      <div className="flex min-h-screen flex-1 flex-col lg:pl-[220px]">
-        <div className="flex h-12 items-center gap-3 border-b border-white/10 bg-black/30 px-4 backdrop-blur-xl lg:hidden">
+      <div className="flex min-h-screen flex-1 flex-col md:pl-[200px] lg:pl-[220px]">
+        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-white/10 bg-black/30 px-4 backdrop-blur-xl md:hidden">
           <button
             type="button"
             aria-label="Open menu"

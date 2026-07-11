@@ -31,34 +31,34 @@ export default function WorkflowLayout({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-black/50 backdrop-blur-2xl">
-        <div className="mx-auto flex w-full max-w-[1600px] items-start justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
+      <header className="sticky top-12 z-20 border-b border-white/10 bg-black/50 backdrop-blur-2xl md:top-0">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-4 sm:px-6 md:flex-row md:items-start md:justify-between md:py-5 lg:px-8">
           <div className="min-w-0 flex-1">
             <nav className="flex items-center gap-1.5 text-[11px] font-medium">
-              <Link href="/circulars" className="text-slate-500 transition hover:text-cyan-300">
+              <Link href="/circulars" className="shrink-0 text-slate-500 transition hover:text-cyan-300">
                 Documents
               </Link>
-              <svg className="h-3 w-3 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="h-3 w-3 shrink-0 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
               <span className="truncate text-slate-400">{circular.originalFilename}</span>
             </nav>
 
-            <div className="mt-2 flex items-center gap-3">
+            <div className="mt-2 flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02] text-cyan-300">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                 </svg>
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="truncate text-lg font-bold tracking-tight text-white sm:text-xl">
+                  <h1 className="max-w-full truncate text-base font-bold tracking-tight text-white sm:text-lg md:text-xl">
                     {circular.originalFilename}
                   </h1>
                   <StatusBadge status={circular.status} />
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[11px] font-medium text-slate-500">
-                  <span>Updated {formatRelativeTime(circular.updatedAt)}</span>
+                <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] font-medium text-slate-500 sm:text-[11px]">
+                  <span className="shrink-0">Updated {formatRelativeTime(circular.updatedAt)}</span>
                   {stats.map((s) => (
                     <span key={s} className="flex items-center gap-1.5">
                       <span className="h-0.5 w-0.5 rounded-full bg-slate-600" />
@@ -69,19 +69,23 @@ export default function WorkflowLayout({
               </div>
             </div>
           </div>
-          {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+          {actions && (
+            <div className="flex w-full shrink-0 items-stretch md:w-auto md:items-center">
+              {actions}
+            </div>
+          )}
         </div>
 
-        <div className="mx-auto w-full max-w-[1600px] overflow-x-auto border-t border-white/5 px-4 py-3 sm:px-6 lg:px-8">
-          <ol className="flex items-center gap-1.5">
+        <div className="-mx-4 overflow-x-auto border-t border-white/5 px-4 py-3 sm:mx-0 sm:px-6 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <ol className="mx-auto flex w-full min-w-max max-w-[1600px] items-center gap-1 sm:gap-1.5">
             {WORKFLOW_STEPS.map((step, i) => {
               const done = clamped > step.id;
               const active = clamped === step.id;
               const isLast = i === WORKFLOW_STEPS.length - 1;
               return (
-                <li key={step.key} className="flex items-center gap-1.5">
+                <li key={step.key} className="flex items-center gap-1 sm:gap-1.5">
                   <span
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold transition sm:gap-1.5 sm:px-3 sm:text-[11px] ${
                       active
                         ? "bg-white text-slate-900 shadow-lg shadow-white/10"
                         : done
@@ -106,11 +110,11 @@ export default function WorkflowLayout({
                         step.id
                       )}
                     </span>
-                    {step.label}
+                    <span className="hidden min-[420px]:inline">{step.label}</span>
                   </span>
                   {!isLast && (
                     <span
-                      className={`h-px w-6 shrink-0 ${
+                      className={`h-px w-3 shrink-0 sm:w-6 ${
                         done ? "bg-cyan-400/40" : "bg-white/10"
                       }`}
                     />
@@ -122,7 +126,7 @@ export default function WorkflowLayout({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">{children}</main>
     </div>
   );
 }

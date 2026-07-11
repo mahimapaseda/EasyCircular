@@ -138,10 +138,10 @@ export default function SummaryPanel({
   })();
 
   return (
-    <section className="relative flex min-h-[min(72vh,720px)] w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-xl shadow-black/20 backdrop-blur-xl">
+    <section className="relative flex min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-xl shadow-black/20 backdrop-blur-xl lg:min-h-[min(72vh,720px)]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4 sm:px-6">
+      <div className="flex flex-col gap-3 border-b border-white/10 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6 sm:py-4">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 shadow-md shadow-cyan-500/30">
             <span className="absolute inset-px rounded-[7px] bg-gradient-to-br from-white/30 to-transparent" />
@@ -168,25 +168,25 @@ export default function SummaryPanel({
           </div>
         </div>
         {summary && !editing && (
-          <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+          <div className="flex w-full items-center justify-stretch gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 sm:w-auto sm:justify-start">
             <button
               type="button"
               onClick={onEditStart}
-              className="rounded-md px-2.5 py-1 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white"
+              className="min-h-9 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white sm:flex-none sm:py-1"
             >
               Edit
             </button>
             <button
               type="button"
               onClick={() => void handleCopy()}
-              className="rounded-md px-2.5 py-1 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white"
+              className="min-h-9 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white sm:flex-none sm:py-1"
             >
               Copy
             </button>
             <button
               type="button"
               onClick={() => handleExport("md")}
-              className="rounded-md px-2.5 py-1 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white"
+              className="min-h-9 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white sm:flex-none sm:py-1"
             >
               Export
             </button>
@@ -214,7 +214,7 @@ export default function SummaryPanel({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto border-t border-white/5 p-5 sm:p-6 lg:p-8">
+      <div className="flex-1 overflow-y-auto border-t border-white/5 p-4 sm:p-6 lg:p-8">
         {meta.guardrailWarnings && meta.guardrailWarnings.length > 0 && !editing && (
           <div className="mb-6 rounded-xl border border-amber-400/25 bg-gradient-to-br from-amber-400/10 to-amber-400/5 px-4 py-3">
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-amber-300">

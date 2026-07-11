@@ -97,7 +97,7 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
           setDragOver(false);
           onFile(e.dataTransfer.files[0]);
         }}
-        className={`relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed px-8 py-14 text-center transition-all duration-300 ${
+        className={`relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed px-5 py-10 text-center transition-all duration-300 sm:px-8 sm:py-14 ${
           dragOver
             ? "border-cyan-400/60 bg-cyan-400/10"
             : uploading
@@ -129,7 +129,7 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
           )}
         </div>
 
-        <p className="font-display text-xl font-bold tracking-tight text-white">
+        <p className="font-display text-lg font-bold tracking-tight text-white sm:text-xl">
           {uploading ? "Uploading your circular…" : dragOver ? "Drop it here!" : "Drop PDF or browse"}
         </p>
         <p className="mt-2 text-sm font-medium text-slate-300">

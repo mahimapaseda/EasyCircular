@@ -96,7 +96,7 @@ export default function DocumentsPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-10 border-b border-white/10 bg-black/50 px-4 py-4 backdrop-blur-2xl sm:px-6">
+      <header className="sticky top-12 z-10 border-b border-white/10 bg-black/50 px-4 py-4 backdrop-blur-2xl md:top-0 sm:px-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-white">Documents</h1>
@@ -126,21 +126,21 @@ export default function DocumentsPage() {
           </p>
         )}
 
-        <dl className="mb-6 grid grid-cols-3 gap-3">
+        <dl className="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
           {[
             { label: "Total", value: stats.total },
             { label: "Summarized", value: stats.completed },
             { label: "In progress", value: stats.active },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 backdrop-blur-xl">
-              <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</dt>
-              <dd className="mt-1 text-2xl font-bold tabular-nums text-white">{value}</dd>
+            <div key={label} className="rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 backdrop-blur-xl sm:px-4 sm:py-3">
+              <dt className="text-[9px] font-bold uppercase tracking-wider text-slate-500 sm:text-[10px]">{label}</dt>
+              <dd className="mt-1 text-xl font-bold tabular-nums text-white sm:text-2xl">{value}</dd>
             </div>
           ))}
         </dl>
 
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative max-w-md flex-1">
+        <div className="mb-5 flex flex-col gap-3">
+          <div className="relative w-full">
             <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
@@ -152,13 +152,13 @@ export default function DocumentsPage() {
               className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-9 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
             />
           </div>
-          <div className="inline-flex rounded-lg border border-white/10 bg-white/5 p-0.5">
+          <div className="inline-flex w-full rounded-lg border border-white/10 bg-white/5 p-0.5 sm:w-auto">
             {FILTERS.map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setFilter(key)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                className={`min-h-10 flex-1 rounded-md px-3 py-2 text-xs font-semibold transition sm:flex-none sm:py-1.5 ${
                   filter === key
                     ? "bg-white/15 text-white"
                     : "text-slate-400 hover:text-white"
@@ -219,7 +219,7 @@ export default function DocumentsPage() {
             )}
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {filtered.map((item) => (
               <DocumentCard key={item.id} item={item} onDelete={handleDelete} />
             ))}
