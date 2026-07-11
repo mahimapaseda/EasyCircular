@@ -7,6 +7,7 @@ const Circular = require("../models/Circular");
 const { authOptional, authRequired } = require("../middleware/auth");
 const { rateLimit } = require("../middleware/rateLimit");
 const { SESSION_HEADER } = require("../middleware/session");
+const { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } = require("../../../shared/api-contract");
 const {
   canAccess,
   createFromUpload,
@@ -23,7 +24,7 @@ const router = express.Router();
 const UPLOAD_DIR = path.resolve(
   process.env.UPLOAD_DIR || path.join(__dirname, "../../uploads"),
 );
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_FILE_SIZE = MAX_UPLOAD_BYTES;
 
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -93,7 +94,7 @@ router.post("/upload", authRequired, upload.single("file"), async (req, res, nex
     }
 
     if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({ error: "File exceeds the 20 MB limit" });
+      return res.status(400).json({ error: `File exceeds the ${MAX_UPLOAD_MB} MB limit` });
     }
 
     next(error);

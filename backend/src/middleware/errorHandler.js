@@ -1,3 +1,5 @@
+const { MAX_UPLOAD_MB } = require("../../../shared/api-contract");
+
 function notFoundHandler(_req, res) {
   res.status(404).json({ error: "Route not found" });
 }
@@ -6,7 +8,7 @@ function errorHandler(err, req, res, _next) {
   if (multerLikeError(err)) {
     const message =
       err.code === "LIMIT_FILE_SIZE"
-        ? "File exceeds the 20 MB limit"
+        ? `File exceeds the ${MAX_UPLOAD_MB} MB limit`
         : err.message;
     return res.status(400).json({ error: message });
   }

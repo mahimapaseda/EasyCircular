@@ -15,9 +15,11 @@ class Settings:
     chunk_size: int
     chunk_overlap: int
     map_reduce_threshold: int
+    max_upload_bytes: int
 
     @classmethod
     def from_env(cls) -> "Settings":
+        max_upload_mb = int(os.getenv("MAX_UPLOAD_MB", "50"))
         return cls(
             port=int(os.getenv("PORT", "5000")),
             llm_provider=os.getenv("LLM_PROVIDER", "openai").lower(),
@@ -30,6 +32,7 @@ class Settings:
             chunk_size=int(os.getenv("CHUNK_SIZE", "6000")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "400")),
             map_reduce_threshold=int(os.getenv("MAP_REDUCE_THRESHOLD", "10000")),
+            max_upload_bytes=max_upload_mb * 1024 * 1024,
         )
 
 

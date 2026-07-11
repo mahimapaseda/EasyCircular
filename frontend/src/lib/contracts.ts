@@ -1,4 +1,6 @@
 export const API_VERSION = "v1";
+export const MAX_UPLOAD_MB = 50;
+export const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
 
 export const WORKFLOW_STEPS = [
   { id: 1, key: "upload", label: "Upload", description: "Select a PDF circular" },

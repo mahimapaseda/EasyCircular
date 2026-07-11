@@ -27,10 +27,14 @@ const WORKFLOW_STEPS = Object.freeze([
 ]);
 
 const API_VERSION = "v1";
+const MAX_UPLOAD_MB = 50;
+const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
 
 module.exports = {
   API_VERSION,
   CIRCULAR_STATUS,
   ENTITY_LABELS,
   WORKFLOW_STEPS,
+  MAX_UPLOAD_MB,
+  MAX_UPLOAD_BYTES,
 };

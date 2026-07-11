@@ -225,6 +225,16 @@ export async function processCircular(
   return data;
 }
 
+export async function deleteCircular(id: string): Promise<void> {
+  const response = await apiFetch(`${API_URL}/api/circulars/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+}
+
 export function displayText(circular: Circular): string {
   return circular.editedText ?? circular.extractedText ?? "";
 }

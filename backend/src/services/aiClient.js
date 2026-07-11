@@ -4,17 +4,27 @@ const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:5000";
 
 const client = axios.create({
   baseURL: AI_SERVICE_URL,
-  timeout: 180_000,
   headers: { "Content-Type": "application/json" },
 });
 
+const PARSE_TIMEOUT_MS = Number(process.env.AI_PARSE_TIMEOUT_MS || 600_000);
+const PIPELINE_TIMEOUT_MS = Number(process.env.AI_PIPELINE_TIMEOUT_MS || 300_000);
+
 async function parsePdf(base64, filename) {
-  const { data } = await client.post("/v1/parse/pdf", { base64, filename });
+  const { data } = await client.post(
+    "/v1/parse/pdf",
+    { base64, filename },
+    { timeout: PARSE_TIMEOUT_MS },
+  );
   return data;
 }
 
 async function runPipeline(text) {
-  const { data } = await client.post("/v1/pipeline", { text });
+  const { data } = await client.post(
+    "/v1/pipeline",
+    { text },
+    { timeout: PIPELINE_TIMEOUT_MS },
+  );
   return data;
 }
 

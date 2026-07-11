@@ -49,8 +49,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${sourceSans.variable} ${sourceSerif.variable} font-sans`}>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body
+        className={`${sourceSans.variable} ${sourceSerif.variable} font-sans`}
+        suppressHydrationWarning
+      >
         <AuthProvider>
           <ToastProvider>
             {children}

@@ -5,8 +5,7 @@ import { useCallback, useState } from "react";
 import AuthButtonGroup from "@/components/AuthButtonGroup";
 import { useAuth } from "@/context/AuthContext";
 import { uploadCircular } from "@/lib/circulars";
-
-const MAX_SIZE = 20 * 1024 * 1024;
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from "@/lib/contracts";
 
 export const UPLOAD_RETURN_TO = "/#upload";
 
@@ -30,8 +29,8 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
         return;
       }
 
-      if (file.size > MAX_SIZE) {
-        setError("File exceeds the 20 MB limit.");
+      if (file.size > MAX_UPLOAD_BYTES) {
+        setError(`File exceeds the ${MAX_UPLOAD_MB} MB limit.`);
         return;
       }
 
@@ -136,7 +135,7 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
         <p className="mt-2 text-sm font-medium text-slate-300">
           {uploading
             ? "Please wait while we store your document"
-            : "Ministry of Education circulars · PDF · max 20 MB"}
+            : `Ministry of Education circulars · PDF · max ${MAX_UPLOAD_MB} MB`}
         </p>
 
         {!uploading && (

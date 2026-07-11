@@ -3,6 +3,7 @@ import base64
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from app.config import settings
 from app.ner import extract_entities
 from app.pdf_parser import parse_pdf_bytes
 from app.summarize import summarize_text
@@ -35,8 +36,9 @@ def parse_pdf(request: ParsePdfRequest):
     except Exception as exc:
         raise HTTPException(status_code=400, detail="Invalid base64 PDF data") from exc
 
-    if len(pdf_bytes) > 20 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="PDF exceeds 20 MB limit")
+    if len(pdf_bytes) > settings.max_upload_bytes:
+        max_mb = settings.max_upload_bytes // (1024 * 1024)
+        raise HTTPException(status_code=400, detail=f"PDF exceeds {max_mb} MB limit")
 
     try:
         result = parse_pdf_bytes(pdf_bytes)

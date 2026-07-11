@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import DocumentCard from "@/components/workspace/DocumentCard";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { listCirculars, type Circular } from "@/lib/circulars";
+import { deleteCircular, listCirculars, type Circular } from "@/lib/circulars";
 
 type FilterKey = "all" | "completed" | "active";
 
@@ -74,6 +74,25 @@ export default function DocumentsPage() {
       return haystack.includes(q);
     });
   }, [items, filter, query]);
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      const item = items.find((entry) => entry.id === id);
+      try {
+        await deleteCircular(id);
+        setItems((current) => current.filter((entry) => entry.id !== id));
+        showToast(
+          item ? `"${item.originalFilename}" deleted` : "Document deleted",
+          "success",
+        );
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Could not delete document";
+        showToast(message, "error");
+        throw err;
+      }
+    },
+    [items, showToast],
+  );
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -202,7 +221,7 @@ export default function DocumentsPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((item) => (
-              <DocumentCard key={item.id} item={item} />
+              <DocumentCard key={item.id} item={item} onDelete={handleDelete} />
             ))}
           </div>
         )}

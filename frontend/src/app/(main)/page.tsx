@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import UploadDropzone, { UPLOAD_RETURN_TO } from "@/components/UploadDropzone";
 import { useAuth } from "@/context/AuthContext";
+import { MAX_UPLOAD_MB } from "@/lib/contracts";
 
 const FEATURES = [
   {
@@ -264,7 +265,7 @@ export default function HomePage() {
               Upload a circular
             </h2>
             <p className="mt-2 text-sm text-slate-300">
-              PDF only · up to 20 MB · sign in to get started
+              PDF only · up to {MAX_UPLOAD_MB} MB · sign in to get started
             </p>
           </div>
           <UploadDropzone />
