@@ -300,7 +300,7 @@ export default function SummaryPanel({
 
             <div className="space-y-5">
               {summary.sections.map((section, index) => (
-                <article key={section.heading} className="relative rounded-xl border border-white/5 bg-white/[0.02] p-5 pl-12 sm:p-6 sm:pl-14">
+                <article key={`${section.heading}-${index}`} className="relative rounded-xl border border-white/5 bg-white/[0.02] p-5 pl-12 sm:p-6 sm:pl-14">
                   <span className="absolute left-4 top-5 flex h-6 w-6 items-center justify-center rounded-md border border-cyan-400/30 bg-cyan-400/10 text-[11px] font-bold text-cyan-300 sm:left-5">
                     {String(index + 1).padStart(2, "0")}
                   </span>

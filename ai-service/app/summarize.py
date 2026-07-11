@@ -219,14 +219,24 @@ def summarize_text(
     chunk_count = len(split_text(text)) if len(text) > settings.map_reduce_threshold else 1
 
     if llm_is_configured():
-        summary, tokens, chunk_count = llm_summarize(text, entities)
-        meta = {
-            "model": active_model_name(),
-            "tokensUsed": tokens,
-            "mode": "llm",
-            "provider": active_provider(),
-            "chunkCount": chunk_count,
-        }
+        try:
+            summary, tokens, chunk_count = llm_summarize(text, entities)
+            meta = {
+                "model": active_model_name(),
+                "tokensUsed": tokens,
+                "mode": "llm",
+                "provider": active_provider(),
+                "chunkCount": chunk_count,
+            }
+        except Exception:
+            summary = fallback_summarize(text, entities)
+            meta = {
+                "model": "extractive-fallback",
+                "tokensUsed": 0,
+                "mode": "fallback",
+                "provider": active_provider(),
+                "chunkCount": 1,
+            }
     else:
         summary = fallback_summarize(text, entities)
         meta = {

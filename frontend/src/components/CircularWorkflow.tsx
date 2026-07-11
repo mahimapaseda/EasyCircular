@@ -139,6 +139,15 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
     setProcessing(true);
     setError(null);
     try {
+      const persistedText = displayText(circular!);
+      const draftDiffers = draftText.trim() !== persistedText.trim();
+
+      if (draftDiffers) {
+        const saved = await saveCircularText(id, draftText);
+        setCircular(saved);
+        setDraftText(displayText(saved));
+      }
+
       const result = await processCircular(id);
       setCircular(result.circular);
       setDraftText(displayText(result.circular));
@@ -154,6 +163,12 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
           : "Summary generated successfully.",
         "success",
       );
+      if (result.guardrailWarnings?.length) {
+        showToast(
+          `${result.guardrailWarnings.length} date warning(s) — review suggested.`,
+          "info",
+        );
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Processing failed";
       setError(message);

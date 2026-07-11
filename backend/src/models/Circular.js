@@ -63,6 +63,7 @@ const circularSchema = new mongoose.Schema(
       ocrLang: { type: String, default: null },
       pageCount: { type: Number, default: 0 },
       extractionError: { type: String, default: null },
+      processingError: { type: String, default: null },
       model: { type: String, default: null },
       tokensUsed: { type: Number, default: 0 },
       durationMs: { type: Number, default: 0 },

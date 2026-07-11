@@ -112,6 +112,9 @@ async function extractText(circular) {
   }
 
   circular.extractedText = extractedText;
+  circular.editedText = null;
+  circular.entities = [];
+  circular.summary = null;
   circular.contentHash = hashText(extractedText);
   circular.status = "extracted";
   circular.processingMeta = {
@@ -119,6 +122,7 @@ async function extractText(circular) {
     ocrLang,
     pageCount,
     extractionError,
+    processingError: null,
   };
   await circular.save();
   return circular;
@@ -223,13 +227,21 @@ async function saveEditedText(circular, text) {
   return circular;
 }
 
-async function findCachedSummary(contentHash, excludeId) {
-  return Circular.findOne({
+async function findCachedSummary(contentHash, excludeId, userId = null) {
+  const filter = {
     contentHash,
     status: "completed",
     _id: { $ne: excludeId },
     summary: { $ne: null },
-  }).sort({ updatedAt: -1 });
+  };
+
+  if (userId) {
+    filter.userId = userId;
+  } else {
+    filter.userId = null;
+  }
+
+  return Circular.findOne(filter).sort({ updatedAt: -1 });
 }
 
 async function processCircular(circular) {
@@ -249,7 +261,7 @@ async function processCircular(circular) {
   const contentHash = hashText(text);
   circular.contentHash = contentHash;
 
-  const cached = await findCachedSummary(contentHash, circular._id);
+  const cached = await findCachedSummary(contentHash, circular._id, circular.userId);
   if (cached?.summary?.sections?.length) {
     circular.entities = cached.entities;
     circular.summary = cached.summary;
@@ -284,7 +296,8 @@ async function processCircular(circular) {
     circular.status = "failed";
     circular.processingMeta = {
       ...toPlainMeta(circular.processingMeta),
-      extractionError: String(message),
+      processingError: String(message),
+      extractionError: null,
     };
     await circular.save();
 

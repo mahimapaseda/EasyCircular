@@ -34,6 +34,7 @@ export type CircularProcessingMeta = {
   ocrLang: string | null;
   pageCount: number;
   extractionError: string | null;
+  processingError?: string | null;
   model?: string | null;
   tokensUsed?: number;
   durationMs?: number;
