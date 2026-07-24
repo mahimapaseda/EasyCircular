@@ -24,7 +24,7 @@ function SidebarContent({
   const onDocuments = pathname === "/circulars" || pathname.startsWith("/circular/");
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col" suppressHydrationWarning>
       <div className="px-5 py-6">
         <Link href="/" onClick={onNavigate} className="group flex items-center gap-2.5">
           <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 shadow-lg shadow-cyan-500/20 transition-transform group-hover:scale-105">
@@ -129,8 +129,8 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
   }, [pathname]);
 
   return (
-    <div className="relative flex min-h-screen">
-      <div className="fixed inset-0 -z-10">
+    <div className="relative flex min-h-screen" suppressHydrationWarning>
+      <div className="fixed inset-0 -z-10" suppressHydrationWarning>
         <LiquidChrome
           baseColor={[0.04, 0.12, 0.35]}
           speed={0.25}
@@ -139,7 +139,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
           frequencyY={1.8}
           interactive={true}
         />
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/60" suppressHydrationWarning />
       </div>
 
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[200px] flex-col border-r border-white/10 bg-black/50 backdrop-blur-2xl md:flex lg:w-[220px]">
@@ -167,8 +167,8 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         />
       </aside>
 
-      <div className="flex min-h-screen flex-1 flex-col md:pl-[200px] lg:pl-[220px]">
-        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-white/10 bg-black/30 px-4 backdrop-blur-xl md:hidden">
+      <div className="flex min-h-screen flex-1 flex-col md:pl-[200px] lg:pl-[220px]" suppressHydrationWarning>
+        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-white/10 bg-black/30 px-4 backdrop-blur-xl md:hidden" suppressHydrationWarning>
           <button
             type="button"
             aria-label="Open menu"

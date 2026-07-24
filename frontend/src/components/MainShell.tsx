@@ -14,8 +14,8 @@ export default function MainShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col">
-      <div className="fixed inset-0 -z-10">
+    <div className="relative flex min-h-screen flex-col" suppressHydrationWarning>
+      <div className="fixed inset-0 -z-10" suppressHydrationWarning>
         <LiquidChrome
           baseColor={[0.04, 0.12, 0.35]}
           speed={0.25}
