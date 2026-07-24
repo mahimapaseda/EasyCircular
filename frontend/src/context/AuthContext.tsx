@@ -13,6 +13,7 @@ import {
   loginWithGoogle as apiLoginWithGoogle,
   register as apiRegister,
   setStoredToken,
+  type RegisterPayload,
   type User,
 } from "@/lib/auth";
 import { claimSessionCirculars } from "@/lib/circulars";
@@ -22,7 +23,7 @@ type AuthContextValue = {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: (credential: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signUp: (payload: RegisterPayload) => Promise<void>;
   signOut: () => void;
 };
 
@@ -61,8 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [attachSessionCirculars]);
 
   const signUp = useCallback(
-    async (name: string, email: string, password: string) => {
-      const { user: nextUser, token } = await apiRegister(name, email, password);
+    async (payload: RegisterPayload) => {
+      const { user: nextUser, token } = await apiRegister(payload);
       setStoredToken(token);
       setUser(nextUser);
       await attachSessionCirculars();

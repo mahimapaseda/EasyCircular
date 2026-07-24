@@ -25,6 +25,12 @@ sample circulars/*.pdf
 ai-service/tessdata/*.traineddata
 *.log
 
+# NER training artifacts (derived from local sample PDFs)
+ai-service/training/corpus/
+ai-service/training/annotations/
+ai-service/training/output/
+ai-service/training/*.spacy
+
 # OS / IDE
 .DS_Store
 Thumbs.db

@@ -23,8 +23,10 @@ REGEX_RULES: list[tuple[str, EntityLabel]] = [
     (r"\b\d{1,2}(?:st|nd|rd|th)?\s+of\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b", "DATE"),
     (r"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b", "DATE"),
     (r"\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b", "DATE"),
-    (r"(?:Circular|Circ\.?)\s*(?:Number|No\.?)\s*[:\-]?\s*\d{1,4}\s*/\s*\d{2,4}(?:\s*\([a-z]\))?", "LAW"),
-    (r"(?:Circular|Circ\.?)\s*No\.?\s*\d{4}\s*/\s*\d{1,4}(?:\s*\([a-z]\))?", "LAW"),
+    (r"(?:Circular|Circ\.?)\s*(?:Number|Nos?\.?)\s*[.:\-]*\s*\d{1,4}\s*/\s*\d{2,4}(?:\s*\([a-z]\))?", "LAW"),
+    (r"(?:Circular|Circ\.?)\s*Nos?\.?\s*[.:\-]*\s*\d{4}\s*/\s*\d{1,4}(?:\s*\([a-z]\))?", "LAW"),
+    # "Circular No. 54 of 2023" (12-2026-En-1)
+    (r"(?:Circular|Circ\.?)\s*Nos?\.?\s*\d{1,4}\s+of\s+\d{4}", "LAW"),
     (r"(?:චක්‍රලේඛ|සැකසුම්)\s*(?:අංක|නං\.?)?\s*[\d]+[/\-]?[\d]*(?:\s*\([a-z]\))?", "LAW"),
     (r"\bED/\d{2}(?:/\d{2}){1,4}(?:/\d{3})?\b", "LAW"),
     (r"Education\s+Ordinance(?:\s+No\.?\s*\d+)?", "LAW"),
@@ -36,9 +38,18 @@ REGEX_RULES: list[tuple[str, EntityLabel]] = [
     (r"Department\s+of\s+Examinations", "ORG"),
     (r"National\s+Institute\s+of\s+Education", "ORG"),
     (r"Commissioner\s+General\s+of\s+Examinations", "ORG"),
-    (r"Provincial\s+(?:Education\s+)?Secretar(?:y|ies)", "ORG"),
+    (r"Provincial\s+(?:Education\s+)?Secretar(?:y|ies)(?:\s+of\s+Education)?", "ORG"),
     (r"Zonal\s+Directors?\s+of\s+Education", "ORG"),
     (r"Divisional\s+Directors?\s+of\s+Education", "ORG"),
+    # Corpus-derived (sample circulars 10/15/23/44-2026, 44-2006i, 12-2026)
+    (r"(?:Provincial\s+)?Chief\s+Secretar(?:y|ies)(?:\s+(?:to|of)\s+(?:the\s+)?Provincial\s+Councils?)?", "ORG"),
+    (r"Provincial\s+Public\s+Service\s+Commissions?", "ORG"),
+    (r"Sri\s+Lanka\s+Education\s+Administrative\s+Service", "ORG"),
+    (r"Director\s+General\s+of\s+(?:Management\s+Services|National\s+Budget|Establishments|Public\s+Finance|Education)", "ORG"),
+    (r"Ministry\s*/\s*Department\s*/\s*Provincial\s+Council", "ORG"),
+    (r"Zonal\s+Office\s*/\s*District", "ORG"),
+    (r"Provincial\s+Councils?\b", "ORG"),
+    (r"Head\s+of\s+(?:the\s+)?Department", "ORG"),
 ]
 
 LABEL_PRIORITY = {"LAW": 4, "DATE": 3, "ORG": 2, "PERSON": 1, "OTHER": 0}
@@ -47,6 +58,61 @@ NOISE_ORG_PATTERN = re.compile(
     r"^(?:the\s+)?(?:educational institutions|educational institution|vesak day)$",
     re.IGNORECASE,
 )
+
+_VOWELS = set("aeiouAEIOU")
+
+
+def _looks_like_ocr_noise(text: str) -> bool:
+    """Detect OCR garbage such as 'k s s o e -' or 'NgnidnettasloohcsW3tShPleoee'.
+
+    Applied to PERSON/ORG/OTHER entities; regex-derived DATE/LAW spans have
+    strict shapes already.
+    """
+    stripped = text.strip()
+    if len(stripped) < 3:
+        return True
+
+    letters = [ch for ch in stripped if ch.isalpha()]
+    if not letters:
+        return True
+
+    # Only score Latin-script text; Sinhala/Tamil have no ASCII vowels.
+    ascii_letters = [ch for ch in letters if ch.isascii()]
+    if len(ascii_letters) < len(letters) * 0.5:
+        return False
+
+    # Mostly single-character tokens: "k s s o e -"
+    tokens = stripped.split()
+    if len(tokens) >= 3:
+        single_char = sum(1 for token in tokens if len(token) == 1)
+        if single_char / len(tokens) > 0.5:
+            return True
+
+    # Low alphabetic ratio (symbols/digits soup)
+    non_space = [ch for ch in stripped if not ch.isspace()]
+    if len(letters) / len(non_space) < 0.6:
+        return True
+
+    # Vowel-less or nearly vowel-less alphabetic runs: "spoohkpfrrvskp"
+    if len(ascii_letters) >= 4:
+        vowels = sum(1 for ch in ascii_letters if ch in _VOWELS)
+        if vowels == 0:
+            return True
+        if len(ascii_letters) >= 12 and vowels / len(ascii_letters) < 0.2:
+            return True
+
+    # Long scrambled tokens from reversed/columnar OCR:
+    # "NgnidnettasloohcsW3tShPleoee" — digits or repeated case flips inside
+    # a single long token never occur in real names.
+    for token in tokens:
+        if len(token) < 12:
+            continue
+        has_interior_digit = any(ch.isdigit() for ch in token[1:-1])
+        interior_upper = sum(1 for ch in token[2:] if ch.isupper())
+        if has_interior_digit or interior_upper >= 2:
+            return True
+
+    return False
 
 
 @dataclass
@@ -149,6 +215,10 @@ def _filter_entities(entities: list[Entity]) -> list[Entity]:
         if entity.label == "ORG" and NOISE_ORG_PATTERN.match(text):
             continue
         if entity.label == "DATE" and ED_REF_PATTERN.search(text):
+            continue
+        if entity.label in ("PERSON", "ORG", "OTHER") and _looks_like_ocr_noise(text):
+            continue
+        if entity.label == "PERSON" and any(ch.isdigit() for ch in text):
             continue
         filtered.append(entity)
     return filtered

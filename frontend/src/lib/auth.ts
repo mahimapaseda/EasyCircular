@@ -1,14 +1,26 @@
 import { API_URL } from "@/lib/api";
 
+export type JobRole = "teacher" | "principal" | "education_administration";
+
 export type User = {
   id: string;
   name: string;
   email: string;
+  jobRole: JobRole | null;
+  district: string | null;
 };
 
 export type AuthResponse = {
   user: User;
   token: string;
+};
+
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+  jobRole: JobRole;
+  district?: string;
 };
 
 const TOKEN_KEY = "easycircular_token";
@@ -55,14 +67,10 @@ async function authRequest<T>(
   return body as T;
 }
 
-export async function register(
-  name: string,
-  email: string,
-  password: string,
-): Promise<AuthResponse> {
+export async function register(payload: RegisterPayload): Promise<AuthResponse> {
   return authRequest<AuthResponse>("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify(payload),
   });
 }
 

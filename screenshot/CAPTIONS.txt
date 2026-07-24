@@ -1,0 +1,39 @@
+EasyCircular — System Screenshots (Thesis Figures)
+Generated: 2026-07-23
+Source: live app at http://localhost:3002
+
+01-dashboard.png
+  EN: EasyCircular Dashboard (Landing / Home)
+  SI: EasyCircular Dashboard (ඔබේ වෙබ් අඩවියේ අතුරුමුහුණත)
+
+02-document-upload.png
+  EN: Document Upload Interface
+  SI: චක්‍රලේඛය උඩුගත කරන තිරය
+
+03-sign-in.png
+  EN: Sign-In Page
+  SI: පිවිසුම් තිරය
+
+04-dashboard-signed-in.png
+  EN: Dashboard (Signed In)
+  SI: පිවිසුණු පරිශීලක Dashboard
+
+05-documents-list.png
+  EN: Documents List / Workspace Dashboard
+  SI: ලේඛන ලැයිස්තුව / Workspace Dashboard
+
+06-summary-interface.png
+  EN: Document Upload & Summary Interface
+  SI: චක්‍රලේඛය උඩුගත කරන සහ AI සාරාංශය පෙන්වන තිරය
+
+07-ai-summary-detail.png
+  EN: AI Summary Detail View
+  SI: AI සාරාංශ විස්තර තිරය
+
+08-mobile-dashboard.png
+  EN: Mobile Dashboard
+  SI: ජංගම Dashboard
+
+09-mobile-summary.png
+  EN: Mobile Summary Interface
+  SI: ජංගම AI සාරාංශ තිරය

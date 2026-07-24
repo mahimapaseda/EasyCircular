@@ -18,17 +18,27 @@ function signToken(user) {
   );
 }
 
+const JOB_ROLES = ["teacher", "principal", "education_administration"];
+
 function formatUser(user) {
   return {
     id: user._id.toString(),
     name: user.name,
     email: user.email,
+    jobRole: user.jobRole ?? null,
+    district: user.district ?? null,
   };
+}
+
+function optionalTrimmed(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed || null;
 }
 
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, jobRole, district } = req.body;
 
     if (!name?.trim() || !email?.trim() || !password) {
       return res.status(400).json({ error: "Name, email, and password are required" });
@@ -36,6 +46,12 @@ router.post("/register", async (req, res) => {
 
     if (password.length < 8) {
       return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
+
+    if (!JOB_ROLES.includes(jobRole)) {
+      return res.status(400).json({
+        error: "Job role is required (teacher, principal, or education_administration)",
+      });
     }
 
     const existing = await User.findOne({ email: email.toLowerCase().trim() });
@@ -48,6 +64,8 @@ router.post("/register", async (req, res) => {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       passwordHash,
+      jobRole,
+      district: optionalTrimmed(district),
     });
 
     const token = signToken(user);
@@ -154,7 +172,9 @@ router.post("/google", async (req, res) => {
 
 router.get("/me", authRequired, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("name email");
+    const user = await User.findById(req.user.id).select(
+      "name email jobRole district",
+    );
     if (!user) {
       return res.status(404).json({ error: "Account not found" });
     }

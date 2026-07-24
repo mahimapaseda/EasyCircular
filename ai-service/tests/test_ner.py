@@ -1,4 +1,4 @@
-from app.ner import extract_entities
+from app.ner import _looks_like_ocr_noise, extract_entities
 
 
 SAMPLE = """
@@ -33,3 +33,40 @@ def test_extracts_legal_reference():
 def test_empty_text_returns_empty():
     assert extract_entities("") == []
     assert extract_entities("   ") == []
+
+
+# Garbage strings observed on processed OCR circulars (23-2026-En.pdf)
+OCR_GARBAGE = [
+    "k s s o e -",
+    "N g n i d n e t t a s l o o h c s W 3 t S h P l e o e e",
+    "s p o o h e o p m f e r r o v s k p",
+    "S d n a",
+    "u l i",
+    "NgnidnettasloohcsW3tShPleoee",
+    "spqqhkpfrrvskp",
+]
+
+
+def test_ocr_noise_detector_flags_garbage():
+    for garbage in OCR_GARBAGE:
+        assert _looks_like_ocr_noise(garbage), garbage
+
+
+def test_ocr_noise_detector_keeps_real_names():
+    for real in [
+        "Ministry of Education",
+        "Department of Examinations",
+        "Mr. Perera",
+        "Provincial Council",
+        "Zonal Office",
+        "National Institute of Education",
+    ]:
+        assert not _looks_like_ocr_noise(real), real
+
+
+def test_ocr_garbage_filtered_from_entities():
+    text = SAMPLE + "\nAttention: k s s o e - and s p o o h e o p m f e r r o v s k p\n"
+    entities = extract_entities(text)
+    for entity in entities:
+        if entity["label"] in ("PERSON", "ORG", "OTHER"):
+            assert not _looks_like_ocr_noise(entity["text"]), entity

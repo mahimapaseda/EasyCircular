@@ -16,7 +16,7 @@ SAMPLE_DIRS = [
 sys.path.insert(0, str(ROOT / "ai-service"))
 
 from app.moe_text import build_summary_title, extract_circular_number, extract_subject  # noqa: E402
-from app.ner import extract_entities  # noqa: E402
+from app.ner import _looks_like_ocr_noise, extract_entities  # noqa: E402
 from app.pdf_parser import parse_pdf_bytes  # noqa: E402
 from app.summarize import fallback_summarize  # noqa: E402
 
@@ -41,6 +41,11 @@ def evaluate() -> list[dict]:
         subject = extract_subject(parsed.text)
         circular_no = extract_circular_number(parsed.text, path.name)
         purpose = summary["sections"][0]["content"] if summary.get("sections") else ""
+        noise_entities = [
+            e["text"]
+            for e in entities
+            if e["label"] in ("PERSON", "ORG", "OTHER") and _looks_like_ocr_noise(e["text"])
+        ]
         results.append(
             {
                 "file": path.name,
@@ -61,6 +66,7 @@ def evaluate() -> list[dict]:
                     section.get("heading") == "Key requirements"
                     for section in summary.get("sections") or []
                 ),
+                "noiseEntities": noise_entities,
             }
         )
     return results
@@ -74,7 +80,12 @@ def main() -> int:
     print(f"Evaluated {len(results)} sample circular(s)\n")
     passed = 0
     for item in results:
-        ok = item["subjectFound"] and "All Provincial" not in (item["purposePreview"] or "")
+        clean = not item["noiseEntities"]
+        ok = (
+            item["subjectFound"]
+            and "All Provincial" not in (item["purposePreview"] or "")
+            and clean
+        )
         passed += int(ok)
         status = "OK" if ok else "CHECK"
         line = (
@@ -82,6 +93,7 @@ def main() -> int:
             f"      circular: {item['circularNo'] or '-'}\n"
             f"      title: {item['title']}\n"
             f"      purpose: {(item['purposePreview'] or '')[:120]}...\n"
+            f"      noise entities: {len(item['noiseEntities'])}\n"
         )
         try:
             print(line)

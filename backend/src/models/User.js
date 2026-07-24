@@ -10,8 +10,17 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    passwordHash: { type: String, default: null },
-    googleId: { type: String, default: null, unique: true, sparse: true },
+    passwordHash: { type: String },
+    googleId: { type: String, unique: true, sparse: true },
+    jobRole: {
+      type: String,
+      enum: {
+        values: ["teacher", "principal", "education_administration", null],
+        message: "{VALUE} is not a valid job role",
+      },
+      default: null,
+    },
+    district: { type: String, default: null, trim: true },
   },
   { timestamps: true },
 );

@@ -46,6 +46,7 @@ type SummaryPanelProps = {
   onEditCancel: () => void;
   onDraftChange: (summary: CircularSummary) => void;
   onSave: () => void;
+  onRegenerate?: () => void;
   onExport?: (format: "txt" | "md") => void;
 };
 
@@ -73,6 +74,7 @@ export default function SummaryPanel({
   onEditCancel,
   onDraftChange,
   onSave,
+  onRegenerate,
   onExport,
 }: SummaryPanelProps) {
   const summary = circular.summary;
@@ -168,7 +170,30 @@ export default function SummaryPanel({
           </div>
         </div>
         {summary && !editing && (
-          <div className="flex w-full items-center justify-stretch gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 sm:w-auto sm:justify-start">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            {onRegenerate && (
+              <button
+                type="button"
+                onClick={onRegenerate}
+                disabled={processing || circular.status === "processing"}
+                className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[11px] font-semibold text-white transition hover:bg-white/15 disabled:opacity-60 md:hidden"
+              >
+                {processing || circular.status === "processing" ? (
+                  <>
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Summarizing…
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                    </svg>
+                    Regenerate
+                  </>
+                )}
+              </button>
+            )}
+            <div className="flex w-full items-center justify-stretch gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 sm:w-auto sm:justify-start">
             <button
               type="button"
               onClick={onEditStart}
@@ -190,6 +215,7 @@ export default function SummaryPanel({
             >
               Export
             </button>
+            </div>
           </div>
         )}
         {summary && editing && (
@@ -223,9 +249,9 @@ export default function SummaryPanel({
               </svg>
               Review suggested
             </p>
-            <ul className="mt-2 space-y-1">
+            <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto sm:max-h-none sm:overflow-visible">
               {meta.guardrailWarnings.map((w) => (
-                <li key={w} className="text-sm text-amber-100/90">• {w}</li>
+                <li key={w} className="text-xs leading-relaxed text-amber-100/90 sm:text-sm">• {w}</li>
               ))}
             </ul>
           </div>
@@ -264,7 +290,7 @@ export default function SummaryPanel({
         {summary && !editing && (
           <div className="space-y-8">
             <div>
-              <h2 className="font-display text-2xl font-bold leading-snug tracking-tight text-white sm:text-3xl lg:text-[2rem] lg:leading-tight">
+              <h2 className="font-display text-lg font-bold leading-snug tracking-tight text-white sm:text-2xl lg:text-[2rem] lg:leading-tight">
                 {summary.title}
               </h2>
               <div className="mt-4 h-px w-20 bg-gradient-to-r from-cyan-400 to-transparent" />

@@ -3,23 +3,43 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import type { JobRole } from "@/lib/auth";
+import { filterDistricts } from "@/lib/districts";
+
+export type AuthFormSubmitData = {
+  name?: string;
+  email: string;
+  password: string;
+  jobRole?: JobRole;
+  district?: string;
+};
 
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
   returnTo?: string;
-  onSubmit: (data: {
-    name?: string;
-    email: string;
-    password: string;
-  }) => Promise<void>;
+  onSubmit: (data: AuthFormSubmitData) => Promise<void>;
   onGoogleSignIn?: (credential: string) => Promise<void>;
 };
 
-function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
+const JOB_ROLE_OPTIONS: { value: JobRole; label: string }[] = [
+  { value: "teacher", label: "Teacher" },
+  { value: "principal", label: "Principal" },
+  { value: "education_administration", label: "Education administration" },
+];
+
+function FieldLabel({
+  htmlFor,
+  children,
+  required = true,
+}: {
+  htmlFor: string;
+  children: React.ReactNode;
+  required?: boolean;
+}) {
   return (
     <label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold text-slate-200">
       {children}
-      <span className="ml-1 text-rose-400">*</span>
+      {required ? <span className="ml-1 text-rose-400">*</span> : null}
     </label>
   );
 }
@@ -42,6 +62,9 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [jobRole, setJobRole] = useState<JobRole | "">("");
+  const [district, setDistrict] = useState("");
+  const [districtOpen, setDistrictOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,13 +72,24 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   const isSignUp = mode === "sign-up";
+  const districtSuggestions = filterDistricts(district);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      await onSubmit({ name: isSignUp ? name : undefined, email, password });
+      await onSubmit({
+        name: isSignUp ? name : undefined,
+        email,
+        password,
+        ...(isSignUp
+          ? {
+              jobRole: jobRole as JobRole,
+              district: district.trim() || undefined,
+            }
+          : {}),
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -173,6 +207,80 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
             </button>
           </div>
         </div>
+
+        {isSignUp && (
+          <>
+            <div>
+              <FieldLabel htmlFor="jobRole">Job role</FieldLabel>
+              <select
+                id="jobRole"
+                required
+                value={jobRole}
+                onChange={(e) => setJobRole(e.target.value as JobRole | "")}
+                className={`${inputClass} px-4`}
+              >
+                <option value="" disabled className="bg-slate-900 text-slate-400">
+                  Select your role
+                </option>
+                {JOB_ROLE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value} className="bg-slate-900 text-white">
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="relative">
+              <FieldLabel htmlFor="district" required={false}>
+                District
+              </FieldLabel>
+              <input
+                id="district"
+                type="text"
+                role="combobox"
+                aria-expanded={districtOpen && districtSuggestions.length > 0}
+                aria-controls="district-suggestions"
+                aria-autocomplete="list"
+                autoComplete="off"
+                value={district}
+                onChange={(e) => {
+                  setDistrict(e.target.value);
+                  setDistrictOpen(true);
+                }}
+                onFocus={() => setDistrictOpen(true)}
+                onBlur={() => {
+                  // Delay so suggestion click registers before close
+                  window.setTimeout(() => setDistrictOpen(false), 120);
+                }}
+                className={`${inputClass} px-4`}
+                placeholder="Start typing a district…"
+              />
+              {districtOpen && districtSuggestions.length > 0 ? (
+                <ul
+                  id="district-suggestions"
+                  role="listbox"
+                  className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-white/15 bg-slate-950/95 py-1 shadow-lg backdrop-blur"
+                >
+                  {districtSuggestions.map((name) => (
+                    <li key={name} role="option">
+                      <button
+                        type="button"
+                        className="w-full px-4 py-2 text-left text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setDistrict(name);
+                          setDistrictOpen(false);
+                        }}
+                      >
+                        {name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </>
+        )}
 
         {!isSignUp && (
           <div className="flex items-center justify-between">

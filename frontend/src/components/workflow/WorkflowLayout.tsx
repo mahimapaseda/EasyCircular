@@ -21,44 +21,45 @@ export default function WorkflowLayout({
   actions,
 }: WorkflowLayoutProps) {
   const words = wordCount(circular);
+  const allStepsDone = currentStep > WORKFLOW_STEPS.length || circular.status === "completed";
   const clamped = Math.min(Math.max(currentStep, 1), WORKFLOW_STEPS.length);
 
   const stats = [
-    circular.processingMeta.pageCount > 0 && `${circular.processingMeta.pageCount} pages`,
+    circular.processingMeta.pageCount > 0 && `${circular.processingMeta.pageCount} pg`,
     words > 0 && `${words.toLocaleString()} words`,
     circular.entities.length > 0 && `${circular.entities.length} entities`,
   ].filter(Boolean) as string[];
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-12 z-20 border-b border-white/10 bg-black/50 backdrop-blur-2xl md:top-0">
-        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-4 sm:px-6 md:flex-row md:items-start md:justify-between md:py-5 lg:px-8">
+      <header className="sticky top-12 z-20 border-b border-white/10 bg-black/60 backdrop-blur-2xl md:top-0">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-2 px-4 py-3 sm:gap-3 sm:py-4 md:flex-row md:items-start md:justify-between lg:px-8">
           <div className="min-w-0 flex-1">
-            <nav className="flex items-center gap-1.5 text-[11px] font-medium">
+            <nav className="flex items-center gap-1.5 text-[10px] font-medium sm:text-[11px]">
               <Link href="/circulars" className="shrink-0 text-slate-500 transition hover:text-cyan-300">
                 Documents
               </Link>
-              <svg className="h-3 w-3 shrink-0 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="hidden h-3 w-3 shrink-0 text-slate-600 sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
-              <span className="truncate text-slate-400">{circular.originalFilename}</span>
+              <span className="hidden truncate text-slate-400 sm:inline">{circular.originalFilename}</span>
             </nav>
 
-            <div className="mt-2 flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02] text-cyan-300">
+            <div className="mt-1.5 flex items-start gap-2.5 sm:mt-2 sm:gap-3">
+              <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02] text-cyan-300 sm:flex sm:h-10 sm:w-10">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                 </svg>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="max-w-full truncate text-base font-bold tracking-tight text-white sm:text-lg md:text-xl">
-                    {circular.originalFilename}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <h1 className="min-w-0 text-sm font-bold leading-snug tracking-tight text-white sm:text-lg md:text-xl">
+                    <span className="line-clamp-2 sm:truncate">{circular.originalFilename}</span>
                   </h1>
-                  <StatusBadge status={circular.status} />
+                  <StatusBadge status={circular.status} className="shrink-0" />
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] font-medium text-slate-500 sm:text-[11px]">
-                  <span className="shrink-0">Updated {formatRelativeTime(circular.updatedAt)}</span>
+                <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] font-medium text-slate-500 sm:text-[11px]">
+                  <span className="shrink-0">{formatRelativeTime(circular.updatedAt)}</span>
                   {stats.map((s) => (
                     <span key={s} className="flex items-center gap-1.5">
                       <span className="h-0.5 w-0.5 rounded-full bg-slate-600" />
@@ -70,31 +71,33 @@ export default function WorkflowLayout({
             </div>
           </div>
           {actions && (
-            <div className="flex w-full shrink-0 items-stretch md:w-auto md:items-center">
-              {actions}
-            </div>
+            <div className="hidden shrink-0 items-center md:flex">{actions}</div>
           )}
         </div>
 
-        <div className="-mx-4 overflow-x-auto border-t border-white/5 px-4 py-3 sm:mx-0 sm:px-6 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <ol className="mx-auto flex w-full min-w-max max-w-[1600px] items-center gap-1 sm:gap-1.5">
+        <div className="border-t border-white/5 px-4 py-2.5 sm:px-6 sm:py-3 lg:px-8">
+          <ol className="mx-auto flex w-full max-w-[1600px] items-center">
             {WORKFLOW_STEPS.map((step, i) => {
-              const done = clamped > step.id;
-              const active = clamped === step.id;
+              const done = allStepsDone || clamped > step.id;
+              const active = !allStepsDone && clamped === step.id;
               const isLast = i === WORKFLOW_STEPS.length - 1;
               return (
-                <li key={step.key} className="flex items-center gap-1 sm:gap-1.5">
+                <li
+                  key={step.key}
+                  className={`flex items-center ${isLast ? "shrink-0" : "min-w-0 flex-1 sm:flex-none"}`}
+                >
                   <span
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold transition sm:gap-1.5 sm:px-3 sm:text-[11px] ${
+                    className={`mx-auto inline-flex shrink-0 items-center justify-center gap-1 rounded-full transition sm:mx-0 sm:gap-1.5 ${
                       active
-                        ? "bg-white text-slate-900 shadow-lg shadow-white/10"
+                        ? "h-8 w-8 bg-white text-slate-900 shadow-lg shadow-white/10 sm:h-auto sm:w-auto sm:px-3 sm:py-1"
                         : done
-                          ? "border border-cyan-400/30 bg-cyan-400/10 text-cyan-300"
-                          : "border border-white/10 bg-white/[0.03] text-slate-500"
+                          ? "h-8 w-8 border border-cyan-400/30 bg-cyan-400/10 text-cyan-300 sm:h-auto sm:w-auto sm:px-3 sm:py-1"
+                          : "h-8 w-8 border border-white/10 bg-white/[0.03] text-slate-500 sm:h-auto sm:w-auto sm:px-3 sm:py-1"
                     }`}
+                    title={step.label}
                   >
                     <span
-                      className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-black ${
+                      className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black sm:h-3.5 sm:w-3.5 ${
                         active
                           ? "bg-slate-900 text-white"
                           : done
@@ -110,11 +113,11 @@ export default function WorkflowLayout({
                         step.id
                       )}
                     </span>
-                    <span className="hidden min-[420px]:inline">{step.label}</span>
+                    <span className="hidden text-[11px] font-semibold sm:inline">{step.label}</span>
                   </span>
                   {!isLast && (
                     <span
-                      className={`h-px w-3 shrink-0 sm:w-6 ${
+                      className={`mx-1 h-px min-w-[8px] flex-1 sm:mx-1.5 sm:w-6 sm:flex-none ${
                         done ? "bg-cyan-400/40" : "bg-white/10"
                       }`}
                     />

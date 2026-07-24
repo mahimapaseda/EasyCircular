@@ -208,8 +208,10 @@ def _is_circular_meta_line(line: str) -> bool:
 def extract_subject(text: str) -> str | None:
     lines = [line.strip() for line in text.splitlines()]
 
+    # "Annexure" headings in English, Tamil (incl. common OCR variant), Sinhala
+    annexure_pattern = r"^(?:annexure\b|இணைப்பு|இகைப்பு|ඇමුණුම)"
     for index, line in enumerate(lines[:20]):
-        if re.match(r"^annexure\b", line, re.IGNORECASE):
+        if re.match(annexure_pattern, line, re.IGNORECASE):
             for candidate in lines[index + 1 : index + 8]:
                 if not candidate or is_recipient_line(candidate):
                     continue

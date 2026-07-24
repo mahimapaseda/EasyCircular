@@ -11,13 +11,14 @@
     "purposePreview": "Establishing 'Collective Circles' to eradicate all types of toxic drugs, alcohol and tobacco-related products from Educational Institutions under the state policy of creating a 'Drug-free Country with a Joyful Tomorrow'.",
     "entityCounts": {
       "DATE": 2,
-      "ORG": 79,
+      "ORG": 80,
       "LAW": 7,
       "PERSON": 4,
       "OTHER": 0
     },
     "actionItems": 6,
-    "requirementsSection": true
+    "requirementsSection": true,
+    "noiseEntities": []
   },
   {
     "file": "12-2026-En-1.pdf",
@@ -30,14 +31,15 @@
     "title": "MOE Circular 12/2026: Delegation of Powers on financial control in terms of Financial Regulation 13...",
     "purposePreview": "Delegation of Powers on financial control in terms of Financial Regulation 135 - Year 2026",
     "entityCounts": {
-      "DATE": 32,
-      "ORG": 463,
-      "LAW": 27,
-      "PERSON": 133,
+      "DATE": 31,
+      "ORG": 410,
+      "LAW": 28,
+      "PERSON": 89,
       "OTHER": 0
     },
     "actionItems": 6,
-    "requirementsSection": true
+    "requirementsSection": true,
+    "noiseEntities": []
   },
   {
     "file": "15-2026-En.pdf",
@@ -51,13 +53,14 @@
     "purposePreview": "Vesak Week of the Sri Buddha Years 2570",
     "entityCounts": {
       "DATE": 8,
-      "ORG": 37,
+      "ORG": 38,
       "LAW": 3,
       "PERSON": 10,
       "OTHER": 0
     },
     "actionItems": 6,
-    "requirementsSection": true
+    "requirementsSection": true,
+    "noiseEntities": []
   },
   {
     "file": "23-2026-En.pdf",
@@ -71,13 +74,14 @@
     "purposePreview": "Schools/Institutions under the Central Government - 2027",
     "entityCounts": {
       "DATE": 1,
-      "ORG": 17,
+      "ORG": 12,
       "LAW": 0,
-      "PERSON": 1,
+      "PERSON": 0,
       "OTHER": 0
     },
     "actionItems": 2,
-    "requirementsSection": false
+    "requirementsSection": false,
+    "noiseEntities": []
   },
   {
     "file": "44-2006i-En-1.pdf",
@@ -91,13 +95,14 @@
     "purposePreview": "Providing a Financial Incentive for Principals and Teachers serving in difficult schools",
     "entityCounts": {
       "DATE": 2,
-      "ORG": 8,
+      "ORG": 9,
       "LAW": 3,
-      "PERSON": 2,
+      "PERSON": 1,
       "OTHER": 0
     },
     "actionItems": 1,
-    "requirementsSection": true
+    "requirementsSection": true,
+    "noiseEntities": []
   },
   {
     "file": "44-2025-En.pdf",
@@ -112,12 +117,13 @@
     "entityCounts": {
       "DATE": 1,
       "ORG": 39,
-      "LAW": 3,
-      "PERSON": 10,
+      "LAW": 5,
+      "PERSON": 8,
       "OTHER": 0
     },
     "actionItems": 6,
-    "requirementsSection": true
+    "requirementsSection": true,
+    "noiseEntities": []
   },
   {
     "file": "03-2014I.pdf",
@@ -131,13 +137,14 @@
     "purposePreview": "ශ්‍රි ලංකා විදුහල්පති සේවයේ නිලධාරීන්ගේ ආරම්භක වැටුප සංශෝධනය කිරීම.",
     "entityCounts": {
       "DATE": 3,
-      "ORG": 20,
+      "ORG": 19,
       "LAW": 5,
-      "PERSON": 9,
+      "PERSON": 8,
       "OTHER": 0
     },
     "actionItems": 2,
-    "requirementsSection": false
+    "requirementsSection": false,
+    "noiseEntities": []
   },
   {
     "file": "23-2026-Ta.pdf",
@@ -145,19 +152,20 @@
     "ocr": false,
     "chars": 4716,
     "circularNo": "23/2026",
-    "subjectFound": false,
-    "subject": null,
-    "title": "MOE circular summary",
-    "purposePreview": "02\nஇகைப்பு\n.\nஇலங்கைைல்விநிர்வாைசேகவயின்ஒவ்வவாருதரத்திற்கும்தனித்தனியாைஇப்படிவத்கதப்பூர்த்திவேய்யநடவடிக்கைஎடுக்ைவும்\n( I, II, III )\nதரம் ஆைியதரங்ைளுக்ைாை\n/ / 06\nைல்விஅகைச்சு சதேியபாடோகலைள் ைத்தியஅரேின்ைீழ்உள்ளநிறுவனங்ைளி",
+    "subjectFound": true,
+    "subject": "இலங்கைைல்விநிர்வாைசேகவயின்ஒவ்வவாருதரத்திற்கும்தனித்தனியாைஇப்படிவத்கதப்பூர்த்திவேய்யநடவடிக்கைஎடுக்ைவும்",
+    "title": "இலங்கைைல்விநிர்வாைசேகவயின்ஒவ்வவாருதரத்திற்கும்தனித்தனியாைஇப்படிவத்கதப்பூர்த்திவேய்யநடவடிக்கைஎடுக்...",
+    "purposePreview": "இலங்கைைல்விநிர்வாைசேகவயின்ஒவ்வவாருதரத்திற்கும்தனித்தனியாைஇப்படிவத்கதப்பூர்த்திவேய்யநடவடிக்கைஎடுக்ைவும்",
     "entityCounts": {
       "DATE": 2,
-      "ORG": 19,
+      "ORG": 8,
       "LAW": 0,
-      "PERSON": 6,
+      "PERSON": 5,
       "OTHER": 0
     },
     "actionItems": 2,
-    "requirementsSection": false
+    "requirementsSection": false,
+    "noiseEntities": []
   },
   {
     "file": "Dengue_Sinhala.pdf",
@@ -177,7 +185,8 @@
       "OTHER": 0
     },
     "actionItems": 2,
-    "requirementsSection": false
+    "requirementsSection": false,
+    "noiseEntities": []
   },
   {
     "file": "test-digital.pdf",
@@ -191,12 +200,13 @@
     "purposePreview": "ශ්‍රි ලංකා විදුහල්පති සේවයේ නිලධාරීන්ගේ ආරම්භක වැටුප සංශෝධනය කිරීම.",
     "entityCounts": {
       "DATE": 3,
-      "ORG": 20,
+      "ORG": 19,
       "LAW": 5,
-      "PERSON": 9,
+      "PERSON": 8,
       "OTHER": 0
     },
     "actionItems": 2,
-    "requirementsSection": false
+    "requirementsSection": false,
+    "noiseEntities": []
   }
 ]

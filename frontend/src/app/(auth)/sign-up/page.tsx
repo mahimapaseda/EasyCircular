@@ -34,8 +34,14 @@ function SignUpContent() {
     <AuthForm
       mode="sign-up"
       returnTo={returnTo}
-      onSubmit={async ({ name, email, password }) => {
-        await signUp(name!, email, password);
+      onSubmit={async ({ name, email, password, jobRole, district }) => {
+        await signUp({
+          name: name!,
+          email,
+          password,
+          jobRole: jobRole!,
+          district,
+        });
         showToast("Account created — you can now upload your circular.", "success");
         router.push(returnTo);
       }}

@@ -219,7 +219,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         type="button"
         onClick={() => void handleProcess()}
         disabled={processing || circular.status === "processing"}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-md transition hover:scale-[1.02] disabled:opacity-60 md:w-auto"
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-md transition hover:scale-[1.02] disabled:opacity-60"
       >
         {processing || circular.status === "processing" ? (
           <>
@@ -321,6 +321,11 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
             onEditCancel={handleCancelSummaryEdit}
             onDraftChange={setDraftSummary}
             onSave={() => void handleSaveSummary()}
+            onRegenerate={
+              canProcess && hasText && hasSummary
+                ? () => void handleProcess()
+                : undefined
+            }
             onExport={(format) =>
               showToast(`Summary exported as ${format.toUpperCase()}.`, "success")
             }
