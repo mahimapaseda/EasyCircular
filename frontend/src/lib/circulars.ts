@@ -41,6 +41,7 @@ export type CircularProcessingMeta = {
   cached?: boolean;
   guardrailWarnings?: string[];
   chunkCount?: number;
+  llmError?: string | null;
 };
 
 export type Circular = {

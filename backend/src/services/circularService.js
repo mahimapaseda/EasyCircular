@@ -262,6 +262,9 @@ async function processCircular(circular) {
   circular.contentHash = contentHash;
 
   const cached = await findCachedSummary(contentHash, circular._id, circular.userId);
+  // #region agent log
+  fetch('http://127.0.0.1:7252/ingest/4a77687f-dd16-4fe2-8910-499ad99a9f88',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'633f17'},body:JSON.stringify({sessionId:'633f17',location:'circularService.js:processCircular:cache',message:'cache lookup result',data:{circularId:String(circular._id),file:circular.originalFilename,contentHash,cacheHit:Boolean(cached?.summary?.sections?.length),cachedId:cached?String(cached._id):null,cachedModel:cached?.processingMeta?.model||null,cachedMode:cached?.summary?.mode||null},hypothesisId:'H-C',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   if (cached?.summary?.sections?.length) {
     circular.entities = cached.entities;
     circular.summary = cached.summary;
@@ -308,6 +311,9 @@ async function processCircular(circular) {
 
   const durationMs = Date.now() - started;
   const aiMeta = pipelineResult.processingMeta || {};
+  // #region agent log
+  fetch('http://127.0.0.1:7252/ingest/4a77687f-dd16-4fe2-8910-499ad99a9f88',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'633f17'},body:JSON.stringify({sessionId:'633f17',location:'circularService.js:processCircular:pipeline',message:'fresh AI pipeline result',data:{circularId:String(circular._id),file:circular.originalFilename,mode:pipelineResult.summary?.mode||null,model:aiMeta.model||null,tokensUsed:aiMeta.tokensUsed||0,durationMs},hypothesisId:'H-A',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 
   circular.entities = pipelineResult.entities || [];
   circular.summary = pipelineResult.summary || null;
@@ -320,6 +326,7 @@ async function processCircular(circular) {
     cached: false,
     guardrailWarnings: pipelineResult.guardrailWarnings || [],
     chunkCount: aiMeta.chunkCount || 1,
+    llmError: aiMeta.llmError || null,
   };
   await circular.save();
 

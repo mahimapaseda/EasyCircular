@@ -241,6 +241,20 @@ export default function SummaryPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto border-t border-white/5 p-4 sm:p-6 lg:p-8">
+        {summary?.mode === "fallback" && meta.llmError && !editing && (
+          <div className="mb-6 rounded-xl border border-rose-400/25 bg-gradient-to-br from-rose-400/10 to-rose-400/5 px-4 py-3">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-rose-300">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              AI summary unavailable
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-rose-100/90 sm:text-sm">
+              {meta.llmError} A basic extractive summary is shown instead — use Regenerate to retry.
+            </p>
+          </div>
+        )}
+
         {meta.guardrailWarnings && meta.guardrailWarnings.length > 0 && !editing && (
           <div className="mb-6 rounded-xl border border-amber-400/25 bg-gradient-to-br from-amber-400/10 to-amber-400/5 px-4 py-3">
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-amber-300">

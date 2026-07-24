@@ -70,6 +70,7 @@ const circularSchema = new mongoose.Schema(
       cached: { type: Boolean, default: false },
       guardrailWarnings: { type: [String], default: [] },
       chunkCount: { type: Number, default: 1 },
+      llmError: { type: String, default: null },
     },
   },
   { timestamps: true },

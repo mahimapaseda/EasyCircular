@@ -109,6 +109,15 @@ def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, A
     return summary
 
 
+def _describe_llm_error(exc: Exception) -> str:
+    message = str(exc)
+    if "RESOURCE_EXHAUSTED" in message or "429" in message:
+        return "LLM quota exceeded (429). The provider rate/usage limit was hit — try again later."
+    if isinstance(exc, json.JSONDecodeError):
+        return "LLM returned a response that could not be parsed as JSON."
+    return f"{type(exc).__name__}: {message[:200]}"
+
+
 def _parse_llm_json(content: str) -> dict[str, Any]:
     content = content.strip()
     if content.startswith("```"):
@@ -211,12 +220,28 @@ def llm_summarize(
     return summary, total_tokens + reduce_tokens, chunk_count
 
 
+# #region agent log
+def _dbg(location: str, message: str, data: dict, hypothesis_id: str) -> None:
+    import json as _json, time as _time
+    try:
+        with open(r"C:\Users\User\Documents\GitHub\EasyCircular\debug-633f17.log", "a", encoding="utf-8") as f:
+            f.write(_json.dumps({"sessionId": "633f17", "hypothesisId": hypothesis_id, "location": location, "message": message, "data": data, "timestamp": int(_time.time() * 1000)}, ensure_ascii=False, default=str) + "\n")
+    except Exception:
+        pass
+# #endregion
+
+
 def summarize_text(
     text: str,
     entities: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     entities = entities or []
     chunk_count = len(split_text(text)) if len(text) > settings.map_reduce_threshold else 1
+
+    # #region agent log
+    import os as _os
+    _dbg("summarize.py:summarize_text:entry", "summarize called", {"configured": llm_is_configured(), "provider": active_provider(), "model": active_model_name(), "keyLen": len(_os.getenv("GOOGLE_API_KEY", "").strip()), "textLen": len(text)}, "H-D")
+    # #endregion
 
     if llm_is_configured():
         try:
@@ -228,7 +253,13 @@ def summarize_text(
                 "provider": active_provider(),
                 "chunkCount": chunk_count,
             }
-        except Exception:
+            # #region agent log
+            _dbg("summarize.py:summarize_text:llm-ok", "LLM summarize succeeded", {"tokens": tokens, "chunks": chunk_count}, "H-A")
+            # #endregion
+        except Exception as exc:
+            # #region agent log
+            _dbg("summarize.py:summarize_text:llm-fail", "LLM summarize raised, using fallback", {"errorType": type(exc).__name__, "error": str(exc)[:500]}, "H-A/H-B")
+            # #endregion
             summary = fallback_summarize(text, entities)
             meta = {
                 "model": "extractive-fallback",
@@ -236,8 +267,12 @@ def summarize_text(
                 "mode": "fallback",
                 "provider": active_provider(),
                 "chunkCount": 1,
+                "llmError": _describe_llm_error(exc),
             }
     else:
+        # #region agent log
+        _dbg("summarize.py:summarize_text:not-configured", "LLM not configured, using fallback", {"provider": active_provider()}, "H-D")
+        # #endregion
         summary = fallback_summarize(text, entities)
         meta = {
             "model": "extractive-fallback",
