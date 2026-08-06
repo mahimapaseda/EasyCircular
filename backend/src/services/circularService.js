@@ -12,6 +12,21 @@ function workingText(circular) {
 }
 
 function serializeCircular(doc) {
+  const summary = doc.summary
+    ? {
+        circularNumber: doc.summary.circularNumber || null,
+        issuedDate: doc.summary.issuedDate || null,
+        issuedBy: doc.summary.issuedBy || null,
+        targetAudience: doc.summary.targetAudience || null,
+        effectiveDate: doc.summary.effectiveDate || null,
+        title: doc.summary.title,
+        sections: doc.summary.sections,
+        actionItems: doc.summary.actionItems,
+        rawMarkdown: doc.summary.rawMarkdown,
+        mode: doc.summary.mode,
+      }
+    : null;
+
   return {
     id: doc._id.toString(),
     originalFilename: doc.originalFilename,
@@ -20,7 +35,7 @@ function serializeCircular(doc) {
     editedText: doc.editedText,
     contentHash: doc.contentHash,
     entities: doc.entities || [],
-    summary: doc.summary || null,
+    summary,
     processingMeta: doc.processingMeta,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
@@ -130,6 +145,22 @@ async function extractText(circular) {
 
 function buildSummaryMarkdown(summary) {
   const lines = [`# ${summary.title || "Circular summary"}`, ""];
+
+  const metaFields = [
+    ["Circular Number", summary.circularNumber],
+    ["Issued Date", summary.issuedDate],
+    ["Issued By", summary.issuedBy],
+    ["Target Audience", summary.targetAudience],
+    ["Effective Date", summary.effectiveDate],
+  ];
+  const metaLines = metaFields
+    .filter(([, value]) => value)
+    .map(([label, value]) => `**${label}:** ${value}`);
+  if (metaLines.length > 0) {
+    lines.push(...metaLines);
+    lines.push("");
+  }
+
   for (const section of summary.sections || []) {
     lines.push(`## ${section.heading || "Section"}`);
     lines.push(section.content || "");
@@ -181,7 +212,23 @@ function normalizeSummaryInput(summary) {
         .filter(Boolean)
     : [];
 
+  const circularNumber =
+    typeof summary.circularNumber === "string" ? summary.circularNumber.trim() || null : null;
+  const issuedDate =
+    typeof summary.issuedDate === "string" ? summary.issuedDate.trim() || null : null;
+  const issuedBy =
+    typeof summary.issuedBy === "string" ? summary.issuedBy.trim() || null : null;
+  const targetAudience =
+    typeof summary.targetAudience === "string" ? summary.targetAudience.trim() || null : null;
+  const effectiveDate =
+    typeof summary.effectiveDate === "string" ? summary.effectiveDate.trim() || null : null;
+
   const normalized = {
+    circularNumber,
+    issuedDate,
+    issuedBy,
+    targetAudience,
+    effectiveDate,
     title,
     sections,
     actionItems,
@@ -262,9 +309,6 @@ async function processCircular(circular) {
   circular.contentHash = contentHash;
 
   const cached = await findCachedSummary(contentHash, circular._id, circular.userId);
-  // #region agent log
-  fetch('http://127.0.0.1:7252/ingest/4a77687f-dd16-4fe2-8910-499ad99a9f88',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'633f17'},body:JSON.stringify({sessionId:'633f17',location:'circularService.js:processCircular:cache',message:'cache lookup result',data:{circularId:String(circular._id),file:circular.originalFilename,contentHash,cacheHit:Boolean(cached?.summary?.sections?.length),cachedId:cached?String(cached._id):null,cachedModel:cached?.processingMeta?.model||null,cachedMode:cached?.summary?.mode||null},hypothesisId:'H-C',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   if (cached?.summary?.sections?.length) {
     circular.entities = cached.entities;
     circular.summary = cached.summary;
@@ -311,9 +355,6 @@ async function processCircular(circular) {
 
   const durationMs = Date.now() - started;
   const aiMeta = pipelineResult.processingMeta || {};
-  // #region agent log
-  fetch('http://127.0.0.1:7252/ingest/4a77687f-dd16-4fe2-8910-499ad99a9f88',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'633f17'},body:JSON.stringify({sessionId:'633f17',location:'circularService.js:processCircular:pipeline',message:'fresh AI pipeline result',data:{circularId:String(circular._id),file:circular.originalFilename,mode:pipelineResult.summary?.mode||null,model:aiMeta.model||null,tokensUsed:aiMeta.tokensUsed||0,durationMs},hypothesisId:'H-A',timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
   circular.entities = pipelineResult.entities || [];
   circular.summary = pipelineResult.summary || null;

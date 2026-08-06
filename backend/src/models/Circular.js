@@ -23,6 +23,11 @@ const summarySectionSchema = new mongoose.Schema(
 
 const summarySchema = new mongoose.Schema(
   {
+    circularNumber: { type: String, default: null },
+    issuedDate: { type: String, default: null },
+    issuedBy: { type: String, default: null },
+    targetAudience: { type: String, default: null },
+    effectiveDate: { type: String, default: null },
     title: String,
     sections: [summarySectionSchema],
     actionItems: [String],

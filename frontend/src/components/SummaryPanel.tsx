@@ -315,6 +315,47 @@ export default function SummaryPanel({
               )}
             </div>
 
+            {/* ─── Circular Metadata Detail Card ─────────────── */}
+            {(summary.circularNumber || summary.issuedDate || summary.issuedBy || summary.targetAudience || summary.effectiveDate) && (
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+                <h3 className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Circular Details
+                </h3>
+                <div className="grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
+                  {summary.circularNumber && (
+                    <div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Number</span>
+                      <p className="mt-0.5 text-sm font-medium text-white">{summary.circularNumber}</p>
+                    </div>
+                  )}
+                  {summary.issuedDate && (
+                    <div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Issued</span>
+                      <p className="mt-0.5 text-sm font-medium text-white">{summary.issuedDate}</p>
+                    </div>
+                  )}
+                  {summary.issuedBy && (
+                    <div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Issued By</span>
+                      <p className="mt-0.5 text-sm font-medium text-white">{summary.issuedBy}</p>
+                    </div>
+                  )}
+                  {summary.effectiveDate && (
+                    <div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Effective</span>
+                      <p className="mt-0.5 text-sm font-medium text-white">{summary.effectiveDate}</p>
+                    </div>
+                  )}
+                  {summary.targetAudience && (
+                    <div className="sm:col-span-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Target Audience</span>
+                      <p className="mt-0.5 text-sm leading-relaxed text-slate-200">{summary.targetAudience}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {visibleEntities.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {visibleEntities.map((e, i) => {
@@ -397,6 +438,65 @@ export default function SummaryPanel({
                 className={`${inputClass} text-base font-semibold`}
               />
             </label>
+
+            {/* ─── Metadata Fields ─────────────── */}
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <h4 className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                Circular Details
+              </h4>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Number</span>
+                  <input
+                    type="text"
+                    value={draftSummary.circularNumber || ""}
+                    onChange={(e) => updateDraft({ circularNumber: e.target.value || null })}
+                    className={inputClass}
+                    placeholder="e.g. 10/2026"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Issued Date</span>
+                  <input
+                    type="text"
+                    value={draftSummary.issuedDate || ""}
+                    onChange={(e) => updateDraft({ issuedDate: e.target.value || null })}
+                    className={inputClass}
+                    placeholder="e.g. 04.05.2026"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Issued By</span>
+                  <input
+                    type="text"
+                    value={draftSummary.issuedBy || ""}
+                    onChange={(e) => updateDraft({ issuedBy: e.target.value || null })}
+                    className={inputClass}
+                    placeholder="e.g. Ministry of Education"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Effective Date</span>
+                  <input
+                    type="text"
+                    value={draftSummary.effectiveDate || ""}
+                    onChange={(e) => updateDraft({ effectiveDate: e.target.value || null })}
+                    className={inputClass}
+                    placeholder="e.g. With immediate effect"
+                  />
+                </label>
+                <label className="block sm:col-span-2">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Target Audience</span>
+                  <input
+                    type="text"
+                    value={draftSummary.targetAudience || ""}
+                    onChange={(e) => updateDraft({ targetAudience: e.target.value || null })}
+                    className={inputClass}
+                    placeholder="e.g. All Provincial Education Secretaries"
+                  />
+                </label>
+              </div>
+            </div>
 
             <div className="space-y-4">
               {draftSummary.sections.map((section, index) => (

@@ -10,6 +10,8 @@ class Settings:
     gemini_model: str
     groq_model: str
     llm_temperature: float
+    llm_max_retries: int
+    llm_max_output_tokens: int
     spacy_model: str
     ocr_languages: str
     chunk_size: int
@@ -27,10 +29,12 @@ class Settings:
             gemini_model=os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-3.5-flash")),
             groq_model=os.getenv("GROQ_MODEL", os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")),
             llm_temperature=float(os.getenv("LLM_TEMPERATURE", "0.2")),
+            llm_max_retries=int(os.getenv("LLM_MAX_RETRIES", "2")),
+            llm_max_output_tokens=int(os.getenv("LLM_MAX_OUTPUT_TOKENS", "4096")),
             spacy_model=os.getenv("SPACY_MODEL", "en_core_web_sm"),
             ocr_languages=os.getenv("OCR_LANGUAGES", "sin+eng+tam"),
-            chunk_size=int(os.getenv("CHUNK_SIZE", "6000")),
-            chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "400")),
+            chunk_size=int(os.getenv("CHUNK_SIZE", "8000")),
+            chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "600")),
             map_reduce_threshold=int(os.getenv("MAP_REDUCE_THRESHOLD", "10000")),
             max_upload_bytes=max_upload_mb * 1024 * 1024,
         )

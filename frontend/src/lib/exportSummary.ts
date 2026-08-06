@@ -13,6 +13,26 @@ function buildPlainText(
     "",
   ];
 
+  // Metadata block
+  const metaFields: [string, string | null | undefined][] = [
+    ["Circular Number", summary.circularNumber],
+    ["Issued Date", summary.issuedDate],
+    ["Issued By", summary.issuedBy],
+    ["Target Audience", summary.targetAudience],
+    ["Effective Date", summary.effectiveDate],
+  ];
+  const metaLines = metaFields
+    .filter(([, value]) => value)
+    .map(([label, value]) => `${label}: ${value}`);
+  if (metaLines.length > 0) {
+    lines.push("CIRCULAR DETAILS");
+    lines.push("----------------");
+    for (const line of metaLines) {
+      lines.push(line);
+    }
+    lines.push("");
+  }
+
   for (const section of summary.sections) {
     lines.push(section.heading.toUpperCase());
     lines.push("-".repeat(section.heading.length));

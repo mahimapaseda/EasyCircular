@@ -22,6 +22,11 @@ export type Entity = {
 };
 
 export type CircularSummary = {
+  circularNumber?: string | null;
+  issuedDate?: string | null;
+  issuedBy?: string | null;
+  targetAudience?: string | null;
+  effectiveDate?: string | null;
   title: string;
   sections: { heading: string; content: string }[];
   actionItems: string[];
@@ -156,6 +161,11 @@ export async function extractCircularText(
 
 export function cloneSummary(summary: CircularSummary): CircularSummary {
   return {
+    circularNumber: summary.circularNumber ?? null,
+    issuedDate: summary.issuedDate ?? null,
+    issuedBy: summary.issuedBy ?? null,
+    targetAudience: summary.targetAudience ?? null,
+    effectiveDate: summary.effectiveDate ?? null,
     title: summary.title,
     sections: summary.sections.map((section) => ({ ...section })),
     actionItems: [...summary.actionItems],

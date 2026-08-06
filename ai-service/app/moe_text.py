@@ -403,3 +403,109 @@ def top_org_entities(entities: list[dict], limit: int = 8) -> list[str]:
             break
 
     return unique[:limit]
+
+
+def extract_issued_date(text: str) -> str | None:
+    """Extract the date the circular was issued from the header area."""
+    header_lines = text.splitlines()[:15]
+    header = "\n".join(header_lines)
+
+    # Try common MOE header date formats: "2026.03.15", "04.05.2026", "2026-03-15"
+    for pattern in DATE_PATTERNS:
+        match = pattern.search(header)
+        if match:
+            value = match.group(0).strip()
+            if is_valid_date_text(value):
+                return value
+
+    return None
+
+
+def extract_target_audience(text: str) -> list[str]:
+    """Extract the list of recipients from the circular header.
+
+    These are the lines that ``is_recipient_line`` would normally filter out,
+    but they are valuable structured metadata (e.g.,
+    "All Provincial Education Secretaries").
+    """
+    lines = [line.strip() for line in text.splitlines()]
+    audience: list[str] = []
+    seen: set[str] = set()
+    in_recipients = False
+
+    for line in lines[:40]:
+        if not line:
+            if in_recipients and audience:
+                break
+            continue
+
+        if any(pattern.search(line) for pattern in CIRCULAR_NUMBER_PATTERNS) or ED_REF_PATTERN.search(line):
+            in_recipients = True
+            continue
+
+        if in_recipients:
+            lowered = line.lower().strip()
+
+            # Stop when we reach the subject or body
+            if POLICY_SUBJECT_PATTERN.search(line):
+                break
+            if _is_subject_stop_line(line):
+                break
+
+            # Check if it looks like a recipient
+            if is_recipient_line(line) and len(line) >= 8:
+                # Clean up common prefixes/suffixes
+                cleaned = re.sub(r"^[-–•]\s*", "", line).strip()
+                if cleaned and cleaned not in seen and len(cleaned) >= 8:
+                    seen.add(cleaned)
+                    audience.append(cleaned)
+
+    return audience[:15]
+
+
+def _is_subject_stop_line(line: str) -> bool:
+    """Check if a line signals the start of the body/subject."""
+    return any(pattern.search(line.strip()) for pattern in SUBJECT_STOP_MARKERS)
+
+
+def extract_effective_date(text: str) -> str | None:
+    """Extract when the circular takes effect.
+
+    Looks for phrases like 'with immediate effect', 'effective from',
+    'from 01 April 2026', 'w.e.f.', etc.
+    """
+    # Normalise for searching
+    search_text = " ".join(text.splitlines()[:60])
+
+    # "with immediate effect"
+    if re.search(r"with\s+immediate\s+effect", search_text, re.IGNORECASE):
+        return "With immediate effect"
+
+    # "w.e.f. <date>" or "with effect from <date>"
+    wef_match = re.search(
+        r"(?:w\.?\s*e\.?\s*f\.?|with\s+effect\s+from|effective\s+from)\s+"
+        r"(\d{1,2}[\./]\d{2}[\./]\d{4}|\d{4}[\./]\d{2}[\./]\d{2}|"
+        r"\d{1,2}(?:st|nd|rd|th)?\s+(?:of\s+)?"
+        r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
+        r"\s+\d{4})",
+        search_text,
+        re.IGNORECASE,
+    )
+    if wef_match:
+        return wef_match.group(1).strip()
+
+    # "from <date>" near the end of a sentence about implementation
+    from_match = re.search(
+        r"(?:shall\s+(?:be\s+)?(?:implemented|applicable|enforced|effective)|"
+        r"(?:implemented|applicable|enforced)\s+)"
+        r"(?:from|starting)\s+"
+        r"(\d{1,2}[\./]\d{2}[\./]\d{4}|\d{4}[\./]\d{2}[\./]\d{2}|"
+        r"\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)"
+        r"\s+\d{4})",
+        search_text,
+        re.IGNORECASE,
+    )
+    if from_match:
+        return from_match.group(1).strip()
+
+    return None

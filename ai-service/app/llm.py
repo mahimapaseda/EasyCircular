@@ -2,6 +2,8 @@ import os
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
+from app.config import settings
+
 SUPPORTED_PROVIDERS = ("openai", "gemini", "groq")
 
 
@@ -29,9 +31,15 @@ def active_model_name() -> str:
     return os.getenv("LLM_MODEL", "gpt-4o-mini")
 
 
-def get_chat_model(temperature: float | None = None) -> BaseChatModel:
+def get_chat_model(
+    temperature: float | None = None,
+    max_output_tokens: int | None = None,
+    max_retries: int | None = None,
+) -> BaseChatModel:
     provider = active_provider()
     temp = temperature if temperature is not None else float(os.getenv("LLM_TEMPERATURE", "0.2"))
+    max_tokens = max_output_tokens if max_output_tokens is not None else settings.llm_max_output_tokens
+    retries = max_retries if max_retries is not None else settings.llm_max_retries
 
     if provider == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
@@ -41,7 +49,13 @@ def get_chat_model(temperature: float | None = None) -> BaseChatModel:
             raise RuntimeError("GOOGLE_API_KEY is required when LLM_PROVIDER=gemini")
 
         model = active_model_name()
-        return ChatGoogleGenerativeAI(model=model, temperature=temp, google_api_key=api_key)
+        return ChatGoogleGenerativeAI(
+            model=model,
+            temperature=temp,
+            google_api_key=api_key,
+            max_output_tokens=max_tokens,
+            max_retries=retries,
+        )
 
     if provider == "groq":
         from langchain_groq import ChatGroq
@@ -51,7 +65,13 @@ def get_chat_model(temperature: float | None = None) -> BaseChatModel:
             raise RuntimeError("GROQ_API_KEY is required when LLM_PROVIDER=groq")
 
         model = active_model_name()
-        return ChatGroq(model=model, temperature=temp, groq_api_key=api_key)
+        return ChatGroq(
+            model=model,
+            temperature=temp,
+            groq_api_key=api_key,
+            max_tokens=max_tokens,
+            max_retries=retries,
+        )
 
     if provider == "openai":
         from langchain_openai import ChatOpenAI
@@ -61,7 +81,14 @@ def get_chat_model(temperature: float | None = None) -> BaseChatModel:
             raise RuntimeError("OPENAI_API_KEY is required when LLM_PROVIDER=openai")
 
         model = active_model_name()
-        return ChatOpenAI(model=model, temperature=temp, api_key=api_key)
+        return ChatOpenAI(
+            model=model,
+            temperature=temp,
+            api_key=api_key,
+            max_tokens=max_tokens,
+            max_retries=retries,
+        )
 
     supported = ", ".join(SUPPORTED_PROVIDERS)
     raise RuntimeError(f"Unsupported LLM_PROVIDER '{provider}'. Use one of: {supported}")
+
