@@ -20,6 +20,9 @@ from app.moe_text import (
     extract_key_requirements,
     extract_subject,
     extract_target_audience,
+    is_letterhead_line,
+    LETTERHEAD_NOISE_PATTERN,
+    normalize_moe_text,
     top_org_entities,
 )
 from app.output_schema import validate_llm_output
@@ -335,6 +338,7 @@ def llm_summarize(
 # ──────────────────────────────────────────────────────────────────────
 
 def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, Any]:
+    text = normalize_moe_text(text)
     dates = collect_valid_dates(text, entities)
     orgs = top_org_entities(entities)
     laws = _entity_lines(entities, "LAW")
@@ -377,13 +381,22 @@ def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, A
         )
 
     if orgs or people:
-        parties = orgs + [p for p in people if p not in orgs]
-        sections.append(
-            {
-                "heading": "Responsible parties",
-                "content": "\n".join(f"• {item}" for item in parties[:10]),
-            }
-        )
+        clean_people = [
+            p
+            for p in people
+            if not LETTERHEAD_NOISE_PATTERN.match(p)
+            and not is_letterhead_line(p)
+            and len(p) >= 8
+            and " " in p
+        ]
+        parties = orgs + [p for p in clean_people if p not in orgs]
+        if parties:
+            sections.append(
+                {
+                    "heading": "Responsible parties",
+                    "content": "\n".join(f"• {item}" for item in parties[:10]),
+                }
+            )
 
     # Build target audience section if extracted
     if target_audience:
@@ -427,6 +440,7 @@ def summarize_text(
     text: str,
     entities: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    text = normalize_moe_text(text or "")
     entities = entities or []
     chunk_count = len(split_text(text)) if len(text) > settings.map_reduce_threshold else 1
 

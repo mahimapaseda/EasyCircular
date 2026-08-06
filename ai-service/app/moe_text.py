@@ -54,6 +54,20 @@ RECIPIENT_PREFIXES = (
     "annexure",
     "please fill",
     "register of",
+    "kruthyadhikari",
+    "parivenadhipathi",
+    "parivenacharya",
+)
+
+# Role/institution lines that are still recipients even without "All …" prefixes.
+RECIPIENT_ROLE_MARKERS = (
+    "of all the",
+    "in the island",
+    "pirivena",
+    "parivena",
+    "bhikku training",
+    "seelamaatha",
+    "educational institutions in the island",
 )
 
 SUBJECT_STOP_MARKERS = (
@@ -65,16 +79,36 @@ SUBJECT_STOP_MARKERS = (
     re.compile(r"^therefore[,.]?", re.IGNORECASE),
 )
 
+# First line of circular body (not a recipient / short subject title).
+BODY_START_PATTERN = re.compile(
+    r"^(?:it\s+is\s+(?:hereby\s+)?(?:mandatory|notified|informed|decided)|"
+    r"it\s+is\s+hereby|"
+    r"the\s+provisions|"
+    r"this\s+circular|"
+    r"accordingly[,.]?|"
+    r"\d{1,2}\s*[\.\)])",
+    re.IGNORECASE,
+)
+
 POLICY_SUBJECT_PATTERN = re.compile(
     r"(?:establishing|providing|regarding|implement(?:ing)?|celebrat|duty hours|"
-    r"actions have|financial incentive|vesak week|amending|conducting|organizing|organising)",
+    r"actions have|financial incentive|vesak week|amending|conducting|organizing|organising|"
+    r"mandatory\s+to\s+consider|ten-day\s+teacher\s+train)",
     re.IGNORECASE,
 )
 
 ACTION_SENTENCE_PATTERN = re.compile(
     r"(?:\b(?:must|shall|should|required to|need to|arranged to|expected to|"
     r"instructed to|directed to|requested to|ensure|implement|submit|complete|"
-    r"conduct|organize|organise|celebrate|observe|report|forward|inform)\b)",
+    r"conduct|organize|organise|celebrate|observe|report|forward|inform|"
+    r"mandatory|hereby|to be (?:considered|mentioned|confirmed|implemented))\b)",
+    re.IGNORECASE,
+)
+
+# Common OCR / letterhead fragments that must never become entities or parties.
+LETTERHEAD_NOISE_PATTERN = re.compile(
+    r"^(?:இலங்கை|ශ්‍රී\s*ලංකාව?|sri\s*lanka|st\s*lanka|battaramulla|isurupaya|"
+    r"buddhist|trainin|camscanner|lanka|moe\.gov\.lk|www\.moe)$",
     re.IGNORECASE,
 )
 
@@ -108,6 +142,10 @@ def normalize_moe_text(text: str) -> str:
     text = re.sub(r"[ \t]+\n", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     text = re.sub(r"[ \t]{2,}", " ", text)
+    # Common OCR word breaks seen on CamScanner MOE PDFs
+    text = re.sub(r"\btrainin[,.]?\s*rogramme\b", "training programme", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bsuch[_\s]+in\b", "such in", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bSt\s+Lanka\b", "Sri Lanka", text)
     return text.strip()
 
 
@@ -178,8 +216,18 @@ def is_recipient_line(line: str) -> bool:
     if stripped.endswith("වෙත") and len(stripped) < 80:
         return True
     lowered = stripped.lower()
+    if BODY_START_PATTERN.search(stripped):
+        return False
+    if ACTION_SENTENCE_PATTERN.search(stripped) and len(stripped) > 60:
+        return False
     if lowered.startswith(RECIPIENT_PREFIXES):
         return True
+    if any(marker in lowered for marker in RECIPIENT_ROLE_MARKERS) and len(stripped) < 140:
+        # Role lists like "Kruthyadhikari/Parivenadhipathi of all the Pirivenas…"
+        if not POLICY_SUBJECT_PATTERN.search(stripped) or lowered.startswith(
+            ("kruthyadhikari", "parivenadhipathi", "heads of", "head of")
+        ):
+            return True
     if re.match(r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,4},?$", stripped) and len(stripped) < 60:
         return True
     if stripped.endswith(":") and len(stripped) < 80:
@@ -236,8 +284,8 @@ def extract_subject(text: str) -> str | None:
         if phase == "recipients":
             if is_letterhead_line(line) or _is_circular_meta_line(line):
                 continue
-            if POLICY_SUBJECT_PATTERN.search(line) or re.search(
-                r"(?:වැඩසටහන|ඩෙංගු|සංශෝධනය|இலங்கை)",
+            if BODY_START_PATTERN.search(line) or POLICY_SUBJECT_PATTERN.search(line) or re.search(
+                r"(?:වැඩසටහන|ඩෙංගු|සංශෝධනය)",
                 line,
             ):
                 phase = "subject"
@@ -245,16 +293,32 @@ def extract_subject(text: str) -> str | None:
                 continue
             if is_recipient_line(line):
                 continue
-            if len(line) >= 15:
+            if len(line) >= 40 and ACTION_SENTENCE_PATTERN.search(line):
+                phase = "subject"
+                subject_lines = [line]
+                continue
+            if len(line) >= 25:
                 phase = "subject"
                 subject_lines = [line]
             continue
 
         if phase == "subject":
-            if _is_subject_stop(line) or is_recipient_line(line):
+            if _is_subject_stop(line):
                 break
-            if subject_lines and len(line) > 20 and line[0].islower():
+            # Keep wrapping OCR lines that continue the same sentence.
+            if subject_lines and (
+                line[0].islower()
+                or (
+                    not subject_lines[-1].rstrip().endswith((".", "!", "?"))
+                    and not BODY_START_PATTERN.search(line)
+                    and not is_recipient_line(line)
+                )
+            ):
                 subject_lines.append(line)
+                # Stop once we have a complete sentence long enough for a subject.
+                joined = re.sub(r"\s+", " ", " ".join(subject_lines)).strip()
+                if joined.endswith((".", "!", "?")) and len(joined) >= 60:
+                    break
                 continue
             if subject_lines:
                 break
@@ -287,6 +351,9 @@ def extract_key_requirements(text: str, max_items: int = 8) -> list[str]:
     for sentence in sentences:
         cleaned = re.sub(r"\s+", " ", sentence).strip()
         if len(cleaned) < 40 or len(cleaned) > 500:
+            continue
+        # Skip OCR fragments that start mid-clause.
+        if cleaned[0].islower():
             continue
         if not ACTION_SENTENCE_PATTERN.search(cleaned):
             continue
@@ -381,17 +448,25 @@ def top_org_entities(entities: list[dict], limit: int = 8) -> list[str]:
         "zonal",
         "examinations",
         "commission",
+        "pirivena",
+        "parivena",
+        "teacher training",
     )
     orgs = [str(e.get("text", "")).strip() for e in entities if e.get("label") == "ORG"]
     unique: list[str] = []
     seen: set[str] = set()
 
     def add_org(value: str) -> None:
-        key = value.lower()
-        if not value or key in seen or len(value) < 6:
+        cleaned = value.strip().strip(",.;:")
+        key = cleaned.lower()
+        if not cleaned or key in seen or len(cleaned) < 6:
+            return
+        if LETTERHEAD_NOISE_PATTERN.match(cleaned):
+            return
+        if is_letterhead_line(cleaned) and "ministry" not in key and "education" not in key:
             return
         seen.add(key)
-        unique.append(value)
+        unique.append(cleaned)
 
     for org in orgs:
         if any(term in org.lower() for term in priority_terms):
@@ -432,33 +507,38 @@ def extract_target_audience(text: str) -> list[str]:
     audience: list[str] = []
     seen: set[str] = set()
     in_recipients = False
+    blank_streak = 0
 
-    for line in lines[:40]:
+    for line in lines[:50]:
         if not line:
             if in_recipients and audience:
-                break
+                blank_streak += 1
+                # MOE lists often have a blank between recipients; only stop after
+                # a larger gap that usually precedes the body.
+                if blank_streak >= 2:
+                    break
             continue
+
+        blank_streak = 0
 
         if any(pattern.search(line) for pattern in CIRCULAR_NUMBER_PATTERNS) or ED_REF_PATTERN.search(line):
             in_recipients = True
             continue
 
         if in_recipients:
-            lowered = line.lower().strip()
-
-            # Stop when we reach the subject or body
-            if POLICY_SUBJECT_PATTERN.search(line):
-                break
-            if _is_subject_stop_line(line):
+            if POLICY_SUBJECT_PATTERN.search(line) or BODY_START_PATTERN.search(line) or _is_subject_stop_line(line):
                 break
 
-            # Check if it looks like a recipient
             if is_recipient_line(line) and len(line) >= 8:
-                # Clean up common prefixes/suffixes
                 cleaned = re.sub(r"^[-–•]\s*", "", line).strip()
                 if cleaned and cleaned not in seen and len(cleaned) >= 8:
                     seen.add(cleaned)
                     audience.append(cleaned)
+                continue
+
+            # Non-recipient substantive line ends the recipient block.
+            if len(line) >= 25:
+                break
 
     return audience[:15]
 

@@ -52,6 +52,51 @@ def test_extract_subject_skips_recipients():
     assert "Provincial Education Secretaries" not in subject
 
 
+def test_extract_subject_skips_pirivena_role_recipients():
+    text = """
+Circular No.: 26/2026
+All Provincial Secretaries of Education
+All Provincial Directors of Education
+All Zonal Directors of Education
+Kruthyadhikari/Parivenadhipathi of all the Pirivenas in the island
+Heads of Buddhist Seelamaatha Educational Institutions in the island
+Heads of the Pirivena Bhikku Training Institutions
+It is mandatory to consider the certificate awarded by this Ministry for trainees who have
+successfully completed the ten-day teacher training programme for new teachers
+implemented by the Seethawakapura Pirivena Teacher Training Institution.
+"""
+    subject = extract_subject(text)
+    assert subject is not None
+    assert "mandatory to consider the certificate" in subject.lower()
+    assert "Kruthyadhikari" not in subject
+
+
+def test_extract_target_audience_keeps_blank_separated_recipients():
+    from app.moe_text import extract_target_audience
+
+    text = """
+Circular No.: 26/2026
+
+All Provincial Secretaries of Education
+
+All Provincial Directors of Education
+
+All Zonal Directors of Education
+
+Kruthyadhikari/Parivenadhipathi of all the Pirivenas in the island
+Heads of the Pirivena Bhikku Training Institutions
+
+It is mandatory to consider the certificate awarded by this Ministry.
+"""
+    audience = extract_target_audience(text)
+    assert "All Provincial Secretaries of Education" in audience
+    assert "All Provincial Directors of Education" in audience
+    assert "All Zonal Directors of Education" in audience
+    assert any("Kruthyadhikari" in item for item in audience)
+    assert any("Pirivena Bhikku" in item for item in audience)
+    assert not any("mandatory" in item.lower() for item in audience)
+
+
 def test_build_summary_title_uses_subject():
     title = build_summary_title(SAMPLE_10_2026)
     assert "10/2026" in title

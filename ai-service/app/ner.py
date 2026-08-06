@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from app.moe_text import ED_REF_PATTERN, is_valid_date_text
+from app.moe_text import ED_REF_PATTERN, is_valid_date_text, normalize_moe_text
 
 EntityLabel = Literal["DATE", "PERSON", "ORG", "LAW", "OTHER"]
 
@@ -56,6 +56,14 @@ LABEL_PRIORITY = {"LAW": 4, "DATE": 3, "ORG": 2, "PERSON": 1, "OTHER": 0}
 
 NOISE_ORG_PATTERN = re.compile(
     r"^(?:the\s+)?(?:educational institutions|educational institution|vesak day)$",
+    re.IGNORECASE,
+)
+
+LETTERHEAD_ENTITY_NOISE = re.compile(
+    r"^(?:இலங்கை|ශ්‍රී\s*ලංකාව?|sri\s*lanka|st\s*lanka|battaramulla|isurupaya|"
+    r"buddhist|trainin|camscanner|lanka|moe\.gov\.lk|www\.moe|"
+    r"hon\.?\s*minister|secretary|"
+    r"(?:the\s+)?letter\s+of\s+appointment|training\s+institution)$",
     re.IGNORECASE,
 )
 
@@ -218,9 +226,22 @@ def _filter_entities(entities: list[Entity]) -> list[Entity]:
             continue
         if entity.label in ("PERSON", "ORG", "OTHER") and _looks_like_ocr_noise(text):
             continue
+        if entity.label in ("PERSON", "ORG", "OTHER") and LETTERHEAD_ENTITY_NOISE.match(text):
+            continue
         if entity.label == "PERSON" and any(ch.isdigit() for ch in text):
             continue
-        filtered.append(entity)
+        # Drop very short OCR fragments and single-token leftovers.
+        if entity.label in ("PERSON", "ORG") and len(text) < 5:
+            continue
+        if entity.label in ("PERSON", "ORG") and " " not in text and len(text) < 14:
+            # Single-token ORG/PERSON like "Buddhist", "Pirivenas", "trainin".
+            if text.lower() not in {"moe"}:
+                continue
+        filtered.append(
+            Entity(text=text, label=entity.label, start=entity.start, end=entity.end)
+            if text != entity.text
+            else entity
+        )
     return filtered
 
 
@@ -228,6 +249,7 @@ def extract_entities(text: str) -> list[dict]:
     if not text or not text.strip():
         return []
 
+    text = normalize_moe_text(text)
     regex_entities = _extract_regex_entities(text)
     spacy_entities = _extract_spacy_entities(text)
     merged = _merge_entities(regex_entities + spacy_entities)
