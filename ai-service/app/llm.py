@@ -4,11 +4,15 @@ from langchain_core.language_models.chat_models import BaseChatModel
 
 from app.config import settings
 
-SUPPORTED_PROVIDERS = ("openai", "gemini", "groq")
+SUPPORTED_PROVIDERS = ("openai", "gemini", "groq", "ollama")
 
 
 def active_provider() -> str:
     return os.getenv("LLM_PROVIDER", "openai").lower().strip()
+
+
+def ollama_base_url() -> str:
+    return os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
 
 
 def llm_is_configured() -> bool:
@@ -19,6 +23,9 @@ def llm_is_configured() -> bool:
         return bool(os.getenv("GROQ_API_KEY", "").strip())
     if provider == "openai":
         return bool(os.getenv("OPENAI_API_KEY", "").strip())
+    if provider == "ollama":
+        # Local Ollama needs no cloud API key.
+        return True
     return False
 
 
@@ -28,6 +35,8 @@ def active_model_name() -> str:
         return os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-3.5-flash"))
     if provider == "groq":
         return os.getenv("GROQ_MODEL", os.getenv("LLM_MODEL", "llama-3.3-70b-versatile"))
+    if provider == "ollama":
+        return os.getenv("OLLAMA_MODEL", os.getenv("LLM_MODEL", "llama3.2:3b"))
     return os.getenv("LLM_MODEL", "gpt-4o-mini")
 
 
@@ -89,6 +98,16 @@ def get_chat_model(
             max_retries=retries,
         )
 
+    if provider == "ollama":
+        from langchain_ollama import ChatOllama
+
+        model = active_model_name()
+        return ChatOllama(
+            model=model,
+            base_url=ollama_base_url(),
+            temperature=temp,
+            num_predict=max_tokens,
+        )
+
     supported = ", ".join(SUPPORTED_PROVIDERS)
     raise RuntimeError(f"Unsupported LLM_PROVIDER '{provider}'. Use one of: {supported}")
-

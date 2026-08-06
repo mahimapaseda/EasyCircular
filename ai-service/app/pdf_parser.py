@@ -7,6 +7,13 @@ from app.ocr_languages import resolve_ocr_settings
 
 TEXT_DENSITY_THRESHOLD = 50
 
+# Scanner watermarks / near-empty text layers that must never be treated as content.
+WATERMARK_ONLY_PATTERN = re.compile(
+    r"^(?:camscanner|scanned\s+by|scanned\s+with|scanbot|adobe\s+scan|"
+    r"microsoft\s+lens|genius\s+scan|.*?scanner)$",
+    re.IGNORECASE,
+)
+
 
 @dataclass
 class ParseResult:
@@ -26,6 +33,20 @@ def _average_density(text: str, pages: int) -> float:
     if pages <= 0:
         return 0.0
     return len(text.strip()) / pages
+
+
+def _is_insufficient_text(text: str, pages: int = 1) -> bool:
+    """True when extracted text is empty, watermark-only, or far too short for a circular."""
+    cleaned = (text or "").strip()
+    if not cleaned:
+        return True
+    collapsed = re.sub(r"\s+", " ", cleaned)
+    if WATERMARK_ONLY_PATTERN.match(collapsed):
+        return True
+    # A real MOE circular page almost never has fewer than ~80 readable chars.
+    if len(collapsed) < 80 and _average_density(cleaned, max(pages, 1)) < TEXT_DENSITY_THRESHOLD:
+        return True
+    return False
 
 
 def _extract_with_pdfplumber(data: bytes) -> tuple[list[str], int]:
@@ -113,29 +134,34 @@ def parse_pdf_bytes(data: bytes) -> ParseResult:
     combined = _normalize_text("\n\n".join(page_texts))
     density = _average_density(combined, page_count)
 
-    if density < TEXT_DENSITY_THRESHOLD:
+    # Force OCR for watermark-only / tiny text layers even if density math is odd.
+    needs_ocr = density < TEXT_DENSITY_THRESHOLD or _is_insufficient_text(combined, page_count)
+
+    if needs_ocr:
         try:
             page_texts, page_count = _extract_with_pymupdf(data)
             combined = _normalize_text("\n\n".join(page_texts))
             density = _average_density(combined, page_count)
+            needs_ocr = density < TEXT_DENSITY_THRESHOLD or _is_insufficient_text(combined, page_count)
         except Exception as exc:
             errors.append(f"PyMuPDF: {exc}")
 
-    if density < TEXT_DENSITY_THRESHOLD:
+    if needs_ocr:
         if not _is_tesseract_available():
             message = (
-                "Low text density and Tesseract OCR is not available. "
+                "This looks like a scanned PDF (little or no real text — often only a "
+                "'CamScanner' watermark). Tesseract OCR is not available. "
                 "Install Tesseract OCR on the host or use the Docker image."
             )
             if errors:
                 message = f"{message} ({'; '.join(errors)})"
             return ParseResult(
-                text=combined,
+                text="",
                 pages=page_count,
                 ocr_used=False,
                 ocr_lang=None,
                 page_texts=page_texts,
-                error=message if not combined else message,
+                error=message,
             )
 
         try:
@@ -145,13 +171,29 @@ def parse_pdf_bytes(data: bytes) -> ParseResult:
         except Exception as exc:
             errors.append(f"OCR: {exc}")
             return ParseResult(
-                text=combined,
+                text="",
                 pages=page_count,
                 ocr_used=False,
                 ocr_lang=None,
                 page_texts=page_texts,
                 error="; ".join(errors) if errors else str(exc),
             )
+
+    if _is_insufficient_text(combined, page_count):
+        message = (
+            "OCR did not recover readable circular text from this scanned PDF "
+            "(result was empty or only a scanner watermark). Try a clearer scan or re-export the PDF."
+        )
+        if errors:
+            message = f"{message} ({'; '.join(errors)})"
+        return ParseResult(
+            text="",
+            pages=page_count,
+            ocr_used=ocr_used,
+            ocr_lang=ocr_lang,
+            page_texts=page_texts,
+            error=message,
+        )
 
     if not combined and errors:
         return ParseResult(

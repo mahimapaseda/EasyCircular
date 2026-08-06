@@ -21,6 +21,13 @@ def test_llm_is_configured_by_provider(monkeypatch, provider, key_name):
     assert llm_is_configured() is True
 
 
+def test_llm_is_configured_for_ollama(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    for name in ("GOOGLE_API_KEY", "GROQ_API_KEY", "OPENAI_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
+    assert llm_is_configured() is True
+
+
 def test_active_model_name_for_groq(monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "groq")
     monkeypatch.setenv("GROQ_MODEL", "llama-3.3-70b-versatile")
@@ -35,7 +42,15 @@ def test_active_model_name_for_gemini(monkeypatch):
     assert active_model_name() == "gemini-3.5-flash"
 
 
+def test_active_model_name_for_ollama(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OLLAMA_MODEL", "llama3.2:3b")
+    assert active_provider() == "ollama"
+    assert active_model_name() == "llama3.2:3b"
+
+
 def test_supported_providers():
     assert "gemini" in SUPPORTED_PROVIDERS
     assert "groq" in SUPPORTED_PROVIDERS
     assert "openai" in SUPPORTED_PROVIDERS
+    assert "ollama" in SUPPORTED_PROVIDERS

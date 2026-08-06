@@ -107,7 +107,12 @@ async function extractText(circular) {
   const ocrLang = aiResult.ocrLang || null;
   const extractionError = aiResult.error || null;
 
-  if (!extractedText) {
+  const watermarkOnly = /^(camscanner|scanned\s+by|scanned\s+with|scanbot|adobe\s+scan)$/i.test(
+    extractedText.replace(/\s+/g, " ").trim(),
+  );
+  const tooShort = extractedText.length > 0 && extractedText.length < 80;
+
+  if (!extractedText || watermarkOnly || (tooShort && !ocrUsed)) {
     circular.status = "failed";
     circular.extractedText = "";
     circular.processingMeta = {
@@ -116,7 +121,9 @@ async function extractText(circular) {
       pageCount,
       extractionError:
         extractionError ||
-        "No readable text found. The PDF may be empty, corrupt, or image-only without OCR.",
+        (watermarkOnly
+          ? "Only a scanner watermark was found (e.g. CamScanner). Re-run Extract so OCR can read the scanned page."
+          : "No readable text found. The PDF may be empty, corrupt, or image-only without OCR."),
     };
     await circular.save();
 

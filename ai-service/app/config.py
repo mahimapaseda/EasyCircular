@@ -9,6 +9,8 @@ class Settings:
     llm_model: str
     gemini_model: str
     groq_model: str
+    ollama_model: str
+    ollama_base_url: str
     llm_temperature: float
     llm_max_retries: int
     llm_max_output_tokens: int
@@ -28,6 +30,8 @@ class Settings:
             llm_model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
             gemini_model=os.getenv("GEMINI_MODEL", os.getenv("LLM_MODEL", "gemini-3.5-flash")),
             groq_model=os.getenv("GROQ_MODEL", os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")),
+            ollama_model=os.getenv("OLLAMA_MODEL", os.getenv("LLM_MODEL", "llama3.2:3b")),
+            ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/"),
             llm_temperature=float(os.getenv("LLM_TEMPERATURE", "0.2")),
             llm_max_retries=int(os.getenv("LLM_MAX_RETRIES", "2")),
             llm_max_output_tokens=int(os.getenv("LLM_MAX_OUTPUT_TOKENS", "4096")),

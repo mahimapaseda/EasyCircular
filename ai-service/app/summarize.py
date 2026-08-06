@@ -339,6 +339,42 @@ def llm_summarize(
 
 def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, Any]:
     text = normalize_moe_text(text)
+    collapsed = re.sub(r"\s+", " ", text).strip()
+    if (
+        not collapsed
+        or len(collapsed) < 80
+        or re.fullmatch(
+            r"(?:camscanner|scanned\s+by|scanned\s+with|scanbot|adobe\s+scan)",
+            collapsed,
+            flags=re.IGNORECASE,
+        )
+    ):
+        summary = {
+            "circularNumber": None,
+            "issuedDate": None,
+            "issuedBy": None,
+            "targetAudience": None,
+            "effectiveDate": None,
+            "title": "MOE circular summary",
+            "sections": [
+                {
+                    "heading": "Purpose",
+                    "content": (
+                        "No usable circular text was available to summarize. "
+                        "This often happens when Extract only captured a scanner watermark "
+                        "(e.g. CamScanner). Re-run Extract so OCR can read the scanned PDF, then Process again."
+                    ),
+                }
+            ],
+            "actionItems": [
+                "Re-run Extract on the original PDF (OCR), then Process again.",
+            ],
+            "rawMarkdown": "",
+            "mode": "fallback",
+        }
+        summary["rawMarkdown"] = _build_markdown(summary)
+        return summary
+
     dates = collect_valid_dates(text, entities)
     orgs = top_org_entities(entities)
     laws = _entity_lines(entities, "LAW")
