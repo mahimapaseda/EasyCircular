@@ -1,4 +1,6 @@
 import os
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
@@ -15,6 +17,43 @@ def ollama_base_url() -> str:
     return os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
 
 
+def ollama_is_reachable(timeout_sec: float = 1.5) -> bool:
+    """Return True when the local Ollama HTTP API responds to /api/tags."""
+    url = f"{ollama_base_url()}/api/tags"
+    try:
+        req = Request(url, method="GET")
+        with urlopen(req, timeout=timeout_sec) as response:
+            return 200 <= getattr(response, "status", 200) < 300
+    except (URLError, TimeoutError, OSError, ValueError):
+        return False
+
+
+def ollama_has_model(timeout_sec: float = 1.5) -> bool:
+    """Return True when the configured Ollama model is present locally."""
+    import json
+
+    model = active_model_name()
+    url = f"{ollama_base_url()}/api/tags"
+    try:
+        req = Request(url, method="GET")
+        with urlopen(req, timeout=timeout_sec) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError):
+        return False
+
+    names = []
+    for item in payload.get("models") or []:
+        name = str(item.get("name") or item.get("model") or "").strip()
+        if name:
+            names.append(name)
+
+    if model in names:
+        return True
+    # Allow tag-less match: "llama3.2:3b" vs "llama3.2:3b" / "llama3.2"
+    base = model.split(":", 1)[0]
+    return any(name == model or name.startswith(f"{base}:") or name == base for name in names)
+
+
 def llm_is_configured() -> bool:
     provider = active_provider()
     if provider == "gemini":
@@ -24,8 +63,8 @@ def llm_is_configured() -> bool:
     if provider == "openai":
         return bool(os.getenv("OPENAI_API_KEY", "").strip())
     if provider == "ollama":
-        # Local Ollama needs no cloud API key.
-        return True
+        # Local Ollama needs no cloud key, but the daemon must be up.
+        return ollama_is_reachable()
     return False
 
 
@@ -100,6 +139,12 @@ def get_chat_model(
 
     if provider == "ollama":
         from langchain_ollama import ChatOllama
+
+        if not ollama_is_reachable():
+            raise RuntimeError(
+                "Ollama is not reachable at "
+                f"{ollama_base_url()}. Start it with scripts/start-ollama.ps1"
+            )
 
         model = active_model_name()
         return ChatOllama(

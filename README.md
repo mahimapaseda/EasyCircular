@@ -9,6 +9,7 @@ AI/NLP web application for Sri Lankan Ministry of Education circulars — upload
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (recommended), or:
 - Node.js 20+, Python 3.11+, MongoDB 7
+- **Local LLM (optional but recommended):** [Ollama](https://ollama.com/) with models stored under `G:\AI\models`
 
 ## Quick start (Docker)
 
@@ -31,6 +32,8 @@ docker compose up --build
 
 Open http://localhost:3002 — the **System Status** panel should show all services as healthy.
 
+**Note:** Docker Compose does **not** include Ollama. For LLM summaries with `LLM_PROVIDER=ollama`, run Ollama on the host at `http://127.0.0.1:11434` (see below).
+
 ### Verify Phase 1 exit gate
 
 With services running (Docker or local dev):
@@ -43,13 +46,48 @@ Checks AI `/health`, backend `/health` (MongoDB + AI reachable), and frontend HT
 
 ## Local development (without Docker)
 
+### Fast path (Windows)
+
+```powershell
+# First time: install Ollama (models go to G:\AI\models)
+winget install Ollama.Ollama -e
+[Environment]::SetEnvironmentVariable("OLLAMA_MODELS", "G:\AI\models", "User")
+
+# Pull model + start Ollama, then open AI/backend/frontend terminals
+npm run start:ollama
+npm run start:local
+```
+
 ### 1. MongoDB
 
 ```bash
 docker compose up mongodb -d
 ```
 
-### 2. AI service
+Or use a local MongoDB Windows service on port 27017.
+
+### 2. Local Ollama LLM (`G:\AI`)
+
+```powershell
+# Models directory (required for this project layout)
+mkdir G:\AI\models -Force
+$env:OLLAMA_MODELS = "G:\AI\models"
+
+# Start daemon + pull default model (llama3.2:3b)
+powershell -ExecutionPolicy Bypass -File .\scripts\start-ollama.ps1 -PullModel
+```
+
+In `ai-service/.env` set:
+
+```
+LLM_PROVIDER=ollama
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=llama3.2:3b
+```
+
+No cloud API key is required. If Ollama is down, the AI service falls back to extractive summaries.
+
+### 3. AI service
 
 ```bash
 cd ai-service
@@ -61,7 +99,7 @@ cp .env.example .env
 uvicorn app.main:app --reload --port 5000
 ```
 
-### 3. Backend
+### 4. Backend
 
 ```bash
 cd backend
@@ -70,7 +108,7 @@ npm install
 npm run dev
 ```
 
-### 4. Frontend
+### 5. Frontend
 
 ```bash
 cd frontend
@@ -137,12 +175,12 @@ Then restart the AI service and click **Re-extract** on the circular page.
 ## Phase 3 — AI processing
 
 - [x] SpaCy + regex NER (`POST /extract/entities`)
-- [x] LangChain summarization (`POST /summarize`) with extractive fallback when no API key
+- [x] LangChain summarization (`POST /summarize`) with extractive fallback when LLM is unavailable
 - [x] `POST /api/circulars/:id/process` — NER + summary with content-hash cache
 - [x] Entity highlights + summary panel on `/circular/[id]`
 - [x] Date guardrails (warnings when summary dates are not in source)
 
-Set `OPENAI_API_KEY` in `ai-service/.env` for LLM summaries; otherwise an extractive fallback is used.
+For LLM summaries set `LLM_PROVIDER=ollama` (local) or a cloud provider key (`OPENAI_API_KEY` / `GOOGLE_API_KEY` / `GROQ_API_KEY`). Without a reachable LLM, an extractive fallback is used.
 
 ## Phase 4 — MVP product completion
 

@@ -6,6 +6,11 @@ export type HealthCheck = {
   timestamp: string;
   mongodb?: string;
   aiService?: string;
+  llmProvider?: string | null;
+  llmModel?: string | null;
+  llmConfigured?: boolean;
+  ollamaReachable?: boolean | null;
+  ollamaModelReady?: boolean | null;
 };
 
 export async function fetchBackendHealth(): Promise<HealthCheck> {

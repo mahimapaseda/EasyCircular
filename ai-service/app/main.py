@@ -8,7 +8,14 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.llm import SUPPORTED_PROVIDERS, active_model_name, active_provider, llm_is_configured
+from app.llm import (
+    SUPPORTED_PROVIDERS,
+    active_model_name,
+    active_provider,
+    llm_is_configured,
+    ollama_has_model,
+    ollama_is_reachable,
+)
 from app.routes_v1 import router as v1_router
 
 load_dotenv()
@@ -58,15 +65,20 @@ app.include_router(v1_router)
 
 @app.get("/health")
 def health():
+    provider = active_provider()
+    reachable = ollama_is_reachable() if provider == "ollama" else None
+    model_ready = ollama_has_model() if provider == "ollama" and reachable else None
     return {
         "service": "ai-service",
         "status": "ok",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "apiVersion": "v1",
-        "llm_provider": active_provider(),
+        "llm_provider": provider,
         "llm_model": active_model_name(),
         "llm_configured": llm_is_configured(),
         "llm_providers_supported": list(SUPPORTED_PROVIDERS),
+        "ollama_reachable": reachable,
+        "ollama_model_ready": model_ready,
     }
 
 

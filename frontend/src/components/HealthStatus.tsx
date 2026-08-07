@@ -112,7 +112,28 @@ export default function HealthStatus({ compact = false }: HealthStatusProps) {
     ? "degraded"
     : "offline";
 
-  const allOk = apiStatus === "ok" && dbStatus === "ok" && aiStatus === "ok";
+  const llmProvider = health?.llmProvider || null;
+  const llmConfigured = Boolean(health?.llmConfigured);
+  const llmStatus: ServiceStatus = loading
+    ? "checking"
+    : !llmProvider
+    ? "offline"
+    : llmConfigured
+    ? "ok"
+    : "degraded";
+
+  const llmDetail = loading
+    ? undefined
+    : !llmProvider
+    ? "unknown"
+    : llmConfigured
+    ? `${llmProvider}${health?.llmModel ? ` / ${health.llmModel}` : ""}`
+    : llmProvider === "ollama"
+    ? "ollama offline (extractive fallback)"
+    : `${llmProvider} not configured`;
+
+  const allOk =
+    apiStatus === "ok" && dbStatus === "ok" && aiStatus === "ok" && llmStatus === "ok";
 
   return (
     <div>
@@ -137,9 +158,10 @@ export default function HealthStatus({ compact = false }: HealthStatusProps) {
         <ServiceRow label="Backend API" status={apiStatus} detail={health?.status} />
         <ServiceRow label="MongoDB" status={dbStatus} detail={health?.mongodb} />
         <ServiceRow label="AI Service" status={aiStatus} detail={health?.aiService} />
+        <ServiceRow label="LLM" status={llmStatus} detail={llmDetail} />
       </ul>
 
-      {!loading && (
+      {!loading && !compact && (
         <p className="mt-3 text-right text-[11px] font-medium text-white/20">
           Refreshes every 15s
         </p>

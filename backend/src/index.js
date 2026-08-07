@@ -73,11 +73,27 @@ app.get("/health", async (_req, res) => {
   try {
     const aiResponse = await healthCheck();
     checks.aiService = aiResponse?.status === "ok" ? "ok" : "degraded";
+    checks.llmProvider = aiResponse?.llm_provider || null;
+    checks.llmModel = aiResponse?.llm_model || null;
+    checks.llmConfigured = Boolean(aiResponse?.llm_configured);
+    checks.ollamaReachable =
+      typeof aiResponse?.ollama_reachable === "boolean"
+        ? aiResponse.ollama_reachable
+        : null;
+    checks.ollamaModelReady =
+      typeof aiResponse?.ollama_model_ready === "boolean"
+        ? aiResponse.ollama_model_ready
+        : null;
     if (checks.aiService !== "ok") {
       checks.status = "degraded";
     }
   } catch {
     checks.aiService = "unreachable";
+    checks.llmProvider = null;
+    checks.llmModel = null;
+    checks.llmConfigured = false;
+    checks.ollamaReachable = null;
+    checks.ollamaModelReady = null;
     checks.status = "degraded";
   }
 

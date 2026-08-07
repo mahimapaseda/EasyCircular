@@ -6,6 +6,8 @@
   "scripts": {
     "verify:phase1": "node scripts/verify-phase1.mjs",
     "verify:phase4": "node scripts/verify-phase4.mjs",
-    "evaluate:samples": "python scripts/evaluate-samples.py"
+    "evaluate:samples": "python scripts/evaluate-samples.py",
+    "start:local": "powershell -ExecutionPolicy Bypass -File ./scripts/start-local.ps1",
+    "start:ollama": "powershell -ExecutionPolicy Bypass -File ./scripts/start-ollama.ps1 -PullModel"
   }
 }
