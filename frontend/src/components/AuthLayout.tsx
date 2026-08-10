@@ -114,7 +114,7 @@ export default function AuthLayout({
         {/* Form area */}
         <div className="flex flex-1 items-center justify-center px-6 pb-10 sm:px-10">
           <div className="w-full max-w-md animate-fade-up">
-            <div className="rounded-2xl border border-white/10 bg-black/40 p-8 shadow-2xl backdrop-blur-2xl">
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-5 shadow-2xl backdrop-blur-2xl sm:p-8">
               {children}
             </div>
           </div>

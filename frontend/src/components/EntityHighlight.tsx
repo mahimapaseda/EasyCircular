@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 import type { Entity } from "@/lib/circulars";
 
 const LABEL_CONFIG: Record<
@@ -53,6 +55,8 @@ export default function EntityHighlight({
   entities,
   className = "",
 }: EntityHighlightProps) {
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+
   if (!text) {
     return (
       <p className={`text-sm text-ink-500 dark:text-ink-400 ${className}`}>
@@ -92,22 +96,36 @@ export default function EntityHighlight({
     }
 
     const cfg = LABEL_CONFIG[entity.label] || LABEL_CONFIG.OTHER;
+    const key = `e-${index}-${entity.start}`;
+    const open = activeKey === key;
 
     parts.push(
       <mark
-        key={`e-${index}-${entity.start}`}
-        className={`group relative inline-flex cursor-default items-baseline rounded-md px-1.5 py-0.5 mx-0.5 font-semibold transition-colors duration-200 ${cfg.light} ${cfg.dark}`}
+        key={key}
+        role="button"
+        tabIndex={0}
+        aria-label={`${cfg.label}: ${text.slice(entity.start, entity.end)}`}
+        onClick={() => setActiveKey((current) => (current === key ? null : key))}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setActiveKey((current) => (current === key ? null : key));
+          }
+        }}
+        className={`group relative inline-flex cursor-pointer items-baseline rounded-md px-1.5 py-0.5 mx-0.5 font-semibold transition-colors duration-200 ${cfg.light} ${cfg.dark}`}
       >
         {text.slice(entity.start, entity.end)}
-        
-        {/* Animated Tooltip */}
-        <span className="pointer-events-none absolute -top-9 left-1/2 z-20 flex -translate-x-1/2 scale-95 items-center gap-1.5 whitespace-nowrap rounded-xl bg-ink-900/95 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white opacity-0 shadow-xl backdrop-blur-md transition-all duration-200 group-hover:-translate-y-1 group-hover:scale-100 group-hover:opacity-100 dark:bg-white/95 dark:text-ink-950">
+        <span
+          className={`pointer-events-none absolute -top-9 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-xl bg-ink-900/95 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-xl backdrop-blur-md transition-all duration-200 dark:bg-white/95 dark:text-ink-950 ${
+            open
+              ? "-translate-y-1 scale-100 opacity-100"
+              : "scale-95 opacity-0 group-hover:-translate-y-1 group-hover:scale-100 group-hover:opacity-100"
+          }`}
+        >
           <span className={`h-2 w-2 rounded-full ${cfg.dot} shadow-sm`} />
           {cfg.label}
-          
-          {/* Tooltip arrow */}
           <svg className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 text-ink-900/95 dark:text-white/95" viewBox="0 0 24 24" fill="currentColor">
-             <path d="M12 21l-8-8h16l-8 8z"/>
+            <path d="M12 21l-8-8h16l-8 8z" />
           </svg>
         </span>
       </mark>,
@@ -123,6 +141,9 @@ export default function EntityHighlight({
   return (
     <div
       className={`whitespace-pre-wrap text-[15px] font-medium leading-[2] tracking-tight text-ink-800 dark:text-ink-100 ${className}`}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) setActiveKey(null);
+      }}
     >
       {parts}
     </div>

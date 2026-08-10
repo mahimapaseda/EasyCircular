@@ -92,7 +92,7 @@ export default function DocumentCard({ item, onDelete }: DocumentCardProps) {
           onClick={() => void handleDelete()}
           disabled={deleting}
           aria-label={`Delete ${item.originalFilename}`}
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-slate-500 opacity-0 transition hover:border-rose-400/30 hover:bg-rose-400/10 hover:text-rose-400 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/40 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="absolute right-3 top-3 flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/10 bg-black/40 text-slate-400 opacity-100 transition hover:border-rose-400/30 hover:bg-rose-400/10 hover:text-rose-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/40 md:opacity-0 md:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {deleting ? (
             <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">

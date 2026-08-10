@@ -3,7 +3,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 const LiquidChrome = dynamic(() => import("@/components/LiquidChrome"), {
@@ -106,9 +106,9 @@ function SidebarContent({
                 onNavigate?.();
               }}
               aria-label="Sign out"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/10 hover:text-white"
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/10 hover:text-white"
             >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
               </svg>
             </button>
@@ -123,10 +123,42 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    const firstFocusable = drawerRef.current?.querySelector<HTMLElement>(
+      'a[href], button:not([disabled])',
+    );
+    firstFocusable?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [mobileOpen]);
+
+  function closeDrawer() {
+    setMobileOpen(false);
+    queueMicrotask(() => menuButtonRef.current?.focus());
+  }
 
   return (
     <div className="relative flex min-h-screen" suppressHydrationWarning>
@@ -151,10 +183,14 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
           type="button"
           aria-label="Close menu"
           className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"
-          onClick={() => setMobileOpen(false)}
+          onClick={closeDrawer}
         />
       )}
       <aside
+        ref={drawerRef}
+        role="dialog"
+        aria-modal={mobileOpen}
+        aria-label="Workspace menu"
         className={`fixed inset-y-0 left-0 z-50 flex w-[min(85vw,280px)] flex-col border-r border-white/10 bg-black/80 backdrop-blur-2xl transition-transform duration-300 md:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
@@ -162,7 +198,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         <SidebarContent
           pathname={pathname}
           user={user}
-          onNavigate={() => setMobileOpen(false)}
+          onNavigate={closeDrawer}
           onSignOut={signOut}
         />
       </aside>
@@ -170,10 +206,12 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
       <div className="flex min-h-screen flex-1 flex-col md:pl-[200px] lg:pl-[220px]" suppressHydrationWarning>
         <div className="flex h-12 shrink-0 items-center gap-3 border-b border-white/10 bg-black/30 px-4 backdrop-blur-xl md:hidden" suppressHydrationWarning>
           <button
+            ref={menuButtonRef}
             type="button"
             aria-label="Open menu"
+            aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(true)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />

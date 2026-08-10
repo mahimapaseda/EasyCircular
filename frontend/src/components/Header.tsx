@@ -136,7 +136,7 @@ export default function Header() {
               />
             </svg>
           </div>
-          <span className="hidden text-sm font-bold text-white sm:inline">
+          <span className="inline text-sm font-bold text-white">
             Easy<span className="text-cyan-300">Circular</span>
           </span>
         </Link>

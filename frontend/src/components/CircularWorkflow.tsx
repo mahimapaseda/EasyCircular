@@ -274,39 +274,43 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   const showManualGenerate =
     !circular.summary && canProcess && hasText && !extracting && !processing;
 
-  const generateButton =
-    canProcess && hasText ? (
-      <button
-        type="button"
-        onClick={() => void handleProcess()}
-        disabled={busy}
-        className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-md transition hover:scale-[1.02] disabled:opacity-60"
-      >
-        {busy ? (
-          <>
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
-            {extracting ? "Extracting…" : "Summarizing…"}
-          </>
-        ) : (
-          <>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-            Generate summary
-          </>
-        )}
-      </button>
-    ) : null;
+  const showHeaderGenerate = canProcess && hasText && !hasSummary;
+  const generateButton = showHeaderGenerate ? (
+    <button
+      type="button"
+      onClick={() => void handleProcess()}
+      disabled={busy}
+      className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
+    >
+      {busy ? (
+        <>
+          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+          {extracting ? "Extracting…" : "Summarizing…"}
+        </>
+      ) : (
+        "Generate summary"
+      )}
+    </button>
+  ) : canProcess && hasText && hasSummary ? (
+    <button
+      type="button"
+      onClick={() => void handleProcess()}
+      disabled={busy}
+      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-3.5 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-60"
+    >
+      {busy ? "Summarizing…" : "Regenerate"}
+    </button>
+  ) : null;
 
   return (
     <WorkflowLayout circular={circular} currentStep={step} actions={generateButton}>
       {error && (
-        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-300 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-rose-400/20 bg-rose-400/[0.08] px-4 py-3 text-sm text-rose-300 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-semibold">{error}</p>
           <button
             type="button"
             onClick={() => void load()}
-            className="shrink-0 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
+            className="shrink-0 rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10"
           >
             Retry
           </button>
@@ -317,61 +321,36 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         className={
           hasSummary
             ? sourceExpanded
-              ? "grid w-full gap-4 md:gap-5 lg:grid-cols-[minmax(280px,38%)_minmax(0,1fr)] lg:items-start"
-              : "grid w-full gap-4 md:gap-5 lg:grid-cols-[minmax(220px,30%)_minmax(0,1fr)] lg:items-start"
-            : "mx-auto w-full max-w-3xl space-y-4 md:space-y-5"
+              ? "grid w-full gap-4 md:grid-cols-[minmax(0,1fr)_minmax(260px,36%)] md:items-start md:gap-5"
+              : "flex w-full flex-col gap-3"
+            : "mx-auto w-full max-w-2xl space-y-4"
         }
       >
-        <div
-          className={`space-y-4 md:space-y-5 ${hasSummary ? "order-2 lg:order-1 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto" : ""}`}
-        >
-          <SourceTextPanel
-            circular={circular}
-            draftText={draftText}
-            textView={textView}
-            sourceText={sourceText}
-            confidence={confidence}
-            extracting={extracting || circular.status === "uploaded"}
-            saving={saving}
-            hasText={hasText}
-            hasEntities={hasEntities}
-            expanded={sourceExpanded}
-            compact={hasSummary}
-            onToggle={() => setSourceExpanded((v) => !v)}
-            onTextViewChange={setTextView}
-            onDraftChange={setDraftText}
-            onExtract={() => void handleExtract()}
-            onSave={() => void handleSave()}
-            onReset={() => setDraftText(circular.extractedText ?? "")}
-          />
+        {hasSummary && !sourceExpanded && (
+          <div className="w-full shrink-0">
+            <SourceTextPanel
+              circular={circular}
+              draftText={draftText}
+              textView={textView}
+              sourceText={sourceText}
+              confidence={confidence}
+              extracting={extracting || circular.status === "uploaded"}
+              saving={saving}
+              hasText={hasText}
+              hasEntities={hasEntities}
+              expanded={sourceExpanded}
+              compact
+              onToggle={() => setSourceExpanded((v) => !v)}
+              onTextViewChange={setTextView}
+              onDraftChange={setDraftText}
+              onExtract={() => void handleExtract()}
+              onSave={() => void handleSave()}
+              onReset={() => setDraftText(circular.extractedText ?? "")}
+            />
+          </div>
+        )}
 
-          {showManualGenerate && (
-            <div className="relative overflow-hidden rounded-2xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/10 via-blue-500/5 to-transparent p-6 text-center">
-              <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-400/20 blur-3xl" />
-              <div className="relative flex flex-col items-center gap-3">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">
-                  Next step
-                </span>
-                <p className="text-sm font-semibold text-white">
-                  Text is ready — generate a structured summary
-                </p>
-                <button
-                  type="button"
-                  onClick={() => void handleProcess()}
-                  disabled={busy}
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-slate-900 shadow-lg shadow-black/20 transition hover:scale-[1.02]"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                  Generate AI Summary
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className={`min-w-0 space-y-4 md:space-y-5 ${hasSummary ? "order-1 lg:order-2" : ""}`}>
+        <div className={`min-w-0 ${hasSummary && sourceExpanded ? "order-1" : ""}`}>
           <SummaryPanel
             circular={circular}
             processing={processing}
@@ -392,6 +371,53 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
             }
           />
         </div>
+
+        {(!hasSummary || sourceExpanded) && (
+          <div
+            className={`space-y-3 ${
+              hasSummary && sourceExpanded
+                ? "order-2 md:sticky md:top-28 md:max-h-[calc(100vh-8rem)] md:overflow-y-auto lg:top-32"
+                : ""
+            }`}
+          >
+            <SourceTextPanel
+              circular={circular}
+              draftText={draftText}
+              textView={textView}
+              sourceText={sourceText}
+              confidence={confidence}
+              extracting={extracting || circular.status === "uploaded"}
+              saving={saving}
+              hasText={hasText}
+              hasEntities={hasEntities}
+              expanded={sourceExpanded}
+              compact={hasSummary}
+              onToggle={() => setSourceExpanded((v) => !v)}
+              onTextViewChange={setTextView}
+              onDraftChange={setDraftText}
+              onExtract={() => void handleExtract()}
+              onSave={() => void handleSave()}
+              onReset={() => setDraftText(circular.extractedText ?? "")}
+            />
+
+            {showManualGenerate && (
+              <div className="rounded-xl border border-white/[0.08] bg-black/20 px-5 py-5 text-center backdrop-blur-xl">
+                <p className="text-sm font-semibold text-white">Text is ready</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Generate a structured brief from the extracted circular.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void handleProcess()}
+                  disabled={busy}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
+                >
+                  Generate summary
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </WorkflowLayout>
   );

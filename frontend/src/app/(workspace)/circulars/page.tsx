@@ -126,7 +126,7 @@ export default function DocumentsPage() {
           </p>
         )}
 
-        <dl className="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
+        <dl className="mb-6 grid grid-cols-1 gap-2 min-[400px]:grid-cols-3 sm:gap-3">
           {[
             { label: "Total", value: stats.total },
             { label: "Summarized", value: stats.completed },
@@ -199,7 +199,9 @@ export default function DocumentsPage() {
                   </svg>
                 </div>
                 <p className="font-semibold text-white">No documents yet</p>
-                <p className="mt-1 text-sm text-slate-400">Use New Analysis in the sidebar to upload a circular.</p>
+                <p className="mt-1 text-sm text-slate-400">
+                  Tap New Analysis in the menu to upload a circular.
+                </p>
               </>
             ) : (
               <>

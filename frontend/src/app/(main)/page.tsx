@@ -103,7 +103,7 @@ export default function HomePage() {
             </div>
 
             {/* Main heading */}
-            <h1 className="mt-8 text-[3.2rem] font-black leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-[4.2rem]">
+            <h1 className="mt-8 text-4xl font-black leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-[4.2rem]">
               Summarize.
               <br />
               Extract, Analyze, &amp;
