@@ -4,6 +4,8 @@ import json
 import logging
 import re
 import time
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from app.chunking import split_text
@@ -29,12 +31,123 @@ from app.output_schema import validate_llm_output
 
 logger = logging.getLogger("easycircular.ai.summarize")
 
+FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
+
+
+@lru_cache(maxsize=1)
+def _load_fewshot_examples() -> list[dict]:
+    """Load short gold examples for the summarize system prompt (llama3.2:3b budget)."""
+    if not FEWSHOT_DIR.is_dir():
+        return []
+    examples: list[dict] = []
+    # Only curated gold files (ignore smoke/debug JSON dumps).
+    for name in ("10-2026.json", "44-2006i.json"):
+        path = FEWSHOT_DIR / name
+        if not path.is_file():
+            continue
+        try:
+            examples.append(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.warning("Skipping few-shot file %s: %s", path.name, exc)
+    return examples
+
+
+def _format_fewshot_block() -> str:
+    examples = _load_fewshot_examples()
+    if not examples:
+        return ""
+    parts = ["## Few-shot examples (follow this JSON shape; do not copy these facts into other circulars)"]
+    for ex in examples[:2]:
+        excerpt = str(ex.get("source_excerpt") or "")[:380]
+        gold = ex.get("gold") or {}
+        # Compact gold to save context for llama3.2:3b
+        compact = {
+            "circularNumber": gold.get("circularNumber"),
+            "issuedDate": gold.get("issuedDate"),
+            "issuedBy": gold.get("issuedBy"),
+            "targetAudience": gold.get("targetAudience"),
+            "effectiveDate": gold.get("effectiveDate"),
+            "title": gold.get("title"),
+            "sections": (gold.get("sections") or [])[:3],
+            "actionItems": (gold.get("actionItems") or [])[:4],
+        }
+        parts.append(
+            f"\n### Example {ex.get('id', 'sample')}\n"
+            f"Source (truncated):\n{excerpt}\n\n"
+            f"JSON:\n{json.dumps(compact, ensure_ascii=False)}"
+        )
+    return "\n".join(parts)
+
+
+def _build_system_prompt_summarize() -> str:
+    fewshot = _format_fewshot_block()
+    return SYSTEM_PROMPT_SUMMARIZE_BASE + ("\n\n" + fewshot if fewshot else "")
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Enhanced LLM Prompts
+# ──────────────────────────────────────────────────────────────────────
+
+SYSTEM_PROMPT_SUMMARIZE_BASE = """\
+You are a specialist summarizer for Sri Lankan Ministry of Education (MOE) circulars.
+Your audience is school principals and education administrators who need to understand
+and act on circulars quickly.
+
+## Your Task
+Analyse the provided circular text and extracted entities, then produce a SINGLE JSON
+object with this exact schema:
+
+```json
+{
+  "circularNumber": "string or null — e.g. '10/2026'",
+  "issuedDate": "string or null — the date the circular was issued",
+  "issuedBy": "string or null — the issuing authority, e.g. 'Ministry of Education'",
+  "targetAudience": "string or null — who receives this, e.g. 'All Provincial Education Secretaries, All Zonal Directors of Education'",
+  "effectiveDate": "string or null — when it takes effect, e.g. 'With immediate effect' or '01 April 2026'",
+  "title": "string — concise descriptive title including circular number if available",
+  "sections": [
+    {"heading": "string", "content": "string — rich detail, not just bullet headers"}
+  ],
+  "actionItems": ["string — concrete steps for school staff"]
+}
+```
+
+## Mandatory Sections (include all that apply, omit only if truly absent)
+1. **Purpose** — State what this circular is about in plain language. Include the policy
+   objective, not just the subject line. Mention any amending/superseding circulars.
+2. **Key requirements** — The specific rules, criteria, amounts, percentages, eligibility
+   conditions, or procedures mandated. Include financial figures, grade thresholds,
+   time limits, and any tables of values. Be thorough — missing a requirement is a
+   failure.
+3. **Legal & circular references** — List every referenced circular number, act,
+   ordinance, section, and regulation with its context.
+4. **Deadlines & dates** — Every deadline, effective date, and date range mentioned.
+5. **Responsible parties** — Who must act and their specific responsibilities.
+6. **Compliance & penalties** — Any consequences for non-compliance, reporting
+   requirements, or audit provisions.
+
+## Rules
+- Preserve legal meaning; do not paraphrase legal terms loosely.
+- Every date in the summary MUST appear in the source text or entity list.
+  If a date is not in the source, write "Not specified" — do NOT fabricate.
+- Include specific numbers: monetary amounts, percentages, student counts, distances.
+- Skip letterhead and distribution-list boilerplate; focus on operative instructions.
+- Content should be detailed paragraphs, not single-line headers.
+- actionItems: 4-8 concrete steps that a school principal must take.
+- Return ONLY valid JSON. No markdown fences, no commentary outside the JSON.
+- Few-shot examples are format only — never copy their circular numbers, dates, or topics
+  into a different circular. If the source is an Annexure/form, say so in the title.
+"""
+
+# Backward-compatible name used in tests / imports
+SYSTEM_PROMPT_SUMMARIZE = SYSTEM_PROMPT_SUMMARIZE_BASE
+
 # ──────────────────────────────────────────────────────────────────────
 # Label priority for entity injection into LLM prompts.
 # Higher-priority labels are sent first so they are never truncated.
 # ──────────────────────────────────────────────────────────────────────
 ENTITY_PRIORITY = {"LAW": 4, "DATE": 3, "ORG": 2, "PERSON": 1, "OTHER": 0}
-MAX_ENTITIES_IN_PROMPT = 60
+MAX_ENTITIES_IN_PROMPT = 24
 
 
 def _prioritise_entities(entities: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -104,82 +217,8 @@ def _build_markdown(summary: dict[str, Any]) -> str:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Enhanced LLM Prompts
+# Enhanced LLM Prompts (base prompt + few-shot loader are defined above)
 # ──────────────────────────────────────────────────────────────────────
-
-SYSTEM_PROMPT_SUMMARIZE = """\
-You are a specialist summarizer for Sri Lankan Ministry of Education (MOE) circulars.
-Your audience is school principals and education administrators who need to understand
-and act on circulars quickly.
-
-## Your Task
-Analyse the provided circular text and extracted entities, then produce a SINGLE JSON
-object with this exact schema:
-
-```json
-{
-  "circularNumber": "string or null — e.g. '10/2026'",
-  "issuedDate": "string or null — the date the circular was issued",
-  "issuedBy": "string or null — the issuing authority, e.g. 'Ministry of Education'",
-  "targetAudience": "string or null — who receives this, e.g. 'All Provincial Education Secretaries, All Zonal Directors of Education'",
-  "effectiveDate": "string or null — when it takes effect, e.g. 'With immediate effect' or '01 April 2026'",
-  "title": "string — concise descriptive title including circular number if available",
-  "sections": [
-    {"heading": "string", "content": "string — rich detail, not just bullet headers"}
-  ],
-  "actionItems": ["string — concrete steps for school staff"]
-}
-```
-
-## Mandatory Sections (include all that apply, omit only if truly absent)
-1. **Purpose** — State what this circular is about in plain language. Include the policy
-   objective, not just the subject line. Mention any amending/superseding circulars.
-2. **Key requirements** — The specific rules, criteria, amounts, percentages, eligibility
-   conditions, or procedures mandated. Include financial figures, grade thresholds,
-   time limits, and any tables of values. Be thorough — missing a requirement is a
-   failure.
-3. **Legal & circular references** — List every referenced circular number, act,
-   ordinance, section, and regulation with its context.
-4. **Deadlines & dates** — Every deadline, effective date, and date range mentioned.
-5. **Responsible parties** — Who must act and their specific responsibilities.
-6. **Compliance & penalties** — Any consequences for non-compliance, reporting
-   requirements, or audit provisions.
-
-## Rules
-- Preserve legal meaning; do not paraphrase legal terms loosely.
-- Every date in the summary MUST appear in the source text or entity list.
-  If a date is not in the source, write "Not specified" — do NOT fabricate.
-- Include specific numbers: monetary amounts, percentages, student counts, distances.
-- Skip letterhead and distribution-list boilerplate; focus on operative instructions.
-- Content should be detailed paragraphs, not single-line headers.
-- actionItems: 4-8 concrete steps that a school principal must take.
-- Return ONLY valid JSON. No markdown fences, no commentary outside the JSON.
-
-## Example Output
-{
-  "circularNumber": "44/2006(i)",
-  "issuedDate": "04.05.2026",
-  "issuedBy": "Ministry of Education, Higher Education and Vocational Education",
-  "targetAudience": "All Provincial Directors of Education, All Zonal Directors of Education",
-  "effectiveDate": "01 April 2026",
-  "title": "MOE Circular 2006/44(i): Revised Financial Incentive for Principals and Teachers in Difficult Schools",
-  "sections": [
-    {"heading": "Purpose", "content": "This circular amends Circular No. 2006/44 dated 27.11.2006 to revise the financial incentive scheme for principals and teachers serving in schools classified as difficult. The amendment updates the allowance amounts payable under the original scheme."},
-    {"heading": "Key requirements", "content": "Principals and teachers assigned to difficult schools shall receive a revised monthly allowance of Rs. 5,000 (previously Rs. 3,000). Eligibility requires a minimum continuous service period of 6 months at the designated difficult school. The school must be classified under Category A or B of the difficulty classification."},
-    {"heading": "Legal & circular references", "content": "• Circular No. 2006/44 dated 27.11.2006\\n• Financial Regulation 135\\n• Establishments Code Chapter XII"},
-    {"heading": "Deadlines & dates", "content": "• Revised allowance effective from 01 April 2026\\n• Original circular dated 27.11.2006"},
-    {"heading": "Responsible parties", "content": "Provincial Directors of Education must update payroll systems. Zonal Directors must verify eligibility of teachers. School principals must submit updated staff lists to their Zonal Office."},
-    {"heading": "Compliance & penalties", "content": "Failure to implement revised rates by the stipulated date may result in audit queries. All payments must be reconciled with the Provincial Council treasury."}
-  ],
-  "actionItems": [
-    "Update payroll systems to reflect the revised allowance of Rs. 5,000 per month.",
-    "Verify eligibility of all principals and teachers currently serving in difficult schools.",
-    "Submit updated staff lists to the Zonal Education Office.",
-    "Ensure back-payments from 01 April 2026 are processed for eligible staff.",
-    "File the amended circular alongside original Circular No. 2006/44 for reference."
-  ]
-}
-"""
 
 SYSTEM_PROMPT_REDUCE = """\
 You merge partial summaries of one Sri Lankan MOE circular into a single comprehensive JSON summary.
@@ -219,11 +258,34 @@ def _token_usage(response) -> int:
 
 
 def _parse_llm_json(content: str) -> dict[str, Any]:
-    content = content.strip()
+    """Parse LLM JSON with fence stripping and brace extraction for fragile 3B models."""
+    content = (content or "").strip()
+    if not content:
+        raise json.JSONDecodeError("Empty LLM response", content, 0)
+
     if content.startswith("```"):
-        content = re.sub(r"^```(?:json)?\s*", "", content)
-        content = re.sub(r"\s*```$", "", content)
-    return json.loads(content)
+        content = re.sub(r"^```(?:json)?\s*", "", content, flags=re.IGNORECASE)
+        content = re.sub(r"\s*```\s*$", "", content)
+
+    # Prefer the outermost JSON object if the model added commentary.
+    start = content.find("{")
+    end = content.rfind("}")
+    if start >= 0 and end > start:
+        content = content[start : end + 1]
+
+    # Common 3B glitches: trailing commas, smart quotes
+    repaired = content.replace("\u201c", '"').replace("\u201d", '"').replace("\u2019", "'")
+    repaired = re.sub(r",\s*([}\]])", r"\1", repaired)
+
+    try:
+        parsed = json.loads(repaired)
+    except json.JSONDecodeError:
+        # Last resort: truncate after last complete top-level value
+        parsed = json.loads(content)
+
+    if not isinstance(parsed, dict):
+        raise json.JSONDecodeError("LLM JSON root must be an object", content, 0)
+    return parsed
 
 
 def _describe_llm_error(exc: Exception) -> str:
@@ -233,6 +295,36 @@ def _describe_llm_error(exc: Exception) -> str:
     if isinstance(exc, json.JSONDecodeError):
         return "LLM returned a response that could not be parsed as JSON."
     return f"{type(exc).__name__}: {message[:200]}"
+
+
+def _prepare_text_for_llm(text: str, *, filename: str | None = None) -> str:
+    """Shrink long OCR circulars for small local models while keeping the operative head."""
+    text = normalize_moe_text(text or "")
+    if len(text) <= 12000:
+        return text
+
+    header = text[:4500]
+    # Keep paragraphs that look like operative MOE content
+    keep_pat = re.compile(
+        r"(?:circular|financial\s+regulation|establishments?\s+code|"
+        r"shall|mandatory|with\s+effect|annexure|accordingly|"
+        r"delegation|allowance|duty\s+hours|section\s+\d)",
+        re.IGNORECASE,
+    )
+    selected: list[str] = [header]
+    used = len(header)
+    for para in re.split(r"\n\s*\n", text[4500:]):
+        para = para.strip()
+        if len(para) < 40 or not keep_pat.search(para):
+            continue
+        if used + len(para) > 12000:
+            break
+        selected.append(para)
+        used += len(para) + 2
+
+    circ = extract_circular_number(text, filename)
+    note = f"[NOTE: Source truncated for summarization; circular={circ or 'unknown'}]\n\n"
+    return note + "\n\n".join(selected)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -266,27 +358,47 @@ def _summarize_chunk(
     entities: list[dict[str, Any]],
     *,
     is_reduce: bool = False,
+    known_circular: str | None = None,
 ) -> tuple[dict[str, Any], int]:
-    entity_summary = json.dumps(entities[:MAX_ENTITIES_IN_PROMPT], ensure_ascii=False)
+    # Cap entities for small local models
+    capped = entities[:24]
+    entity_summary = json.dumps(capped, ensure_ascii=False)
+    circ_hint = ""
+    if known_circular:
+        circ_hint = (
+            f"Known circular number from filename/header (use this; do not invent): "
+            f"{known_circular}\n"
+        )
+    if re.search(r"\bannexure\b", chunk[:1500], re.IGNORECASE):
+        circ_hint += (
+            "This source looks like an Annexure/form. Title should mention Annexure/"
+            "staff return — do NOT invent an unrelated policy topic.\n"
+        )
+
 
     if is_reduce:
         system_prompt = SYSTEM_PROMPT_REDUCE
-        user_prompt = f"""Partial summaries to merge:
+        user_prompt = f"""{circ_hint}Partial summaries to merge:
 {chunk}
 
 Extracted entities:
-{entity_summary}"""
+{entity_summary}
+
+Return ONLY a single JSON object."""
     else:
-        system_prompt = SYSTEM_PROMPT_SUMMARIZE
-        user_prompt = f"""Source circular text:
-{chunk}
+        system_prompt = _build_system_prompt_summarize()
+        # Truncate chunk further if still huge after prepare
+        body = chunk if len(chunk) <= 9000 else chunk[:9000]
+        user_prompt = f"""{circ_hint}Source circular text:
+{body}
 
 Extracted entities (JSON):
 {entity_summary}
 
-Produce the JSON summary. Think step-by-step: first identify the circular number,
-issuer, recipients, effective date, then analyse the body for requirements, deadlines,
-and action items. Return ONLY the JSON object."""
+Return ONLY one JSON object with keys circularNumber, issuedDate, issuedBy,
+targetAudience, effectiveDate, title, sections, actionItems.
+Do not invent circular numbers (never use Annexure as a circular number).
+No markdown fences, no commentary."""
 
     llm = get_chat_model()
     max_attempts = settings.llm_max_retries + 1
@@ -299,10 +411,36 @@ and action items. Return ONLY the JSON object."""
             for block in content
         )
 
-    raw_parsed = _parse_llm_json(str(content))
+    try:
+        raw_parsed = _parse_llm_json(str(content))
+    except json.JSONDecodeError:
+        # One repair pass: ask the model to convert its previous output to JSON only
+        repair_prompt = (
+            "Convert the following into ONE valid JSON object with keys "
+            "circularNumber, issuedDate, issuedBy, targetAudience, effectiveDate, "
+            "title, sections, actionItems. Return JSON only.\n\n" + str(content)[:6000]
+        )
+        repair_resp = _invoke_with_retry(
+            llm,
+            _llm_messages(
+                "You fix malformed JSON. Return ONLY valid JSON. No markdown.",
+                repair_prompt,
+            ),
+            max_attempts=1,
+        )
+        repair_content = repair_resp.content
+        if isinstance(repair_content, list):
+            repair_content = "".join(
+                block.get("text", "") if isinstance(block, dict) else str(block)
+                for block in repair_content
+            )
+        raw_parsed = _parse_llm_json(str(repair_content))
+        response = repair_resp
 
     # Validate and normalise through Pydantic schema
     validated = validate_llm_output(raw_parsed)
+    if known_circular and not validated.get("circularNumber"):
+        validated["circularNumber"] = known_circular
     validated["mode"] = "llm"
     validated["rawMarkdown"] = _build_markdown(validated)
     return validated, _token_usage(response)
@@ -311,25 +449,49 @@ and action items. Return ONLY the JSON object."""
 def llm_summarize(
     text: str,
     entities: list[dict[str, Any]],
+    *,
+    filename: str | None = None,
 ) -> tuple[dict[str, Any], int, int]:
+    known_circular = extract_circular_number(text, filename)
+    prepared = _prepare_text_for_llm(text, filename=filename)
     prioritised = _prioritise_entities(entities)
-    chunks = split_text(text)
+    chunks = split_text(prepared, filename=filename)
+    # Cap map-reduce depth for small local models
+    if len(chunks) > 3:
+        chunks = chunks[:3]
     chunk_count = len(chunks)
 
     if chunk_count == 1:
-        summary, tokens = _summarize_chunk(chunks[0], prioritised)
+        summary, tokens = _summarize_chunk(
+            chunks[0], prioritised, known_circular=known_circular
+        )
         return summary, tokens, chunk_count
 
     partials: list[str] = []
     total_tokens = 0
 
     for chunk in chunks:
-        partial, tokens = _summarize_chunk(chunk, prioritised)
+        partial, tokens = _summarize_chunk(
+            chunk, prioritised, known_circular=known_circular
+        )
         total_tokens += tokens
-        partials.append(json.dumps(partial, ensure_ascii=False))
+        # Keep partials compact for reduce step
+        partials.append(
+            json.dumps(
+                {
+                    "circularNumber": partial.get("circularNumber"),
+                    "title": partial.get("title"),
+                    "sections": (partial.get("sections") or [])[:4],
+                    "actionItems": (partial.get("actionItems") or [])[:6],
+                },
+                ensure_ascii=False,
+            )
+        )
 
     merged_blob = "\n\n---\n\n".join(partials)
-    summary, reduce_tokens = _summarize_chunk(merged_blob, prioritised, is_reduce=True)
+    summary, reduce_tokens = _summarize_chunk(
+        merged_blob, prioritised, is_reduce=True, known_circular=known_circular
+    )
     return summary, total_tokens + reduce_tokens, chunk_count
 
 
@@ -337,7 +499,12 @@ def llm_summarize(
 # Enriched Fallback Summarizer
 # ──────────────────────────────────────────────────────────────────────
 
-def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, Any]:
+def fallback_summarize(
+    text: str,
+    entities: list[dict[str, Any]],
+    *,
+    filename: str | None = None,
+) -> dict[str, Any]:
     text = normalize_moe_text(text)
     collapsed = re.sub(r"\s+", " ", text).strip()
     if (
@@ -380,7 +547,7 @@ def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, A
     laws = _entity_lines(entities, "LAW")
     people = _entity_lines(entities, "PERSON")
 
-    circular_no = extract_circular_number(text)
+    circular_no = extract_circular_number(text, filename)
     issued_date = extract_issued_date(text)
     target_audience = extract_target_audience(text)
     effective_date = extract_effective_date(text)
@@ -458,7 +625,7 @@ def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, A
         "issuedBy": issued_by,
         "targetAudience": ", ".join(target_audience) if target_audience else None,
         "effectiveDate": effective_date,
-        "title": build_summary_title(text),
+        "title": build_summary_title(text, filename),
         "sections": sections,
         "actionItems": action_items,
         "rawMarkdown": "",
@@ -472,17 +639,64 @@ def fallback_summarize(text: str, entities: list[dict[str, Any]]) -> dict[str, A
 # Public entry point
 # ──────────────────────────────────────────────────────────────────────
 
+def _normalize_circular_metadata(
+    summary: dict[str, Any],
+    text: str,
+    *,
+    filename: str | None = None,
+) -> tuple[dict[str, Any], list[str]]:
+    """Replace invented circular numbers (e.g. Annexure 02/03, bare ED refs) with extracted ones."""
+    warnings: list[str] = []
+    trusted = extract_circular_number(text, filename)
+    raw = (summary.get("circularNumber") or "").strip()
+    if not raw and trusted:
+        summary["circularNumber"] = trusted
+        return summary, warnings
+
+    if not raw:
+        return summary, warnings
+
+    invented = bool(
+        re.search(r"annexure", raw, re.IGNORECASE)
+        or re.match(r"^ED/", raw, re.IGNORECASE)
+        or not re.search(r"\d{1,4}\s*/\s*\d{2,4}", raw)
+    )
+    if invented and trusted:
+        warnings.append(
+            f"Replaced invented circularNumber '{raw}' with '{trusted}' from source/filename."
+        )
+        summary["circularNumber"] = trusted
+        title = summary.get("title") or ""
+        if raw in title:
+            summary["title"] = title.replace(raw, trusted)
+    elif invented:
+        warnings.append(f"Dropped invented circularNumber '{raw}'.")
+        summary["circularNumber"] = None
+    elif trusted:
+        # Prefer spaced-normalized form from extractor when LLM has minor OCR spacing
+        summary["circularNumber"] = re.sub(r"\s+", "", raw) if "/" in raw else trusted
+
+    return summary, warnings
+
+
 def summarize_text(
     text: str,
     entities: list[dict[str, Any]] | None = None,
+    *,
+    filename: str | None = None,
 ) -> dict[str, Any]:
     text = normalize_moe_text(text or "")
     entities = entities or []
-    chunk_count = len(split_text(text)) if len(text) > settings.map_reduce_threshold else 1
+    prepared = _prepare_text_for_llm(text, filename=filename)
+    chunk_count = (
+        len(split_text(prepared)) if len(prepared) > settings.map_reduce_threshold else 1
+    )
 
     if llm_is_configured():
         try:
-            summary, tokens, chunk_count = llm_summarize(text, entities)
+            summary, tokens, chunk_count = llm_summarize(
+                text, entities, filename=filename
+            )
             meta = {
                 "model": active_model_name(),
                 "tokensUsed": tokens,
@@ -492,7 +706,7 @@ def summarize_text(
             }
         except Exception as exc:
             logger.warning("LLM summarization failed, falling back: %s", _describe_llm_error(exc))
-            summary = fallback_summarize(text, entities)
+            summary = fallback_summarize(text, entities, filename=filename)
             meta = {
                 "model": "extractive-fallback",
                 "tokensUsed": 0,
@@ -502,7 +716,7 @@ def summarize_text(
                 "llmError": _describe_llm_error(exc),
             }
     else:
-        summary = fallback_summarize(text, entities)
+        summary = fallback_summarize(text, entities, filename=filename)
         meta = {
             "model": "extractive-fallback",
             "tokensUsed": 0,
@@ -511,7 +725,13 @@ def summarize_text(
             "chunkCount": 1,
         }
 
-    warnings = verify_summary_dates(text, entities, summary)
+    summary, circ_warnings = _normalize_circular_metadata(
+        summary, text, filename=filename
+    )
+    if summary.get("rawMarkdown"):
+        summary["rawMarkdown"] = _build_markdown(summary)
+
+    warnings = verify_summary_dates(text, entities, summary) + circ_warnings
     return {
         "summary": summary,
         "guardrailWarnings": warnings,

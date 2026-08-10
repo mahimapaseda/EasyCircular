@@ -40,6 +40,13 @@ def main() -> int:
         print("Corpus directory is empty. Run training/build_corpus.py first.")
         return 1
 
+    # Drop annotation files whose corpus txt was removed (e.g. English-only rebuild).
+    corpus_stems = {path.stem for path in corpus_files}
+    for stale in ANNOTATIONS_DIR.glob("*.jsonl"):
+        if stale.stem not in corpus_stems:
+            stale.unlink()
+            print(f"DEL   {stale.name} (no matching corpus file)")
+
     for text_path in corpus_files:
         text = text_path.read_text(encoding="utf-8")
         entities = extract_entities(text)

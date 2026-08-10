@@ -3,7 +3,7 @@ import re
 from app.config import settings
 
 
-def _build_preamble(text: str) -> str:
+def _build_preamble(text: str, *, filename: str | None = None) -> str:
     """Build a short document context preamble from the circular header.
 
     This is prepended to every chunk so that the LLM always knows
@@ -11,7 +11,7 @@ def _build_preamble(text: str) -> str:
     """
     from app.moe_text import extract_circular_number, extract_subject
 
-    circular_no = extract_circular_number(text)
+    circular_no = extract_circular_number(text, filename)
     subject = extract_subject(text)
     first_lines = text[:300].strip()
 
@@ -19,7 +19,7 @@ def _build_preamble(text: str) -> str:
     if circular_no:
         parts.append(f"Circular Number: {circular_no}")
     if subject:
-        parts.append(f"Subject: {subject}")
+        parts.append(f"Subject: {subject[:200]}")
     parts.append(f"Opening: {first_lines}")
     parts.append("[END CONTEXT]\n")
     return "\n".join(parts)
@@ -31,6 +31,7 @@ def split_text(
     overlap: int | None = None,
     *,
     inject_preamble: bool = True,
+    filename: str | None = None,
 ) -> list[str]:
     chunk_size = chunk_size or settings.chunk_size
     overlap = overlap or settings.chunk_overlap
@@ -42,7 +43,7 @@ def split_text(
     if len(normalized) <= chunk_size:
         return [normalized]
 
-    preamble = _build_preamble(normalized) if inject_preamble else ""
+    preamble = _build_preamble(normalized, filename=filename) if inject_preamble else ""
     preamble_len = len(preamble)
     effective_chunk_size = max(chunk_size - preamble_len, chunk_size // 2)
 

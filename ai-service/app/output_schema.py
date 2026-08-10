@@ -51,8 +51,16 @@ class CircularSummaryOutput(BaseModel):
     @classmethod
     def _ensure_list(cls, v):
         if not isinstance(v, list):
+            if isinstance(v, str) and v.strip():
+                return [{"heading": "Purpose", "content": v.strip()}]
             return []
-        return v
+        normalized = []
+        for item in v:
+            if isinstance(item, str) and item.strip():
+                normalized.append({"heading": "Section", "content": item.strip()})
+            elif isinstance(item, dict):
+                normalized.append(item)
+        return normalized
 
     @field_validator("action_items", mode="before")
     @classmethod

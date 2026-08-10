@@ -27,14 +27,33 @@ REGEX_RULES: list[tuple[str, EntityLabel]] = [
     (r"(?:Circular|Circ\.?)\s*Nos?\.?\s*[.:\-]*\s*\d{4}\s*/\s*\d{1,4}(?:\s*\([a-z]\))?", "LAW"),
     # "Circular No. 54 of 2023" (12-2026-En-1)
     (r"(?:Circular|Circ\.?)\s*Nos?\.?\s*\d{1,4}\s+of\s+\d{4}", "LAW"),
-    (r"(?:චක්‍රලේඛ|සැකසුම්)\s*(?:අංක|නං\.?)?\s*[\d]+[/\-]?[\d]*(?:\s*\([a-z]\))?", "LAW"),
-    (r"\bED/\d{2}(?:/\d{2}){1,4}(?:/\d{3})?\b", "LAW"),
+    # Sinhala circular / circular-number (optional ZWJ as in OCR)
+    (r"චක්[\u200d]?රලේඛ[යු]?\s*(?:අංක|නං\.?)?\s*[:\-]?\s*\d{1,4}\s*/\s*\d{2,4}(?:\s*\([^)]+\))?", "LAW"),
+    (r"අංක\s+\d{1,4}\s*/\s*\d{2,4}\s*චක්[\u200d]?රලේඛ[යු]?", "LAW"),
+    (r"චක්[\u200d]?රලේඛ[යු]?\s*(?:අංක|නං\.?)?\s*[:\-]?\s*[\d]+[/\-]?[\d]*(?:\s*\([^)]+\))?", "LAW"),
+    # Tamil circular markers (OCR often glues tokens / confuses கை↔கம்)
+    (
+        r"(?:சுற்ற(?:றிக்கை|றிக்கை)|சுற்றுநிருப(?:ம்|த்தின்)?)\s*"
+        r"(?:இல(?:க்)?கம்?|இல\.?|எண்)\s*[:\-]?\s*\d{1,4}\s*/\s*\d{2,4}",
+        "LAW",
+    ),
+    # Glued OCR: சுற்றுநிருபத்தின்இலக்ைம்
+    (r"சுற்றுநிருப(?:த்தின்)?இல(?:க்)?க[்ைம்]+", "LAW"),
+    (r"(?:இலக்கம்|இல\.?)\s*[:\-]?\s*\d{1,4}\s*/\s*\d{2,4}", "LAW"),
+    (r"\bED/\d{2}(?:/\d{2}){1,4}(?:/\d{3})?(?:-\d{4})?\b", "LAW"),
     (r"Education\s+Ordinance(?:\s+No\.?\s*\d+)?", "LAW"),
     (r"(?:the\s+)?Establishments?\s+Code", "LAW"),
+    (r"ආයතන\s+සංග්[\u200d]?රහය", "LAW"),
     (r"(?:the\s+)?Appropriation\s+Act\s+No\.?\s*\d+", "LAW"),
     (r"Section\s+\d+(?:\.\d+)?(?:\s*\([a-z]\))?", "LAW"),
     (r"Chapter\s+\d+(?:\.\d+)?", "LAW"),
+    (r"Financial\s+Regulation\s+\d+(?:\.\d+)?", "LAW"),
+    (r"(?:වගන්ති|වගන්තිය|පරිච්ඡේදය)\s*\d+", "LAW"),
     (r"Ministry\s+of\s+Education(?:,\s*Higher\s+Education\s+and\s+Vocational\s+Education)?", "ORG"),
+    (r"Department\s+of\s+Buddhasasana(?:,?\s*Religious\s+and\s+Cultural\s+Affairs)?", "ORG"),
+    (r"National\s+(?:Schools?|Colleges?\s+of\s+Education)", "ORG"),
+    (r"Teacher\s+(?:Training\s+Colleges?|Development\s+Centers?)", "ORG"),
+    (r"Annexure[-\s]?\d+", "ORG"),
     (r"Department\s+of\s+Examinations", "ORG"),
     (r"National\s+Institute\s+of\s+Education", "ORG"),
     (r"Commissioner\s+General\s+of\s+Examinations", "ORG"),
@@ -50,6 +69,26 @@ REGEX_RULES: list[tuple[str, EntityLabel]] = [
     (r"Zonal\s+Office\s*/\s*District", "ORG"),
     (r"Provincial\s+Councils?\b", "ORG"),
     (r"Head\s+of\s+(?:the\s+)?Department", "ORG"),
+    # Sinhala orgs / roles (Dengue_Sinhala, 03-2014I); \u200d = ZWJ in OCR
+    (
+        r"අධ්[\u200d]?යාපන(?:,?\s*උසස්[\u200d]?\s*අධ්[\u200d]?යාපන\s*සහ\s*වෘත්තී?ය\s*අධ්[\u200d]?යාපන)?"
+        r"\s*අමාත්[\u200d]?යාංශ[යු]?",
+        "ORG",
+    ),
+    (r"පළාත්[\u200d]?\s*අධ්[\u200d]?යාපන\s*(?:ලේකම්|අධ්[\u200d]?යක්ෂ)වරුන්", "ORG"),
+    (r"කලාප\s*අධ්[\u200d]?යාපන\s*අධ්[\u200d]?යක්ෂවරුන්", "ORG"),
+    (r"විදුහල්පතිවරුන්", "ORG"),
+    (r"ශ්[\u200d]?රී\s*ලංකා\s*විදුහල්පති\s*සේවය", "ORG"),
+    (r"ජාතික\s*ඩෙංගු\s*මර්දන\s*(?:ඒකකය|සතිය)", "ORG"),
+    (
+        r"රාජ්[\u200d]?ය\s*පරිපාලන(?:,?\s*පළාත්?\s*සභා\s*සහ\s*පළාත්\s*පාලන)?"
+        r"\s*අමාත්[\u200d]?යාංශය",
+        "ORG",
+    ),
+    # Tamil letterhead / orgs (OCR may drop spaces / insert ZWNJ)
+    (r"கல்வி(?:,?\s*உயர்[\u200c]?\s*கல்வி\s*மற்றும்[\u200c]?\s*தொழிற்[\u200c]?\s*கல்வி)?\s*அமைச்சு", "ORG"),
+    (r"வலய\s*கல்வி\s*அலுவலகம்", "ORG"),
+    (r"மாகாண\s*கல்வி\s*(?:செயலாளர்|இயக்குநர்)", "ORG"),
 ]
 
 LABEL_PRIORITY = {"LAW": 4, "DATE": 3, "ORG": 2, "PERSON": 1, "OTHER": 0}
@@ -162,7 +201,8 @@ def _extract_spacy_entities(text: str) -> list[Entity]:
     except (ImportError, OSError):
         return []
 
-    doc = nlp(text[:100000])
+    # Cap very long OCR (e.g. 100+ page annexures) — header carries circular/FR refs.
+    doc = nlp(text[:25000])
     found: list[Entity] = []
     for ent in doc.ents:
         label = SPACY_TO_LABEL.get(ent.label_)
@@ -212,6 +252,46 @@ def _merge_entities(entities: list[Entity]) -> list[Entity]:
     return sorted(merged, key=lambda e: e.start)
 
 
+def _merge_prefer_primary(primary: list[Entity], secondary: list[Entity]) -> list[Entity]:
+    """Keep regex/heuristic spans; add SpaCy only when non-overlapping or higher label."""
+    merged = _merge_entities(primary)
+    for entity in secondary:
+        if not entity.text.strip():
+            continue
+        conflict = next((kept for kept in merged if _overlaps(entity, kept)), None)
+        if conflict is None:
+            merged.append(entity)
+            continue
+        if LABEL_PRIORITY[entity.label] > LABEL_PRIORITY[conflict.label]:
+            merged = [entity if e is conflict else e for e in merged]
+    return sorted(_merge_entities(merged), key=lambda e: e.start)
+
+
+def _filename_law_entity(text: str, filename: str | None) -> Entity | None:
+    """Inject Circular N/YYYY as LAW when body is annexure-only but filename encodes it."""
+    if not filename:
+        return None
+    from app.moe_text import extract_circular_number
+
+    circ = extract_circular_number(text, filename)
+    if not circ:
+        return None
+    # Already have a circular LAW mention in the header area
+    if re.search(
+        r"(?:Circular|Circ\.?)\s*(?:Number|Nos?\.?)\s*[:.\-]?\s*\d",
+        text[:2500],
+        re.IGNORECASE,
+    ):
+        return None
+    # Prefer attaching near an Annexure heading when present
+    label_text = f"Circular No. {circ}"
+    annex = re.search(r"Annexure[-\s]?\d+", text[:2000], re.IGNORECASE)
+    if annex:
+        start = annex.start()
+        return Entity(text=label_text, label="LAW", start=start, end=start)
+    return Entity(text=label_text, label="LAW", start=0, end=0)
+
+
 def _filter_entities(entities: list[Entity]) -> list[Entity]:
     filtered: list[Entity] = []
     for entity in entities:
@@ -237,6 +317,15 @@ def _filter_entities(entities: list[Entity]) -> list[Entity]:
             # Single-token ORG/PERSON like "Buddhist", "Pirivenas", "trainin".
             if text.lower() not in {"moe"}:
                 continue
+        # Long OCR often invents ORG from form column headers
+        if entity.label == "ORG" and len(text) > 80:
+            continue
+        if entity.label == "ORG" and re.search(
+            r"head of department please|date of service|central government\s*-",
+            text,
+            re.IGNORECASE,
+        ):
+            continue
         filtered.append(
             Entity(text=text, label=entity.label, start=entity.start, end=entity.end)
             if text != entity.text
@@ -245,13 +334,21 @@ def _filter_entities(entities: list[Entity]) -> list[Entity]:
     return filtered
 
 
-def extract_entities(text: str) -> list[dict]:
+def extract_entities(text: str, *, filename: str | None = None) -> list[dict]:
     if not text or not text.strip():
         return []
 
     text = normalize_moe_text(text)
+    # For huge OCR blobs, run regex on full text but SpaCy on a capped window
     regex_entities = _extract_regex_entities(text)
-    spacy_entities = _extract_spacy_entities(text)
-    merged = _merge_entities(regex_entities + spacy_entities)
+    spacy_window = text if len(text) <= 25000 else text[:20000] + "\n" + text[-5000:]
+    spacy_entities = _extract_spacy_entities(spacy_window)
+    # Regex/heuristics are primary; custom SpaCy fills gaps only.
+    merged = _merge_prefer_primary(regex_entities, spacy_entities)
+    injected = _filename_law_entity(text, filename)
+    if injected and not any(
+        e.label == "LAW" and ("Circular" in e.text or "/" in e.text) for e in merged
+    ):
+        merged = _merge_entities([injected] + merged)
     filtered = _filter_entities(merged)
     return [entity.to_dict() for entity in filtered]

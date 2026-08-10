@@ -12,11 +12,38 @@ CIRCULAR_NUMBER_PATTERNS = [
         r"(?:Circular\s*(?:Number|No\.?)\s*[:\-]?\s*)(\d{1,4}\s*/\s*\d{2,4}(?:\s*\([a-z]\))?)",
         re.IGNORECASE,
     ),
-    re.compile(r"(?:චක්‍රලේඛ\s*අංක\s*[:\s]*)(\d{1,4}\s*/\s*\d{2,4})", re.IGNORECASE),
+    # Sinhala: චක්‍රලේඛ අංක : 03 /2014 (1)  and  අංක 2010/22 චක්‍රලේඛය
+    re.compile(
+        r"(?:චක්[\u200d]?රලේඛ[යු]?\s*අංක\s*[:\-]?\s*)(\d{1,4}\s*/\s*\d{2,4}(?:\s*\([^)]+\))?)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"(?:අංක\s+)(\d{1,4}\s*/\s*\d{2,4})(?:\s*චක්[\u200d]?රලේඛ)",
+        re.IGNORECASE,
+    ),
+    # Tamil: சுற்றறிக்கை / சுற்றுநிருபம் இலக்கம் 23/2026 (OCR variants)
+    re.compile(
+        r"(?:சுற்ற(?:றிக்கை|றிக்கை)|சுற்றுநிருப(?:ம்|த்தின்)?)\s*"
+        r"(?:இல(?:க்)?கம்?|இல\.?|எண்)\s*[:\-]?\s*(\d{1,4}\s*/\s*\d{2,4})",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"(?:இலக்கம்|இல\.?)\s*[:\-]?\s*(\d{1,4}\s*/\s*\d{2,4})",
+        re.IGNORECASE,
+    ),
+    # "Circular No. 2006/44 (i)" year-first form
     re.compile(r"(?:Circular\s*No\.?\s*)(\d{4}\s*/\s*\d{1,4}(?:\s*\([a-z]\))?)", re.IGNORECASE),
+    # OCR variants with hyphen glued: "Circular No.- 10/2026"
+    re.compile(
+        r"(?:Circular\s*(?:Number|No\.?)\s*[-:.]+\s*)(\d{1,4}\s*/\s*\d{2,4}(?:\s*\([a-z]\))?)",
+        re.IGNORECASE,
+    ),
 ]
 
-ED_REF_PATTERN = re.compile(r"\bED/\d{2}(?:/\d{2}){1,4}(?:/\d{3})?\b", re.IGNORECASE)
+ED_REF_PATTERN = re.compile(
+    r"\bED/\d{2}(?:/\d{2}){1,4}(?:/\d{3})?(?:-\d{4})?\b",
+    re.IGNORECASE,
+)
 
 LETTERHEAD_MARKERS = (
     "ministry of education",
@@ -27,9 +54,16 @@ LETTERHEAD_MARKERS = (
     "my ref",
     "your ref",
     "මගේ යොමුව",
+    "ඔබේ යොමුව",
     "අධ්‍යාපන",
+    "චක්‍රලේඛ",
     "கல்வி",
+    "அமைச்சு",
     "இசுருபாய",
+    "எனது இல",
+    "உமது இல",
+    "சுற்றறிக்கை",
+    "சுற்றுநிருபம்",
 )
 
 RECIPIENT_PREFIXES = (
@@ -146,6 +180,9 @@ def normalize_moe_text(text: str) -> str:
     text = re.sub(r"\btrainin[,.]?\s*rogramme\b", "training programme", text, flags=re.IGNORECASE)
     text = re.sub(r"\bsuch[_\s]+in\b", "such in", text, flags=re.IGNORECASE)
     text = re.sub(r"\bSt\s+Lanka\b", "Sri Lanka", text)
+    # OCR often inserts underscore before short words: "_at", "_the"
+    text = re.sub(r"\b_([a-zA-Z]{2,})\b", r"\1", text)
+    text = re.sub(r"\s+_", " ", text)
     return text.strip()
 
 
@@ -254,6 +291,7 @@ def _is_circular_meta_line(line: str) -> bool:
 
 
 def extract_subject(text: str) -> str | None:
+    text = normalize_moe_text(text)
     lines = [line.strip() for line in text.splitlines()]
 
     # "Annexure" headings in English, Tamil (incl. common OCR variant), Sinhala
@@ -427,12 +465,19 @@ def is_valid_date_text(value: str) -> bool:
 
 
 def build_summary_title(text: str, filename: str | None = None) -> str:
+    text = normalize_moe_text(text)
     circular_no = extract_circular_number(text, filename)
     subject = extract_subject(text)
+    # Annexure-only PDFs (e.g. 23-2026-En): prefer circular + annexure label over form gibberish
+    if subject and re.match(r"^annexure\b", subject, re.IGNORECASE) and circular_no:
+        return f"MOE Circular {circular_no}: {subject[:80]}"
     if circular_no and subject:
         short_subject = subject if len(subject) <= 80 else f"{subject[:77]}..."
         return f"MOE Circular {circular_no}: {short_subject}"
     if circular_no:
+        # Filename-backed circulars whose body is only an annexure form
+        if re.search(r"\bannexure\b", text[:800], re.IGNORECASE):
+            return f"MOE Circular {circular_no}: Annexure / staff return form"
         return f"MOE Circular {circular_no}"
     if subject and not is_recipient_line(subject):
         return subject if len(subject) <= 100 else f"{subject[:97]}..."

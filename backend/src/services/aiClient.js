@@ -19,10 +19,10 @@ async function parsePdf(base64, filename) {
   return data;
 }
 
-async function runPipeline(text) {
+async function runPipeline(text, filename) {
   const { data } = await client.post(
     "/v1/pipeline",
-    { text },
+    { text, filename: filename || undefined },
     { timeout: PIPELINE_TIMEOUT_MS },
   );
   return data;

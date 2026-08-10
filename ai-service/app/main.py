@@ -4,6 +4,10 @@ import time
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
+
+# Load .env before importing app modules that read Settings.from_env().
+load_dotenv()
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -17,8 +21,6 @@ from app.llm import (
     ollama_is_reachable,
 )
 from app.routes_v1 import router as v1_router
-
-load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,

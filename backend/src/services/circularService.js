@@ -339,7 +339,7 @@ async function processCircular(circular) {
   let pipelineResult;
 
   try {
-    pipelineResult = await runPipeline(text);
+    pipelineResult = await runPipeline(text, circular.originalFilename);
   } catch (error) {
     const message =
       error.response?.data?.detail ||

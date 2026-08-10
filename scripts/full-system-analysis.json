@@ -1,0 +1,114 @@
+[
+  {
+    "file": "10-2026-En.txt",
+    "chars": 12043,
+    "lang": "en",
+    "circularNo": "10/2026",
+    "subjectOk": true,
+    "title": "MOE Circular 10/2026: Establishing 'Collective Circles' to eradicate all types of toxic drugs, alco...",
+    "entityCounts": {
+      "LAW": 6,
+      "ORG": 45,
+      "DATE": 2,
+      "PERSON": 1
+    },
+    "fallbackActions": 6,
+    "llmMode": "fallback",
+    "llmCirc": "10/2026",
+    "llmTitle": "MOE Circular 10/2026: Establishing 'Collective Circles' to eradicate all types of toxic dr",
+    "llmError": "LLM returned a response that could not be parsed as JSON."
+  },
+  {
+    "file": "12-2026-En-1.txt",
+    "chars": 130029,
+    "lang": "en",
+    "circularNo": "12/2026",
+    "subjectOk": true,
+    "title": "MOE Circular 12/2026: Delegation of Powers on financial control in terms of Financial Regulation 13...",
+    "entityCounts": {
+      "ORG": 64,
+      "LAW": 23,
+      "DATE": 23,
+      "PERSON": 3
+    },
+    "fallbackActions": 6,
+    "llmMode": "skipped (long doc)",
+    "llmCirc": null,
+    "llmTitle": null,
+    "llmError": null
+  },
+  {
+    "file": "15-2026-En.txt",
+    "chars": 4733,
+    "lang": "en",
+    "circularNo": "15/2026",
+    "subjectOk": true,
+    "title": "MOE Circular 15/2026: Vesak Week of the Sri Buddha Years 2570 Actions have been arranged to be cele...",
+    "entityCounts": {
+      "LAW": 2,
+      "ORG": 17,
+      "DATE": 5,
+      "PERSON": 1
+    },
+    "fallbackActions": 6,
+    "llmMode": "llm",
+    "llmCirc": "15 /2026",
+    "llmTitle": "MOE Circular 15/2026: Vesak Week Programme",
+    "llmError": null
+  },
+  {
+    "file": "23-2026-En.txt",
+    "chars": 4250,
+    "lang": "en",
+    "circularNo": "23/2026",
+    "subjectOk": true,
+    "title": "MOE Circular 23/2026: Schools/Institutions under the Central Government - 2027",
+    "entityCounts": {
+      "ORG": 11,
+      "DATE": 1
+    },
+    "fallbackActions": 2,
+    "llmMode": "llm",
+    "llmCirc": "Annexure 02/03",
+    "llmTitle": "Register of Officers with Longest Period of Service in Sri Lanka Education Administrative ",
+    "llmError": null
+  },
+  {
+    "file": "44-2006i-En-1.txt",
+    "chars": 1563,
+    "lang": "en",
+    "circularNo": "44/2006",
+    "subjectOk": true,
+    "title": "MOE Circular 44/2006: Providing a Financial Incentive for Principals and Teachers serving in diffic...",
+    "entityCounts": {
+      "LAW": 3,
+      "ORG": 9,
+      "DATE": 2,
+      "PERSON": 1
+    },
+    "fallbackActions": 1,
+    "llmMode": "llm",
+    "llmCirc": "ED/02/29/02/02/36",
+    "llmTitle": "MOE Circular 2006/44(i): Financial Incentive for Principals and Teachers in Difficult Scho",
+    "llmError": null
+  },
+  {
+    "file": "44-2025-En.txt",
+    "chars": 5969,
+    "lang": "en",
+    "circularNo": "44/2025",
+    "subjectOk": true,
+    "title": "MOE Circular 44/2025: Duty Hours of Non-academic Staff employed _at National Schools, National Coll...",
+    "entityCounts": {
+      "ORG": 49,
+      "LAW": 5,
+      "DATE": 1,
+      "PERSON": 1
+    },
+    "fallbackActions": 6,
+    "llmMode": "fallback",
+    "llmCirc": "44/2025",
+    "llmTitle": "MOE Circular 44/2025: Duty Hours of Non-academic Staff employed at National Schools, Natio",
+    "llmError": "LLM returned a response that could not be parsed as JSON."
+  }
+]

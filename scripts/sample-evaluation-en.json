@@ -1,0 +1,134 @@
+[
+  {
+    "file": "10-2026-En.pdf",
+    "pages": 5,
+    "ocr": false,
+    "chars": 12043,
+    "circularNo": "10/2026",
+    "subjectFound": true,
+    "subject": "Establishing 'Collective Circles' to eradicate all types of toxic drugs, alcohol and tobacco-related products from Educational Institutions under the state policy of creating a 'Drug-free Country with a Joyful Tomorrow'.",
+    "title": "MOE Circular 10/2026: Establishing 'Collective Circles' to eradicate all types of toxic drugs, alco...",
+    "purposePreview": "Establishing 'Collective Circles' to eradicate all types of toxic drugs, alcohol and tobacco-related products from Educational Institutions under the state policy of creating a 'Drug-free Country with a Joyful Tomorrow'.",
+    "mode": "fallback",
+    "entityCounts": {
+      "DATE": 2,
+      "ORG": 21,
+      "LAW": 6,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 6,
+    "requirementsSection": true,
+    "noiseEntities": []
+  },
+  {
+    "file": "12-2026-En-1.pdf",
+    "pages": 104,
+    "ocr": true,
+    "chars": 129045,
+    "circularNo": "12/2026",
+    "subjectFound": true,
+    "subject": "Delegation of Powers on financial control in terms of Financial Regulation 135 - Year 2026",
+    "title": "MOE Circular 12/2026: Delegation of Powers on financial control in terms of Financial Regulation 13...",
+    "purposePreview": "Delegation of Powers on financial control in terms of Financial Regulation 135 - Year 2026",
+    "mode": "fallback",
+    "entityCounts": {
+      "DATE": 16,
+      "ORG": 29,
+      "LAW": 23,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 6,
+    "requirementsSection": true,
+    "noiseEntities": []
+  },
+  {
+    "file": "15-2026-En.pdf",
+    "pages": 2,
+    "ocr": false,
+    "chars": 4733,
+    "circularNo": "15/2026",
+    "subjectFound": true,
+    "subject": "Vesak Week of the Sri Buddha Years 2570 Actions have been arranged to be celebrated the State Vesak Festival on the 27th of May 2026 at the ancient temple in Midellawala, Thihagoda, Matara, Matara District, by the Department of Buddhasasana, Religious and Cultural Affairs on marking the Vesak Day in the Sri Buddha Years 2570, which falls on the 30th of May 2026 .",
+    "title": "MOE Circular 15/2026: Vesak Week of the Sri Buddha Years 2570 Actions have been arranged to be cele...",
+    "purposePreview": "Vesak Week of the Sri Buddha Years 2570 Actions have been arranged to be celebrated the State Vesak Festival on the 27th of May 2026 at the ancient temple in Midellawala, Thihagoda, Matara, Matara District, by the Depart",
+    "mode": "fallback",
+    "entityCounts": {
+      "DATE": 4,
+      "ORG": 9,
+      "LAW": 2,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 6,
+    "requirementsSection": true,
+    "noiseEntities": []
+  },
+  {
+    "file": "23-2026-En.pdf",
+    "pages": 30,
+    "ocr": false,
+    "chars": 4250,
+    "circularNo": "23/2026",
+    "subjectFound": true,
+    "subject": "Schools/Institutions under the Central Government - 2027",
+    "title": "MOE Circular 23/2026: Schools/Institutions under the Central Government - 2027",
+    "purposePreview": "Schools/Institutions under the Central Government - 2027",
+    "mode": "fallback",
+    "entityCounts": {
+      "DATE": 1,
+      "ORG": 11,
+      "LAW": 0,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 2,
+    "requirementsSection": false,
+    "noiseEntities": []
+  },
+  {
+    "file": "44-2006i-En-1.pdf",
+    "pages": 1,
+    "ocr": false,
+    "chars": 1563,
+    "circularNo": "44/2006",
+    "subjectFound": true,
+    "subject": "Providing a Financial Incentive for Principals and Teachers serving in difficult schools The Circular No. 2006/44 dated 27.11.2006 issued in relation to the above matter is amended as follows.",
+    "title": "MOE Circular 44/2006: Providing a Financial Incentive for Principals and Teachers serving in diffic...",
+    "purposePreview": "Providing a Financial Incentive for Principals and Teachers serving in difficult schools The Circular No. 2006/44 dated 27.11.2006 issued in relation to the above matter is amended as follows.",
+    "mode": "fallback",
+    "entityCounts": {
+      "DATE": 2,
+      "ORG": 6,
+      "LAW": 3,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 1,
+    "requirementsSection": true,
+    "noiseEntities": []
+  },
+  {
+    "file": "44-2025-En.pdf",
+    "pages": 4,
+    "ocr": true,
+    "chars": 5968,
+    "circularNo": "44/2025",
+    "subjectFound": true,
+    "subject": "Duty Hours of Non-academic Staff employed at National Schools, National Colleges of Education, Teacher Training Colleges and Teacher Development Centers functioning under the Ministry of Education, Higher Education and Vocational Education",
+    "title": "MOE Circular 44/2025: Duty Hours of Non-academic Staff employed at National Schools, National Colle...",
+    "purposePreview": "Duty Hours of Non-academic Staff employed at National Schools, National Colleges of Education, Teacher Training Colleges and Teacher Development Centers functioning under the Ministry of Education, Higher Education and V",
+    "mode": "fallback",
+    "entityCounts": {
+      "DATE": 1,
+      "ORG": 31,
+      "LAW": 5,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 6,
+    "requirementsSection": true,
+    "noiseEntities": []
+  }
+]

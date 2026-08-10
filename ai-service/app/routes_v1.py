@@ -18,15 +18,18 @@ class ParsePdfRequest(BaseModel):
 
 class TextRequest(BaseModel):
     text: str = Field(..., min_length=1)
+    filename: str | None = None
 
 
 class SummarizeRequest(BaseModel):
     text: str = Field(..., min_length=1)
     entities: list[dict] | None = None
+    filename: str | None = None
 
 
 class PipelineRequest(BaseModel):
     text: str = Field(..., min_length=1)
+    filename: str | None = None
 
 
 @router.post("/parse/pdf")
@@ -61,19 +64,21 @@ def parse_pdf(request: ParsePdfRequest):
 
 @router.post("/extract/entities")
 def extract_entities_endpoint(request: TextRequest):
-    entities = extract_entities(request.text)
+    entities = extract_entities(request.text, filename=request.filename)
     return {"entities": entities, "count": len(entities)}
 
 
 @router.post("/summarize")
 def summarize_endpoint(request: SummarizeRequest):
-    return summarize_text(request.text, request.entities or [])
+    return summarize_text(
+        request.text, request.entities or [], filename=request.filename
+    )
 
 
 @router.post("/pipeline")
 def pipeline_endpoint(request: PipelineRequest):
-    entities = extract_entities(request.text)
-    result = summarize_text(request.text, entities)
+    entities = extract_entities(request.text, filename=request.filename)
+    result = summarize_text(request.text, entities, filename=request.filename)
     return {
         "entities": entities,
         **result,

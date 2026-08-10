@@ -49,6 +49,24 @@ def chunk_records(text: str, entities: list[list]) -> list[tuple[str, list[list]
     return chunks
 
 
+def trim_span(text: str, start: int, end: int, label: str) -> list | None:
+    """Shrink char offsets so spans have no leading/trailing whitespace (SpaCy E024)."""
+    if start < 0 or end > len(text) or start >= end:
+        return None
+    while start < end and text[start].isspace():
+        start += 1
+    while end > start and text[end - 1].isspace():
+        end -= 1
+    # Drop trailing punctuation that breaks NER oracle updates
+    while end > start and text[end - 1] in ".,;:!?-_":
+        end -= 1
+    while start < end and text[start] in ".,;:!?-_":
+        start += 1
+    if start >= end:
+        return None
+    return [start, end, label]
+
+
 def main() -> int:
     import spacy
     from spacy.tokens import DocBin
@@ -62,14 +80,19 @@ def main() -> int:
         print("Annotations directory is empty.")
         return 1
 
-    nlp = spacy.blank("en")
+    nlp = spacy.blank("xx")
     examples: list[tuple[str, list[list]]] = []
     for path in files:
         for line in path.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
             record = json.loads(line)
-            examples.extend(chunk_records(record["text"], record["entities"]))
+            cleaned = []
+            for start, end, label in record["entities"]:
+                trimmed = trim_span(record["text"], start, end, label)
+                if trimmed:
+                    cleaned.append(trimmed)
+            examples.extend(chunk_records(record["text"], cleaned))
 
     train_bin = DocBin()
     dev_bin = DocBin()
@@ -83,7 +106,11 @@ def main() -> int:
         for start, end, label in entities:
             total_spans += 1
             span = doc.char_span(start, end, label=label, alignment_mode="contract")
-            if span is None:
+            if span is None or not span.text.strip():
+                skipped += 1
+                continue
+            # Reject spans that still have edge whitespace after alignment
+            if span.text != span.text.strip():
                 skipped += 1
                 continue
             kept_spans += 1
