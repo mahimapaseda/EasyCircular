@@ -286,15 +286,15 @@ export default function SummaryPanel({
         )}
 
         {summary && !editing && (
-          <article className="mr-auto w-full max-w-5xl">
+          <article className="w-full">
             <AnimateIn>
               <header className="border-b border-white/[0.06] pb-6">
-                <h2 className="font-display text-xl font-bold leading-[1.25] tracking-tight text-white sm:text-2xl lg:text-[1.85rem]">
+                <h2 className="max-w-4xl font-display text-xl font-bold leading-[1.25] tracking-tight text-white sm:text-2xl lg:text-[1.85rem]">
                   {summary.title}
                 </h2>
 
                 {hasMeta && (
-                  <dl className="mt-5 grid gap-x-8 gap-y-4 border-t border-white/[0.05] pt-5 sm:grid-cols-2">
+                  <dl className="mt-5 grid gap-x-8 gap-y-4 border-t border-white/[0.05] pt-5 sm:grid-cols-2 lg:grid-cols-4">
                     {summary.circularNumber && (
                       <MetaCell label="Number" value={summary.circularNumber} />
                     )}
@@ -308,7 +308,7 @@ export default function SummaryPanel({
                       <MetaCell label="Effective" value={summary.effectiveDate} />
                     )}
                     {summary.targetAudience && (
-                      <div className="min-w-0 sm:col-span-2">
+                      <div className="min-w-0 sm:col-span-2 lg:col-span-4">
                         <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                           Audience
                         </dt>
@@ -322,78 +322,92 @@ export default function SummaryPanel({
               </header>
             </AnimateIn>
 
-            <div className="mt-8 space-y-7">
-              {summary.sections.map((section, index) => (
-                <AnimateIn key={`${section.heading}-${index}`} delay={40 * (index + 1)}>
-                  <section className="relative pl-12 sm:pl-14">
-                    <span className="absolute left-0 top-0 font-display text-sm font-bold tabular-nums text-cyan-400/80">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                      {section.heading}
-                    </h3>
-                    <p className="mt-2 max-w-prose whitespace-pre-wrap text-[15px] leading-7 text-slate-200 sm:text-base sm:leading-7">
-                      {section.content}
-                    </p>
-                  </section>
-                </AnimateIn>
-              ))}
+            <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,34%)] lg:items-start lg:gap-10">
+              <div className="min-w-0 space-y-7">
+                {summary.sections.map((section, index) => (
+                  <AnimateIn key={`${section.heading}-${index}`} delay={40 * (index + 1)}>
+                    <section className="relative pl-12 sm:pl-14">
+                      <span className="absolute left-0 top-0 font-display text-sm font-bold tabular-nums text-cyan-400/80">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                        {section.heading}
+                      </h3>
+                      <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7 text-slate-200 sm:text-base sm:leading-7">
+                        {section.content}
+                      </p>
+                    </section>
+                  </AnimateIn>
+                ))}
+              </div>
+
+              <aside className="min-w-0 space-y-6 lg:sticky lg:top-4">
+                {summary.actionItems.length > 0 && (
+                  <AnimateIn delay={80}>
+                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 sm:p-5">
+                      <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                        Action items
+                      </h3>
+                      <ol className="mt-4 space-y-3">
+                        {summary.actionItems.map((item, i) => (
+                          <li key={item} className="flex gap-3 text-sm leading-relaxed text-slate-200">
+                            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/15 text-[10px] font-bold text-slate-300">
+                              {i + 1}
+                            </span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </AnimateIn>
+                )}
+
+                {circular.entities.length > 0 && (
+                  <AnimateIn delay={120}>
+                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 sm:p-5">
+                      <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                        Key references
+                      </h3>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {visibleEntities.map((e, i) => {
+                          const s = entityStyle(e.label);
+                          return (
+                            <span
+                              key={`${e.start}-${i}`}
+                              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${s.pill}`}
+                              title={e.label}
+                            >
+                              <span className={`h-1 w-1 rounded-full ${s.dot}`} />
+                              {e.text}
+                            </span>
+                          );
+                        })}
+                        {!showAllEntities && hiddenEntityCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAllEntities(true)}
+                            className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-semibold text-slate-400 transition hover:text-white"
+                          >
+                            +{hiddenEntityCount} more
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </AnimateIn>
+                )}
+
+                {summary.actionItems.length === 0 && circular.entities.length === 0 && (
+                  <p className="text-xs text-slate-500 lg:pt-2">
+                    Expand Source text above to review the original circular.
+                  </p>
+                )}
+              </aside>
             </div>
-
-            {summary.actionItems.length > 0 && (
-              <AnimateIn delay={80} className="mt-10 border-t border-white/[0.06] pt-7">
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                  Action items
-                </h3>
-                <ol className="mt-4 space-y-3">
-                  {summary.actionItems.map((item, i) => (
-                    <li key={item} className="flex gap-3 text-sm leading-relaxed text-slate-200">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/15 text-[10px] font-bold text-slate-300">
-                        {i + 1}
-                      </span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ol>
-              </AnimateIn>
-            )}
-
-            {circular.entities.length > 0 && (
-              <AnimateIn delay={120} className="mt-10 border-t border-white/[0.06] pt-7">
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                  Key references
-                </h3>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {visibleEntities.map((e, i) => {
-                    const s = entityStyle(e.label);
-                    return (
-                      <span
-                        key={`${e.start}-${i}`}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${s.pill}`}
-                        title={e.label}
-                      >
-                        <span className={`h-1 w-1 rounded-full ${s.dot}`} />
-                        {e.text}
-                      </span>
-                    );
-                  })}
-                  {!showAllEntities && hiddenEntityCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllEntities(true)}
-                      className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-semibold text-slate-400 transition hover:text-white"
-                    >
-                      +{hiddenEntityCount} more
-                    </button>
-                  )}
-                </div>
-              </AnimateIn>
-            )}
           </article>
         )}
 
         {summary && editing && draftSummary && (
-          <div className="mr-auto w-full max-w-5xl space-y-5">
+          <div className="w-full max-w-5xl space-y-5">
             <p className="text-sm text-slate-400">
               Refine the brief before export. Changes stay on this document only.
             </p>
