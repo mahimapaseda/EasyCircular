@@ -1,0 +1,134 @@
+[
+  {
+    "file": "10-2026-En.pdf",
+    "pages": 5,
+    "ocr": false,
+    "chars": 12043,
+    "circularNo": "10/2026",
+    "subjectFound": true,
+    "subject": "Establishing 'Collective Circles' to eradicate all types of toxic drugs, alcohol and tobacco-related products from Educational Institutions under the state policy of creating a 'Drug-free Country with a Joyful Tomorrow'.",
+    "title": "Establishing Collective Circles to eradicate all types of toxic drugs, alcohol and tobacco-related products from Educational Institutions under the state policy of creating a 'Drug-free Country with a Joyful Tomorrow'.",
+    "purposePreview": "Directs educational institutions to establish Collective Circles to eradicate toxic drugs, alcohol, and tobacco-related products. It is also a specific aim related to schools, especially to transform the child who enters",
+    "mode": "llm",
+    "entityCounts": {
+      "DATE": 2,
+      "ORG": 21,
+      "LAW": 6,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 1,
+    "requirementsSection": false,
+    "noiseEntities": []
+  },
+  {
+    "file": "12-2026-En-1.pdf",
+    "pages": 104,
+    "ocr": true,
+    "chars": 129045,
+    "circularNo": "12/2026",
+    "subjectFound": true,
+    "subject": "Delegation of Powers on financial control in terms of Financial Regulation 135 - Year 2026",
+    "title": "Annexure/staff return — MOE Circular 12/2026: Delegation of Powers on financial control in terms of Financial Regulation 135 - Year 2026",
+    "purposePreview": "Directs educational institutions to exercise Authorization, Approval, Certification and Payment powers only within FR, Procurement Guidelines, Establishments Code, and related budget circulars. Use Annexure 1 schedule; a",
+    "mode": "llm",
+    "entityCounts": {
+      "DATE": 16,
+      "ORG": 29,
+      "LAW": 23,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 4,
+    "requirementsSection": false,
+    "noiseEntities": []
+  },
+  {
+    "file": "15-2026-En.pdf",
+    "pages": 2,
+    "ocr": false,
+    "chars": 4733,
+    "circularNo": "15/2026",
+    "subjectFound": true,
+    "subject": "Vesak Week of the Sri Buddha Years 2570 Actions have been arranged to be celebrated the State Vesak Festival on the 27th of May 2026 at the ancient temple in Midellawala, Thihagoda, Matara, Matara District, by the Department of Buddhasasana, Religious and Cultural Affairs on marking the Vesak Day in the Sri Buddha Years 2570, which falls on the 30th of May 2026 .",
+    "title": "MOE Circular 15/2026: Vesak Week Celebrations",
+    "purposePreview": "Directs educational institutions to implement the 'Vesak Week' programme from May 26, 2026, to June 2, 2026.",
+    "mode": "llm",
+    "entityCounts": {
+      "DATE": 4,
+      "ORG": 9,
+      "LAW": 2,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 4,
+    "requirementsSection": true,
+    "noiseEntities": []
+  },
+  {
+    "file": "23-2026-En.pdf",
+    "pages": 30,
+    "ocr": false,
+    "chars": 4250,
+    "circularNo": "23/2026",
+    "subjectFound": true,
+    "subject": "Schools/Institutions under the Central Government - 2027",
+    "title": "MOE Circular 12/2026: FR 135 financial power delegation for 2026",
+    "purposePreview": "Delegates financial control powers under Financial Regulation 135 for programmes and projects under Expenditure Head 126 (General Education Division) for Year 2026.",
+    "mode": "llm",
+    "entityCounts": {
+      "DATE": 1,
+      "ORG": 11,
+      "LAW": 0,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 4,
+    "requirementsSection": true,
+    "noiseEntities": []
+  },
+  {
+    "file": "44-2006i-En-1.pdf",
+    "pages": 1,
+    "ocr": false,
+    "chars": 1563,
+    "circularNo": "44/2006",
+    "subjectFound": true,
+    "subject": "Providing a Financial Incentive for Principals and Teachers serving in difficult schools The Circular No. 2006/44 dated 27.11.2006 issued in relation to the above matter is amended as follows.",
+    "title": "MOE Circular 2006/44(i): Providing a Financial Incentive for Principals and Teachers serving in diffic...",
+    "purposePreview": "Providing a Financial Incentive for Principals and Teachers serving in difficult schools The Circular No. 2006/44 dated 27.11.2006 issued in relation to the above matter is amended as follows.",
+    "mode": "fallback",
+    "entityCounts": {
+      "DATE": 2,
+      "ORG": 6,
+      "LAW": 3,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 1,
+    "requirementsSection": true,
+    "noiseEntities": []
+  },
+  {
+    "file": "44-2025-En.pdf",
+    "pages": 4,
+    "ocr": true,
+    "chars": 5968,
+    "circularNo": "44/2025",
+    "subjectFound": true,
+    "subject": "Duty Hours of Non-academic Staff employed at National Schools, National Colleges of Education, Teacher Training Colleges and Teacher Development Centers functioning under the Ministry of Education, Higher Education and Vocational Education",
+    "title": "Circular No. 44/2025",
+    "purposePreview": "",
+    "mode": "llm",
+    "entityCounts": {
+      "DATE": 1,
+      "ORG": 31,
+      "LAW": 5,
+      "PERSON": 0,
+      "OTHER": 0
+    },
+    "actionItems": 0,
+    "requirementsSection": false,
+    "noiseEntities": []
+  }
+]

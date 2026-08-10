@@ -86,7 +86,7 @@ export default function SourceTextPanel({
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
           <div>
             <p className="text-sm font-semibold text-white">Extracting text…</p>
-            <p className="text-xs text-slate-400">PDF parsing and OCR if needed</p>
+            <p className="text-xs text-slate-400">PDF parsing and OCR if needed — summary follows automatically</p>
           </div>
         </div>
       </div>

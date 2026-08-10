@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import SummaryPanel from "@/components/SummaryPanel";
 import SourceTextPanel from "@/components/workspace/SourceTextPanel";
 import WorkflowLayout from "@/components/workflow/WorkflowLayout";
@@ -40,6 +40,12 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
+  const autoPipelineStarted = useRef<string | null>(null);
+  const draftTextRef = useRef(draftText);
+  const circularRef = useRef(circular);
+
+  draftTextRef.current = draftText;
+  circularRef.current = circular;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,39 +59,131 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
       setEditingSummary(false);
       if (data.entities.length > 0) setTextView("highlights");
       setSourceExpanded(!data.summary && Boolean(data.extractedText || data.editedText));
+      return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load circular");
+      return null;
     } finally {
       setLoading(false);
     }
   }, [id]);
 
+  const extractOnce = useCallback(
+    async (options?: { quietSuccess?: boolean }): Promise<Circular | null> => {
+      setExtracting(true);
+      setError(null);
+      setSourceExpanded(true);
+      try {
+        const response = await extractCircularText(id);
+        setCircular(response.circular);
+        setDraftText(displayText(response.circular));
+        if (response.error) {
+          setError(response.error);
+          showToast(response.error, "error");
+          return null;
+        }
+        if (!displayText(response.circular).trim()) {
+          const message = "Extraction produced no usable text.";
+          setError(message);
+          showToast(message, "error");
+          return null;
+        }
+        if (!options?.quietSuccess) {
+          showToast("Text extracted successfully.", "success");
+        }
+        return response.circular;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Extraction failed";
+        setError(message);
+        showToast(message, "error");
+        await load();
+        return null;
+      } finally {
+        setExtracting(false);
+      }
+    },
+    [id, load, showToast],
+  );
+
+  const processOnce = useCallback(
+    async (options?: { sourceCircular?: Circular | null }): Promise<Circular | null> => {
+      setProcessing(true);
+      setError(null);
+      try {
+        const current = options?.sourceCircular ?? circularRef.current;
+        if (!current) {
+          throw new Error("Circular not loaded");
+        }
+
+        const persistedText = displayText(current);
+        const draft = draftTextRef.current;
+        const draftDiffers = draft.trim() !== persistedText.trim();
+
+        if (draftDiffers) {
+          const saved = await saveCircularText(id, draft);
+          setCircular(saved);
+          setDraftText(displayText(saved));
+        }
+
+        const result = await processCircular(id);
+        setCircular(result.circular);
+        setDraftText(displayText(result.circular));
+        if (result.circular.summary) {
+          setDraftSummary(cloneSummary(result.circular.summary));
+        }
+        setEditingSummary(false);
+        if (result.circular.entities.length > 0) setTextView("highlights");
+        setSourceExpanded(false);
+        showToast(
+          result.cached
+            ? "Loaded a cached summary for identical text."
+            : "Summary generated successfully.",
+          "success",
+        );
+        if (result.guardrailWarnings?.length) {
+          showToast(
+            `${result.guardrailWarnings.length} date warning(s) — review suggested.`,
+            "info",
+          );
+        }
+        return result.circular;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Processing failed";
+        setError(message);
+        showToast(message, "error");
+        await load();
+        return null;
+      } finally {
+        setProcessing(false);
+      }
+    },
+    [id, load, showToast],
+  );
+
+  const runAutoPipeline = useCallback(async () => {
+    const extracted = await extractOnce({ quietSuccess: true });
+    if (!extracted) return;
+    await processOnce({ sourceCircular: extracted });
+  }, [extractOnce, processOnce]);
+
   useEffect(() => {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    autoPipelineStarted.current = null;
+  }, [id]);
+
+  useEffect(() => {
+    if (!circular || circular.id !== id) return;
+    if (circular.status !== "uploaded") return;
+    if (autoPipelineStarted.current === id) return;
+    autoPipelineStarted.current = id;
+    void runAutoPipeline();
+  }, [circular, id, runAutoPipeline]);
+
   async function handleExtract() {
-    setExtracting(true);
-    setError(null);
-    setSourceExpanded(true);
-    try {
-      const response = await extractCircularText(id);
-      setCircular(response.circular);
-      setDraftText(displayText(response.circular));
-      if (response.error) {
-        setError(response.error);
-        showToast(response.error, "error");
-      } else {
-        showToast("Text extracted successfully.", "success");
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Extraction failed";
-      setError(message);
-      showToast(message, "error");
-      await load();
-    } finally {
-      setExtracting(false);
-    }
+    await extractOnce();
   }
 
   async function handleSaveSummary() {
@@ -136,47 +234,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   }
 
   async function handleProcess() {
-    setProcessing(true);
-    setError(null);
-    try {
-      const persistedText = displayText(circular!);
-      const draftDiffers = draftText.trim() !== persistedText.trim();
-
-      if (draftDiffers) {
-        const saved = await saveCircularText(id, draftText);
-        setCircular(saved);
-        setDraftText(displayText(saved));
-      }
-
-      const result = await processCircular(id);
-      setCircular(result.circular);
-      setDraftText(displayText(result.circular));
-      if (result.circular.summary) {
-        setDraftSummary(cloneSummary(result.circular.summary));
-      }
-      setEditingSummary(false);
-      if (result.circular.entities.length > 0) setTextView("highlights");
-      setSourceExpanded(false);
-      showToast(
-        result.cached
-          ? "Loaded a cached summary for identical text."
-          : "Summary generated successfully.",
-        "success",
-      );
-      if (result.guardrailWarnings?.length) {
-        showToast(
-          `${result.guardrailWarnings.length} date warning(s) — review suggested.`,
-          "info",
-        );
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Processing failed";
-      setError(message);
-      showToast(message, "error");
-      await load();
-    } finally {
-      setProcessing(false);
-    }
+    await processOnce();
   }
 
   if (loading) {
@@ -207,24 +265,27 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   const sourceText = displayText(circular);
   const confidence = extractionConfidence(circular);
   const hasSummary = Boolean(circular.summary);
+  const busy = extracting || processing || circular.status === "processing";
   const canProcess =
     circular.status === "extracted" ||
     circular.status === "completed" ||
     circular.status === "failed";
   const hasEntities = circular.entities.length > 0;
+  const showManualGenerate =
+    !circular.summary && canProcess && hasText && !extracting && !processing;
 
   const generateButton =
     canProcess && hasText ? (
       <button
         type="button"
         onClick={() => void handleProcess()}
-        disabled={processing || circular.status === "processing"}
+        disabled={busy}
         className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-md transition hover:scale-[1.02] disabled:opacity-60"
       >
-        {processing || circular.status === "processing" ? (
+        {busy ? (
           <>
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
-            Summarizing…
+            {extracting ? "Extracting…" : "Summarizing…"}
           </>
         ) : (
           <>
@@ -270,7 +331,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
             textView={textView}
             sourceText={sourceText}
             confidence={confidence}
-            extracting={extracting}
+            extracting={extracting || circular.status === "uploaded"}
             saving={saving}
             hasText={hasText}
             hasEntities={hasEntities}
@@ -284,7 +345,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
             onReset={() => setDraftText(circular.extractedText ?? "")}
           />
 
-          {!circular.summary && canProcess && hasText && (
+          {showManualGenerate && (
             <div className="relative overflow-hidden rounded-2xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/10 via-blue-500/5 to-transparent p-6 text-center">
               <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-400/20 blur-3xl" />
               <div className="relative flex flex-col items-center gap-3">
@@ -297,7 +358,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
                 <button
                   type="button"
                   onClick={() => void handleProcess()}
-                  disabled={processing || circular.status === "processing"}
+                  disabled={busy}
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-slate-900 shadow-lg shadow-black/20 transition hover:scale-[1.02]"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

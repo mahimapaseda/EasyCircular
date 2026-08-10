@@ -34,30 +34,66 @@ logger = logging.getLogger("easycircular.ai.summarize")
 FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
 
 
+def _is_curated_fewshot(payload: dict) -> bool:
+    """Accept gold few-shot files; skip smoke/debug dumps."""
+    gold = payload.get("gold")
+    if not isinstance(gold, dict):
+        return False
+    if not payload.get("id") or not payload.get("source_excerpt"):
+        return False
+    return bool(gold.get("title") or gold.get("circularNumber"))
+
+
 @lru_cache(maxsize=1)
 def _load_fewshot_examples() -> list[dict]:
     """Load short gold examples for the summarize system prompt (llama3.2:3b budget)."""
     if not FEWSHOT_DIR.is_dir():
         return []
     examples: list[dict] = []
-    # Only curated gold files (ignore smoke/debug JSON dumps).
-    for name in ("10-2026.json", "44-2006i.json"):
-        path = FEWSHOT_DIR / name
-        if not path.is_file():
-            continue
+    for path in sorted(FEWSHOT_DIR.glob("*.json")):
         try:
-            examples.append(json.loads(path.read_text(encoding="utf-8")))
+            payload = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             logger.warning("Skipping few-shot file %s: %s", path.name, exc)
+            continue
+        if isinstance(payload, dict) and _is_curated_fewshot(payload):
+            examples.append(payload)
     return examples
 
 
+def _select_fewshot_examples(examples: list[dict], limit: int = 2) -> list[dict]:
+    """Pick up to `limit` examples, preferring diverse circular ids."""
+    if len(examples) <= limit:
+        return examples
+    # Spread across the sorted id list (first + last, then mid) to avoid always
+    # injecting adjacent/similar circulars into every prompt.
+    indices = [0, len(examples) - 1]
+    if limit > 2:
+        indices.append(len(examples) // 2)
+    selected: list[dict] = []
+    seen: set[int] = set()
+    for idx in indices:
+        if idx in seen:
+            continue
+        selected.append(examples[idx])
+        seen.add(idx)
+        if len(selected) >= limit:
+            return selected
+    for idx, ex in enumerate(examples):
+        if idx in seen:
+            continue
+        selected.append(ex)
+        if len(selected) >= limit:
+            break
+    return selected
+
+
 def _format_fewshot_block() -> str:
-    examples = _load_fewshot_examples()
+    examples = _select_fewshot_examples(_load_fewshot_examples(), limit=2)
     if not examples:
         return ""
     parts = ["## Few-shot examples (follow this JSON shape; do not copy these facts into other circulars)"]
-    for ex in examples[:2]:
+    for ex in examples:
         excerpt = str(ex.get("source_excerpt") or "")[:380]
         gold = ex.get("gold") or {}
         # Compact gold to save context for llama3.2:3b

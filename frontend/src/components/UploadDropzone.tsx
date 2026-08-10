@@ -134,7 +134,7 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
         </p>
         <p className="mt-2 text-sm font-medium text-slate-300">
           {uploading
-            ? "Please wait while we store your document"
+            ? "Then we will extract and summarize automatically"
             : `Ministry of Education circulars · PDF · max ${MAX_UPLOAD_MB} MB`}
         </p>
 
