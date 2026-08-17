@@ -3,6 +3,9 @@ const crypto = require("crypto");
 const Circular = require("../models/Circular");
 const { parsePdf, runPipeline } = require("./aiClient");
 
+// Must match ai-service/app/summarize.py SUMMARIZER_VERSION
+const SUMMARIZER_VERSION = "v2-source-fewshot";
+
 function hashText(text) {
   return crypto.createHash("sha256").update(text).digest("hex");
 }
@@ -281,18 +284,23 @@ async function saveEditedText(circular, text) {
   return circular;
 }
 
-async function findCachedSummary(contentHash, excludeId, userId = null) {
+async function findCachedSummary(contentHash, excludeId, userId = null, model = null) {
   const filter = {
     contentHash,
     status: "completed",
     _id: { $ne: excludeId },
     summary: { $ne: null },
+    "processingMeta.summarizerVersion": SUMMARIZER_VERSION,
   };
 
   if (userId) {
     filter.userId = userId;
   } else {
     filter.userId = null;
+  }
+
+  if (model) {
+    filter["processingMeta.model"] = model;
   }
 
   return Circular.findOne(filter).sort({ updatedAt: -1 });
@@ -327,6 +335,8 @@ async function processCircular(circular) {
       durationMs: 0,
       cached: true,
       guardrailWarnings: cached.processingMeta?.guardrailWarnings || [],
+      summarizerVersion:
+        cached.processingMeta?.summarizerVersion || SUMMARIZER_VERSION,
     };
     await circular.save();
     return { circular, cached: true, guardrailWarnings: circular.processingMeta.guardrailWarnings };
@@ -375,6 +385,7 @@ async function processCircular(circular) {
     guardrailWarnings: pipelineResult.guardrailWarnings || [],
     chunkCount: aiMeta.chunkCount || 1,
     llmError: aiMeta.llmError || null,
+    summarizerVersion: aiMeta.summarizerVersion || SUMMARIZER_VERSION,
   };
   await circular.save();
 

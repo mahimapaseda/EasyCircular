@@ -139,6 +139,39 @@ ACTION_SENTENCE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+REGISTER_DOC_PATTERN = re.compile(
+    r"\b(?:annexure|staff return|register of(?:\s+the)?\s+officers)\b",
+    re.IGNORECASE,
+)
+REGISTER_SERVICE_PATTERN = re.compile(
+    r"(?:period of service|longest service|sleas|"
+    r"more than\s+\d+\s+years|years?\s+(?:in|of)\s+service|"
+    r"as\s+at\s+\d|officers who (?:have )?served)",
+    re.IGNORECASE,
+)
+REGISTER_LINE_PATTERN = re.compile(
+    r"(?:annexure|register of|staff return|sleas|"
+    r"period of service|longest service|descending order|"
+    r"as\s+at\s+\d|more than\s+\d+\s+years|"
+    r"please make sure|please fill|include names|one form|separate forms?|"
+    r"each (?:sleas )?grade|per (?:sleas )?grade|"
+    r"sri lanka education administrative)",
+    re.IGNORECASE,
+)
+AS_AT_DATE_PATTERN = re.compile(
+    r"as\s+at\s+(\d{1,2}[./]\d{2}[./]\d{4}|\d{4}[./]\d{2}[./]\d{2})",
+    re.IGNORECASE,
+)
+SERVICE_YEARS_PATTERN = re.compile(
+    r"more than\s+(\d{1,2})\s+years([^\n.]{0,180})",
+    re.IGNORECASE,
+)
+REGISTER_NOISE_PATTERN = re.compile(
+    r"(?:marital|disciplinary|preferred decision|hereby certify|"
+    r"^ministry/department|^zonal office\s*/\s*district)",
+    re.IGNORECASE,
+)
+
 # Common OCR / letterhead fragments that must never become entities or parties.
 LETTERHEAD_NOISE_PATTERN = re.compile(
     r"^(?:இலங்கை|ශ්‍රී\s*ලංකාව?|sri\s*lanka|st\s*lanka|battaramulla|isurupaya|"
@@ -298,6 +331,35 @@ def extract_subject(text: str) -> str | None:
     annexure_pattern = r"^(?:annexure\b|இணைப்பு|இகைப்பு|ඇමුණුම)"
     for index, line in enumerate(lines[:20]):
         if re.match(annexure_pattern, line, re.IGNORECASE):
+            instruction: str | None = None
+            register_title: str | None = None
+            for offset, candidate in enumerate(lines[index + 1 : index + 10]):
+                if not candidate:
+                    continue
+                cleaned = re.sub(r"\s+", " ", candidate).strip()
+                if len(cleaned) < 24:
+                    continue
+                if re.match(r"register of\b", cleaned, re.IGNORECASE):
+                    nxt = ""
+                    nxt_index = index + 1 + offset + 1
+                    if nxt_index < len(lines):
+                        nxt = re.sub(r"\s+", " ", lines[nxt_index]).strip()
+                    if nxt and (
+                        nxt[:1].islower()
+                        or nxt.lower().startswith("schools/")
+                        or nxt.lower().startswith("institutions")
+                    ):
+                        cleaned = f"{cleaned} {nxt}"
+                    register_title = cleaned[:500]
+                    break
+                if instruction is None and re.match(
+                    r"please (?:fill|make sure)\b", cleaned, re.IGNORECASE
+                ):
+                    instruction = cleaned[:500]
+            if register_title:
+                return register_title
+            if instruction:
+                return instruction
             for candidate in lines[index + 1 : index + 8]:
                 if not candidate or is_recipient_line(candidate):
                     continue
@@ -380,7 +442,181 @@ def extract_body_text(text: str) -> str:
     return text[index + len(subject) :].strip()
 
 
+def looks_like_staff_register(text: str) -> bool:
+    """True for annexure / staff-return / service-register circulars (e.g. 23/2026)."""
+    if not REGISTER_DOC_PATTERN.search(text or ""):
+        return False
+    return bool(REGISTER_SERVICE_PATTERN.search(text or ""))
+
+
+def extract_as_at_date(text: str) -> str | None:
+    match = AS_AT_DATE_PATTERN.search(text or "")
+    if not match:
+        return None
+    return match.group(1).strip()
+
+
+def _is_register_noise_line(text: str) -> bool:
+    stripped = re.sub(r"[.\s_�]+", " ", text).strip()
+    if len(stripped) < 24:
+        return True
+    if REGISTER_NOISE_PATTERN.search(stripped):
+        return True
+    if re.fullmatch(
+        r"ministry/department/provincial council\.?",
+        stripped,
+        flags=re.IGNORECASE,
+    ):
+        return True
+    return False
+
+
+def _register_instruction_lines(text: str, max_items: int = 8) -> list[str]:
+    items: list[str] = []
+    seen: set[str] = set()
+    protected = re.sub(r"\bNo\.\s*", "No ", text or "")
+    chunks = re.split(r"(?<=[.!?])\s+|\n+", protected)
+    for chunk in chunks:
+        cleaned = re.sub(r"\s+", " ", chunk).strip(" -•\t")
+        if len(cleaned) < 25 or len(cleaned) > 500:
+            continue
+        if not REGISTER_LINE_PATTERN.search(cleaned):
+            continue
+        if _is_register_noise_line(cleaned):
+            continue
+        if is_letterhead_line(cleaned) and "annexure" not in cleaned.lower():
+            continue
+        key = cleaned.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        items.append(cleaned)
+        if len(items) >= max_items:
+            break
+    return items
+
+
+def extract_register_requirements(text: str, max_items: int = 8) -> list[str]:
+    """Extractive bullets for annexure / service-register circulars."""
+    items = _register_instruction_lines(text, max_items=max_items)
+    seen = {item.lower() for item in items}
+    collapsed = re.sub(r"\s+", " ", text or "")
+
+    as_at = extract_as_at_date(text)
+    if as_at:
+        fact = f"Record service as at {as_at}."
+        if fact.lower() not in seen and as_at not in " ".join(items):
+            items.append(fact)
+            seen.add(fact.lower())
+
+    for match in SERVICE_YEARS_PATTERN.finditer(collapsed):
+        years = match.group(1)
+        tail = re.sub(r"\s+", " ", match.group(2)).strip(" .;,-")
+        if "central" in tail.lower() or "national" in tail.lower() or "education" in tail.lower():
+            fact = f"Include officers with more than {int(years)} years' service in central / national institutions."
+        elif "provincial" in tail.lower():
+            fact = f"Include officers with more than {int(years)} years' service under Provincial Councils."
+        else:
+            fact = f"Include officers with more than {int(years)} years' service{(' ' + tail) if tail else ''}."
+        if fact.lower() not in seen and not any(years in item and "year" in item.lower() for item in items):
+            items.append(fact)
+            seen.add(fact.lower())
+
+    if re.search(r"\bSLEAS\b", text or "") and re.search(
+        r"(?:one form|separate forms?|each (?:SLEAS )?grade|per (?:SLEAS )?grade)",
+        text or "",
+        re.IGNORECASE,
+    ):
+        fact = "Complete a separate form for each SLEAS grade."
+        if fact.lower() not in seen:
+            items.append(fact)
+
+    if re.search(r"descending order|longest (?:continuous )?service", text or "", re.IGNORECASE):
+        fact = "Sort names by longest service first."
+        if fact.lower() not in seen and not any("longest" in item.lower() for item in items):
+            items.append(fact)
+
+    return items[:max_items]
+
+
+def extract_register_action_items(text: str, max_items: int = 6) -> list[str]:
+    """Concrete register actions grounded in the annexure instructions."""
+    items: list[str] = []
+    annexure_ids = []
+    for match in re.finditer(r"annexure\s*([0-9]{1,2})", text or "", re.IGNORECASE):
+        annexure_ids.append(match.group(1).zfill(2) if len(match.group(1)) < 2 else match.group(1))
+    annexure_ids = list(dict.fromkeys(annexure_ids))
+    as_at = extract_as_at_date(text)
+
+    if annexure_ids:
+        label = "/".join(annexure_ids)
+        suffix = f" with data as at {as_at}" if as_at else ""
+        items.append(f"Complete Annexure {label} register(s){suffix}.")
+    elif as_at:
+        items.append(f"Complete the staff-return / service register with data as at {as_at}.")
+
+    if re.search(r"period of service|no\.?\s*04|section\s*04|4\.1", text or "", re.IGNORECASE):
+        items.append("Include all officers meeting the service-period criteria in circular section 04.")
+
+    if re.search(r"descending order|longest (?:continuous )?service", text or "", re.IGNORECASE):
+        items.append("Sort names by longest continuous service first.")
+
+    if re.search(r"\bSLEAS\b", text or "") and re.search(
+        r"(?:grade|form)", text or "", re.IGNORECASE
+    ):
+        items.append("Fill a separate form for each SLEAS grade.")
+
+    if re.search(r"provincial|zonal", text or "", re.IGNORECASE):
+        items.append("Submit compiled registers through the Provincial Council or Zonal Office channel.")
+
+    extracted = _register_instruction_lines(text, max_items=max_items)
+    for line in extracted:
+        if len(items) >= max_items:
+            break
+        if any(line.lower()[:40] in existing.lower() for existing in items):
+            continue
+        items.append(line)
+
+    return items[:max_items]
+
+
+def extract_register_purpose(text: str) -> str | None:
+    """Purpose for annexure/register circulars: complete forms + service-length instructions."""
+    annexure_ids = []
+    for match in re.finditer(r"annexure\s*([0-9]{1,2})", text or "", re.IGNORECASE):
+        value = match.group(1)
+        annexure_ids.append(value.zfill(2) if len(value) < 2 else value)
+    annexure_ids = list(dict.fromkeys(annexure_ids))
+    as_at = extract_as_at_date(text)
+    parts: list[str] = []
+    if annexure_ids:
+        cutoff = f", with data as at {as_at}" if as_at else ""
+        parts.append(
+            "Complete Annexure "
+            + "/".join(annexure_ids)
+            + " registers of officers by length of service"
+            + cutoff
+            + "."
+        )
+    for item in _register_instruction_lines(text, max_items=4):
+        if any(item.lower()[:48] in part.lower() for part in parts):
+            continue
+        parts.append(item)
+    if not parts:
+        subject = extract_subject(text)
+        if subject:
+            parts.append(subject)
+    if not parts:
+        return None
+    return re.sub(r"\s+", " ", " ".join(parts)).strip()[:1200]
+
+
 def extract_key_requirements(text: str, max_items: int = 8) -> list[str]:
+    if looks_like_staff_register(text):
+        register_items = extract_register_requirements(text, max_items=max_items)
+        if register_items:
+            return register_items
+
     body = extract_body_text(text)
     sentences = re.split(r"(?<=[.!?])\s+", body)
     requirements: list[str] = []
@@ -409,6 +645,11 @@ def extract_key_requirements(text: str, max_items: int = 8) -> list[str]:
 
 
 def extract_action_items(text: str, entities: list[dict] | None = None, max_items: int = 6) -> list[str]:
+    if looks_like_staff_register(text):
+        register_items = extract_register_action_items(text, max_items=max_items)
+        if register_items:
+            return register_items
+
     items = extract_key_requirements(text, max_items=max_items)
     if items:
         return items
@@ -632,5 +873,9 @@ def extract_effective_date(text: str) -> str | None:
     )
     if from_match:
         return from_match.group(1).strip()
+
+    as_at = extract_as_at_date(text)
+    if as_at:
+        return f"As at {as_at}"
 
     return None

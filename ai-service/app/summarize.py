@@ -10,9 +10,11 @@ from typing import Any
 
 from app.chunking import split_text
 from app.config import settings
-from app.guardrails import verify_summary_dates
+from app.guardrails import detect_topic_bleed, verify_summary_dates
 from app.llm import active_model_name, active_provider, get_chat_model, llm_is_configured
 from app.moe_text import (
+    CIRCULAR_NUMBER_PATTERNS,
+    LETTERHEAD_NOISE_PATTERN,
     build_summary_title,
     collect_valid_dates,
     extract_action_items,
@@ -20,10 +22,11 @@ from app.moe_text import (
     extract_effective_date,
     extract_issued_date,
     extract_key_requirements,
+    extract_register_purpose,
     extract_subject,
     extract_target_audience,
     is_letterhead_line,
-    LETTERHEAD_NOISE_PATTERN,
+    looks_like_staff_register,
     normalize_moe_text,
     top_org_entities,
 )
@@ -32,6 +35,49 @@ from app.output_schema import validate_llm_output
 logger = logging.getLogger("easycircular.ai.summarize")
 
 FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
+# Bump when prompt/few-shot/guardrail behaviour changes so the backend cache misses.
+SUMMARIZER_VERSION = "v2-source-fewshot"
+
+_OVERLAP_STOPWORDS = frozenset(
+    {
+        "the",
+        "and",
+        "for",
+        "are",
+        "this",
+        "that",
+        "with",
+        "from",
+        "under",
+        "all",
+        "who",
+        "have",
+        "has",
+        "been",
+        "was",
+        "were",
+        "will",
+        "not",
+        "any",
+        "its",
+        "their",
+        "than",
+        "into",
+        "also",
+        "such",
+        "shall",
+        "must",
+        "should",
+        "please",
+        "make",
+        "sure",
+        "included",
+        "herein",
+        "related",
+        "products",
+        "types",
+    }
+)
 
 
 def _is_curated_fewshot(payload: dict) -> bool:
@@ -61,35 +107,141 @@ def _load_fewshot_examples() -> list[dict]:
     return examples
 
 
-def _select_fewshot_examples(examples: list[dict], limit: int = 2) -> list[dict]:
-    """Pick up to `limit` examples, preferring diverse circular ids."""
-    if len(examples) <= limit:
-        return examples
-    # Spread across the sorted id list (first + last, then mid) to avoid always
-    # injecting adjacent/similar circulars into every prompt.
-    indices = [0, len(examples) - 1]
-    if limit > 2:
-        indices.append(len(examples) // 2)
-    selected: list[dict] = []
-    seen: set[int] = set()
-    for idx in indices:
-        if idx in seen:
-            continue
-        selected.append(examples[idx])
-        seen.add(idx)
-        if len(selected) >= limit:
-            return selected
-    for idx, ex in enumerate(examples):
-        if idx in seen:
-            continue
-        selected.append(ex)
-        if len(selected) >= limit:
-            break
-    return selected
+def _compact_circular_token(value: str) -> str:
+    return re.sub(r"\s+", "", (value or "").lower())
 
 
-def _format_fewshot_block() -> str:
-    examples = _select_fewshot_examples(_load_fewshot_examples(), limit=2)
+def _example_identity_keys(example: dict) -> set[str]:
+    """Filename / circular-number tokens that identify a few-shot example."""
+    keys: set[str] = set()
+    example_id = str(example.get("id") or "").lower().strip()
+    if example_id:
+        keys.add(example_id)
+        keys.add(example_id.replace("-", "/"))
+        match = re.match(r"^(\d{1,4})-(\d{2,4})([a-z].*)?$", example_id)
+        if match:
+            number, year, _suffix = match.group(1), match.group(2), match.group(3)
+            year_digits = re.match(r"(\d{4})", year)
+            keys.add(f"{number}/{year}")
+            keys.add(f"{number}-{year}")
+            if year_digits:
+                keys.add(f"{number}/{year_digits.group(1)}")
+                keys.add(f"{number}-{year_digits.group(1)}")
+                keys.add(f"{year_digits.group(1)}/{number}")
+                keys.add(f"{year_digits.group(1)}-{number}")
+    gold_number = str((example.get("gold") or {}).get("circularNumber") or "")
+    if gold_number:
+        compact = _compact_circular_token(gold_number)
+        keys.add(compact)
+        keys.add(compact.replace("/", "-"))
+        base = re.sub(r"\([^)]*\)", "", compact)
+        keys.add(base)
+        keys.add(base.replace("/", "-"))
+    return {key for key in keys if key and len(key) >= 3}
+
+
+def _source_circular_keys(text: str, filename: str | None = None) -> set[str]:
+    """Circular numbers / filename stems present in this document."""
+    keys: set[str] = set()
+    if filename:
+        stem = re.sub(r"\.pdf$", "", Path(filename).name, flags=re.IGNORECASE).lower()
+        keys.add(stem)
+        match = re.match(r"^(\d{1,4})-(\d{2,4}[a-z0-9]*)", stem)
+        if match:
+            number, year = match.group(1), match.group(2)
+            keys.add(f"{number}-{year}")
+            keys.add(f"{number}/{year}")
+            year_digits = re.match(r"(\d{4})", year)
+            if year_digits:
+                keys.add(f"{number}-{year_digits.group(1)}")
+                keys.add(f"{number}/{year_digits.group(1)}")
+                keys.add(f"{year_digits.group(1)}/{number}")
+                keys.add(f"{year_digits.group(1)}-{number}")
+
+    known = extract_circular_number(text or "", filename)
+    if known:
+        compact = _compact_circular_token(known)
+        keys.add(compact)
+        keys.add(compact.replace("/", "-"))
+        base = re.sub(r"\([^)]*\)", "", compact)
+        keys.add(base)
+        keys.add(base.replace("/", "-"))
+
+    for pattern in CIRCULAR_NUMBER_PATTERNS:
+        for match in pattern.finditer(text or ""):
+            compact = _compact_circular_token(match.group(1))
+            keys.add(compact)
+            keys.add(compact.replace("/", "-"))
+    return {key for key in keys if key and len(key) >= 3}
+
+
+def _fewshot_overlap_tokens(text: str) -> set[str]:
+    return {
+        token
+        for token in re.findall(r"[a-z0-9]{3,}", (text or "").lower())
+        if token not in _OVERLAP_STOPWORDS
+    }
+
+
+def _fewshot_overlap_score(example: dict, source_blob: str) -> float:
+    excerpt = str(example.get("source_excerpt") or "")
+    gold = example.get("gold") or {}
+    example_blob = excerpt + " " + str(gold.get("title") or "")
+    example_tokens = _fewshot_overlap_tokens(example_blob)
+    source_tokens = _fewshot_overlap_tokens(source_blob)
+    if not example_tokens or not source_tokens:
+        return 0.0
+    return len(example_tokens & source_tokens) / len(example_tokens)
+
+
+def _select_fewshot_examples(
+    examples: list[dict],
+    limit: int = 1,
+    *,
+    source_text: str = "",
+    filename: str | None = None,
+) -> list[dict]:
+    """Pick few-shots that match this circular; never inject a foreign circular number."""
+    if not examples or limit <= 0:
+        return []
+
+    source_blob = f"{filename or ''}\n{source_text or ''}"
+    source_keys = _source_circular_keys(source_text or "", filename)
+    scored: list[tuple[float, dict]] = []
+
+    for example in examples:
+        identity = _example_identity_keys(example)
+        matched = bool(source_keys & identity)
+        # Never inject an example whose circular number is absent from the source
+        # when the document already identifies a different circular.
+        if source_keys and not matched:
+            continue
+        overlap = _fewshot_overlap_score(example, source_blob)
+        score = overlap + (10.0 if matched else 0.0)
+        scored.append((score, example))
+
+    if not scored:
+        return []
+
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    if not source_keys:
+        top_score, top_example = scored[0]
+        if top_score < 0.12:
+            return []
+        return [top_example][:limit]
+    return [example for _score, example in scored[:limit]]
+
+
+def _format_fewshot_block(
+    source_text: str = "",
+    filename: str | None = None,
+) -> str:
+    examples = _select_fewshot_examples(
+        _load_fewshot_examples(),
+        limit=1,
+        source_text=source_text,
+        filename=filename,
+    )
     if not examples:
         return ""
     parts = ["## Few-shot examples (follow this JSON shape; do not copy these facts into other circulars)"]
@@ -115,8 +267,11 @@ def _format_fewshot_block() -> str:
     return "\n".join(parts)
 
 
-def _build_system_prompt_summarize() -> str:
-    fewshot = _format_fewshot_block()
+def _build_system_prompt_summarize(
+    source_text: str = "",
+    filename: str | None = None,
+) -> str:
+    fewshot = _format_fewshot_block(source_text, filename)
     return SYSTEM_PROMPT_SUMMARIZE_BASE + ("\n\n" + fewshot if fewshot else "")
 
 
@@ -395,6 +550,8 @@ def _summarize_chunk(
     *,
     is_reduce: bool = False,
     known_circular: str | None = None,
+    source_text: str | None = None,
+    filename: str | None = None,
 ) -> tuple[dict[str, Any], int]:
     # Cap entities for small local models
     capped = entities[:24]
@@ -422,7 +579,9 @@ Extracted entities:
 
 Return ONLY a single JSON object."""
     else:
-        system_prompt = _build_system_prompt_summarize()
+        system_prompt = _build_system_prompt_summarize(
+            source_text or chunk, filename=filename
+        )
         # Truncate chunk further if still huge after prepare
         body = chunk if len(chunk) <= 9000 else chunk[:9000]
         user_prompt = f"""{circ_hint}Source circular text:
@@ -499,7 +658,11 @@ def llm_summarize(
 
     if chunk_count == 1:
         summary, tokens = _summarize_chunk(
-            chunks[0], prioritised, known_circular=known_circular
+            chunks[0],
+            prioritised,
+            known_circular=known_circular,
+            source_text=text,
+            filename=filename,
         )
         return summary, tokens, chunk_count
 
@@ -508,7 +671,11 @@ def llm_summarize(
 
     for chunk in chunks:
         partial, tokens = _summarize_chunk(
-            chunk, prioritised, known_circular=known_circular
+            chunk,
+            prioritised,
+            known_circular=known_circular,
+            source_text=text,
+            filename=filename,
         )
         total_tokens += tokens
         # Keep partials compact for reduce step
@@ -526,7 +693,12 @@ def llm_summarize(
 
     merged_blob = "\n\n---\n\n".join(partials)
     summary, reduce_tokens = _summarize_chunk(
-        merged_blob, prioritised, is_reduce=True, known_circular=known_circular
+        merged_blob,
+        prioritised,
+        is_reduce=True,
+        known_circular=known_circular,
+        source_text=text,
+        filename=filename,
     )
     return summary, total_tokens + reduce_tokens, chunk_count
 
@@ -589,7 +761,10 @@ def fallback_summarize(
     effective_date = extract_effective_date(text)
 
     subject = extract_subject(text)
-    purpose = subject or _first_paragraph(text)
+    if looks_like_staff_register(text):
+        purpose = extract_register_purpose(text) or subject or _first_paragraph(text, limit=1200)
+    else:
+        purpose = subject or _first_paragraph(text)
     sections = [
         {"heading": "Purpose", "content": purpose or "See the circular text for full context."},
     ]
@@ -764,10 +939,36 @@ def summarize_text(
     summary, circ_warnings = _normalize_circular_metadata(
         summary, text, filename=filename
     )
+    bleed_warnings: list[str] = []
+    if summary.get("mode") == "llm":
+        bleed_warnings = detect_topic_bleed(
+            text,
+            summary,
+            filename=filename,
+            fewshot_examples=_load_fewshot_examples(),
+            document_circular=extract_circular_number(text, filename),
+        )
+        if bleed_warnings:
+            logger.warning(
+                "Discarding LLM summary due to topic bleed: %s", bleed_warnings
+            )
+            summary = fallback_summarize(text, entities, filename=filename)
+            summary, extra_circ = _normalize_circular_metadata(
+                summary, text, filename=filename
+            )
+            circ_warnings = extra_circ + circ_warnings
+            meta = {
+                **meta,
+                "model": "extractive-fallback",
+                "mode": "fallback",
+                "llmError": "topic-bleed: discarded LLM summary",
+            }
+
     if summary.get("rawMarkdown"):
         summary["rawMarkdown"] = _build_markdown(summary)
 
-    warnings = verify_summary_dates(text, entities, summary) + circ_warnings
+    meta["summarizerVersion"] = SUMMARIZER_VERSION
+    warnings = verify_summary_dates(text, entities, summary) + circ_warnings + bleed_warnings
     return {
         "summary": summary,
         "guardrailWarnings": warnings,

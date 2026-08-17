@@ -76,6 +76,7 @@ const circularSchema = new mongoose.Schema(
       guardrailWarnings: { type: [String], default: [] },
       chunkCount: { type: Number, default: 1 },
       llmError: { type: String, default: null },
+      summarizerVersion: { type: String, default: null },
     },
   },
   { timestamps: true },

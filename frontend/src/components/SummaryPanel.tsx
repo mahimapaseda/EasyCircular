@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AnimateIn from "@/components/AnimateIn";
-import { exportSummaryAsMarkdown, exportSummaryAsTxt } from "@/lib/exportSummary";
+import { exportSummaryAsPdf } from "@/lib/exportSummary";
 import type { Circular, CircularSummary } from "@/lib/circulars";
 
 const ENTITY_STYLE: Record<string, { pill: string; dot: string; label: string }> = {
@@ -48,7 +48,7 @@ type SummaryPanelProps = {
   onDraftChange: (summary: CircularSummary) => void;
   onSave: () => void;
   onRegenerate?: () => void;
-  onExport?: (format: "txt" | "md") => void;
+  onExport?: (format: "txt" | "pdf") => void;
 };
 
 function actionItemsToText(items: string[]): string {
@@ -94,6 +94,7 @@ export default function SummaryPanel({
   const hasText = Boolean(circular.extractedText || circular.editedText);
   const [actionItemsDraft, setActionItemsDraft] = useState("");
   const [showAllEntities, setShowAllEntities] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const entityCap = 12;
   const visibleEntities = useMemo(() => {
@@ -108,10 +109,15 @@ export default function SummaryPanel({
     }
   }, [editing, draftSummary]);
 
-  function handleExport(format: "txt" | "md") {
-    if (format === "txt") exportSummaryAsTxt(circular);
-    else exportSummaryAsMarkdown(circular);
-    onExport?.(format);
+  async function handleExportPdf() {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      await exportSummaryAsPdf(circular);
+      onExport?.("pdf");
+    } finally {
+      setExporting(false);
+    }
   }
 
   async function handleCopy() {
@@ -206,10 +212,11 @@ export default function SummaryPanel({
               </button>
               <button
                 type="button"
-                onClick={() => handleExport("md")}
-                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white sm:flex-none"
+                onClick={() => void handleExportPdf()}
+                disabled={exporting}
+                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white disabled:opacity-60 sm:flex-none"
               >
-                Export
+                {exporting ? "Exporting…" : "Export"}
               </button>
             </div>
           </div>

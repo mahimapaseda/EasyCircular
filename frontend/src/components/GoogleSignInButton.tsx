@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() || "";
+import { fetchGoogleClientId } from "@/lib/auth";
 
 type GoogleCredentialResponse = {
   credential: string;
@@ -29,7 +28,9 @@ export default function GoogleSignInButton({
   submitting = false,
 }: GoogleSignInButtonProps) {
   const hiddenRef = useRef<HTMLDivElement>(null);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
 
   const handleCredential = useCallback(
     (response: GoogleCredentialResponse) => {
@@ -41,7 +42,29 @@ export default function GoogleSignInButton({
   );
 
   useEffect(() => {
-    if (!CLIENT_ID) return;
+    let cancelled = false;
+    fetchGoogleClientId()
+      .then((id) => {
+        if (!cancelled) {
+          setClientId(id);
+          if (!id) {
+            setConfigError("Google sign-in is not configured on the server.");
+          }
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setClientId("");
+          setConfigError("Could not load Google sign-in.");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!clientId) return;
 
     const scriptId = "google-gsi-client";
 
@@ -50,21 +73,25 @@ export default function GoogleSignInButton({
       if (!google?.accounts?.id || !hiddenRef.current) return;
 
       google.accounts.id.initialize({
-        client_id: CLIENT_ID,
+        client_id: clientId as string,
         callback: handleCredential,
+        ux_mode: "popup",
+        auto_select: false,
       });
 
+      hiddenRef.current.innerHTML = "";
       google.accounts.id.renderButton(hiddenRef.current, {
         type: "standard",
         theme: "outline",
         size: "large",
         width: 320,
+        text: "continue_with",
       });
 
       setReady(true);
     }
 
-    const existing = document.getElementById(scriptId);
+    const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
     if (existing) {
       if (window.google?.accounts?.id) {
         initGoogle();
@@ -82,21 +109,38 @@ export default function GoogleSignInButton({
     script.defer = true;
     script.onload = initGoogle;
     document.body.appendChild(script);
-  }, [handleCredential]);
+  }, [clientId, handleCredential]);
 
   function triggerGoogleSignIn() {
     const button = hiddenRef.current?.querySelector(
       'div[role="button"]',
     ) as HTMLElement | null;
-    button?.click();
+    if (button) {
+      button.click();
+      return;
+    }
+    window.google?.accounts?.id?.prompt();
   }
 
-  if (!CLIENT_ID) {
+  if (clientId === null) {
     return (
       <button
         type="button"
         disabled
-        title="Set NEXT_PUBLIC_GOOGLE_CLIENT_ID in frontend/.env.local"
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-white"
+      >
+        <GoogleIcon />
+        Continue with Google
+      </button>
+    );
+  }
+
+  if (!clientId) {
+    return (
+      <button
+        type="button"
+        disabled
+        title={configError || "Set GOOGLE_CLIENT_ID in backend/.env"}
         className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-slate-400 opacity-60"
       >
         <GoogleIcon />
@@ -112,7 +156,7 @@ export default function GoogleSignInButton({
         type="button"
         onClick={triggerGoogleSignIn}
         disabled={!ready || submitting}
-        className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <GoogleIcon />
         {submitting ? "Signing in with Google…" : "Continue with Google"}

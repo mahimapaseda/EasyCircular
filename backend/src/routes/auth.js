@@ -10,6 +10,13 @@ const router = express.Router();
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID?.trim() || "";
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
+router.get("/google-config", (_req, res) => {
+  res.json({
+    enabled: Boolean(GOOGLE_CLIENT_ID),
+    clientId: GOOGLE_CLIENT_ID || null,
+  });
+});
+
 function signToken(user) {
   return jwt.sign(
     { id: user._id.toString(), email: user.email, name: user.name },

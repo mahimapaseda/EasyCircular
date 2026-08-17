@@ -91,6 +91,18 @@ export async function loginWithGoogle(credential: string): Promise<AuthResponse>
   });
 }
 
+export async function fetchGoogleClientId(): Promise<string> {
+  const fromEnv = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() || "";
+  try {
+    const data = await authRequest<{ enabled?: boolean; clientId?: string | null }>(
+      "/api/auth/google-config",
+    );
+    return (data.clientId || "").trim() || fromEnv;
+  } catch {
+    return fromEnv;
+  }
+}
+
 export async function fetchCurrentUser(): Promise<User | null> {
   const token = getStoredToken();
   if (!token) return null;

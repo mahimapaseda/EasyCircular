@@ -3,6 +3,7 @@ node_modules/
 __pycache__/
 *.py[cod]
 .venv/
+.venv-train/
 venv/
 
 # Environment
@@ -25,11 +26,13 @@ sample circulars/*.pdf
 ai-service/tessdata/*.traineddata
 *.log
 
-# NER training artifacts (derived from local sample PDFs)
+# NER / SFT training artifacts (derived from local sample PDFs)
 ai-service/training/corpus/
 ai-service/training/annotations/
 ai-service/training/output/
+ai-service/training/sft/
 ai-service/training/*.spacy
+ai-service/training/*.gguf
 
 # OS / IDE
 .DS_Store

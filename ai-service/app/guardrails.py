@@ -257,3 +257,181 @@ def verify_summary_dates(
         )
 
     return warnings
+
+
+_GENERIC_HALLMARKS = frozenset(
+    {
+        "ministry of education",
+        "higher education",
+        "vocational education",
+        "sri lanka",
+        "circular no",
+        "circular number",
+        "key requirements",
+        "target audience",
+        "provincial councils",
+        "provincial directors",
+        "zonal directors",
+        "national schools",
+        "educational institutions",
+        "teacher training",
+        "teacher training colleges",
+        "heads of department",
+        "responsible parties",
+        "action items",
+        "general education",
+    }
+)
+
+_CIRCULAR_NUMBER_TOKEN = re.compile(
+    r"\b(\d{1,4}\s*/\s*\d{2,4}(?:\s*\([a-z0-9]+\))?)\b",
+    re.IGNORECASE,
+)
+
+
+def _is_plausible_circular_number(value: str) -> bool:
+    compact = re.sub(r"\s+", "", value or "")
+    match = re.match(r"^(\d{1,4})/(\d{2,4})(?:\([a-z0-9]+\))?$", compact, re.IGNORECASE)
+    if not match:
+        return False
+    first, second = int(match.group(1)), int(match.group(2))
+    return first >= 1990 or second >= 1990
+
+
+def _normalize_circular_token(value: str) -> str:
+    compact = re.sub(r"\s+", "", (value or "").lower())
+    return re.sub(r"\([^)]*\)", "", compact)
+
+
+def _quoted_phrases(text: str) -> list[str]:
+    return [
+        phrase.strip()
+        for phrase in re.findall(r"[\"'“‘]([^\"”’]{6,80})[\"'”’]", text or "")
+        if phrase.strip()
+    ]
+
+
+def _title_case_phrases(text: str) -> list[str]:
+    phrases = re.findall(r"\b(?:[A-Z][a-z]+(?:[\s-][A-Z]?[a-z]+){1,5})\b", text or "")
+    hyphenated = re.findall(r"\b[A-Z][a-z]+(?:-[A-Za-z]+){1,3}\b", text or "")
+    return phrases + hyphenated
+
+
+def _gold_text_blob(example: dict) -> str:
+    gold = example.get("gold") or {}
+    parts = [
+        str(gold.get("title") or ""),
+        str(example.get("source_excerpt") or ""),
+    ]
+    for section in gold.get("sections") or []:
+        parts.append(str(section.get("heading") or ""))
+        parts.append(str(section.get("content") or ""))
+    parts.extend(str(item) for item in (gold.get("actionItems") or []))
+    return "\n".join(parts)
+
+
+def _hallmarks_from_example(example: dict) -> list[str]:
+    blob = _gold_text_blob(example)
+    phrases: list[str] = []
+    seen: set[str] = set()
+    for phrase in _quoted_phrases(blob) + _title_case_phrases(blob):
+        cleaned = re.sub(r"\s+", " ", phrase).strip()
+        key = cleaned.lower()
+        if len(cleaned) < 8 or key in seen or key in _GENERIC_HALLMARKS:
+            continue
+        if any(generic == key or generic in key for generic in _GENERIC_HALLMARKS if len(generic) > 12):
+            continue
+        seen.add(key)
+        phrases.append(cleaned)
+    return phrases
+
+
+def _example_matches_document(
+    example: dict,
+    *,
+    source_text: str,
+    filename: str | None,
+    document_circular: str | None,
+) -> bool:
+    blob = f"{filename or ''}\n{source_text or ''}".lower()
+    example_id = str(example.get("id") or "").lower()
+    gold_number = _normalize_circular_token(
+        str((example.get("gold") or {}).get("circularNumber") or "")
+    )
+    if example_id and example_id in blob.replace("/", "-"):
+        return True
+    if document_circular and gold_number:
+        doc_token = _normalize_circular_token(document_circular)
+        if gold_number == doc_token or gold_number in doc_token or doc_token in gold_number:
+            return True
+    if gold_number and gold_number in _normalize_circular_token(blob.replace("-", "/")):
+        return True
+
+    excerpt = str(example.get("source_excerpt") or "")
+    excerpt_tokens = set(re.findall(r"[a-z0-9]{4,}", excerpt.lower()))
+    source_tokens = set(re.findall(r"[a-z0-9]{4,}", (source_text or "").lower()))
+    if excerpt_tokens and source_tokens:
+        recall = len(excerpt_tokens & source_tokens) / len(excerpt_tokens)
+        if recall >= 0.35:
+            return True
+    return False
+
+
+def detect_topic_bleed(
+    source_text: str,
+    summary: dict[str, Any],
+    *,
+    filename: str | None = None,
+    fewshot_examples: list[dict] | None = None,
+    document_circular: str | None = None,
+) -> list[str]:
+    """Flag summaries that copied another few-shot's topic or circular number."""
+    source_blob = f"{filename or ''}\n{source_text or ''}"
+    source_lower = source_blob.lower()
+    summary_blob = _summary_text_blob(summary)
+    summary_lower = summary_blob.lower()
+    warnings: list[str] = []
+
+    for example in fewshot_examples or []:
+        if _example_matches_document(
+            example,
+            source_text=source_text,
+            filename=filename,
+            document_circular=document_circular,
+        ):
+            continue
+        for phrase in _hallmarks_from_example(example):
+            if phrase.lower() in summary_lower and phrase.lower() not in source_lower:
+                example_id = example.get("id") or "few-shot"
+                warnings.append(
+                    f"Topic bleed: summary mentions '{phrase}' from {example_id}, "
+                    "which is not in the source text."
+                )
+                break
+
+    doc_token = _normalize_circular_token(document_circular or "")
+    cited = {
+        match.group(1)
+        for match in _CIRCULAR_NUMBER_TOKEN.finditer(summary_blob)
+        if _is_plausible_circular_number(match.group(1))
+    }
+    for cited_number in sorted(cited):
+        cited_token = _normalize_circular_token(cited_number)
+        if doc_token and (
+            cited_token == doc_token
+            or cited_token.startswith(doc_token)
+            or doc_token.startswith(cited_token)
+        ):
+            continue
+        compact_cited = re.sub(r"\s+", "", cited_number)
+        if compact_cited.lower() in re.sub(r"\s+", "", source_lower):
+            continue
+        hyphenated = compact_cited.replace("/", "-")
+        if hyphenated.lower() in source_lower.replace("/", "-"):
+            continue
+        warnings.append(
+            f"Topic bleed: summary cites circular {compact_cited} which is not "
+            "this document and not in the source."
+        )
+
+    return warnings
