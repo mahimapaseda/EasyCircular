@@ -1,6 +1,44 @@
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+const DEV_FALLBACK_SECRET = "dev-secret-change-in-production";
+const EXAMPLE_SECRETS = new Set([
+  "",
+  DEV_FALLBACK_SECRET,
+  "change-this-to-a-long-random-string",
+]);
+
+function isProduction() {
+  return process.env.NODE_ENV === "production";
+}
+
+let warnedWeakSecret = false;
+
+function resolveJwtSecret() {
+  const secret = (process.env.JWT_SECRET || "").trim();
+  const weak = EXAMPLE_SECRETS.has(secret);
+
+  if (isProduction() && weak) {
+    throw new Error(
+      "JWT_SECRET must be set to a long random string in production (not the example placeholder)",
+    );
+  }
+
+  if (weak) {
+    if (!warnedWeakSecret) {
+      warnedWeakSecret = true;
+      console.warn(
+        "JWT_SECRET is missing or uses the example value — using a dev-only fallback. Do not deploy with this secret.",
+      );
+    }
+    return DEV_FALLBACK_SECRET;
+  }
+
+  return secret;
+}
+
+function assertJwtSecret() {
+  resolveJwtSecret();
+}
 
 function authRequired(req, res, next) {
   const header = req.headers.authorization;
@@ -10,9 +48,12 @@ function authRequired(req, res, next) {
 
   try {
     const token = header.slice(7);
-    req.user = jwt.verify(token, JWT_SECRET);
+    req.user = jwt.verify(token, resolveJwtSecret());
     next();
-  } catch {
+  } catch (error) {
+    if (error.message?.includes("JWT_SECRET")) {
+      return res.status(500).json({ error: "Server auth is not configured" });
+    }
     return res.status(401).json({ error: "Session expired — sign in again" });
   }
 }
@@ -26,7 +67,7 @@ function authOptional(req, _res, next) {
 
   try {
     const token = header.slice(7);
-    req.user = jwt.verify(token, JWT_SECRET);
+    req.user = jwt.verify(token, resolveJwtSecret());
   } catch {
     req.user = null;
   }
@@ -34,4 +75,13 @@ function authOptional(req, _res, next) {
   next();
 }
 
-module.exports = { authRequired, authOptional, JWT_SECRET };
+module.exports = {
+  authRequired,
+  authOptional,
+  assertJwtSecret,
+  resolveJwtSecret,
+  DEV_FALLBACK_SECRET,
+  get JWT_SECRET() {
+    return resolveJwtSecret();
+  },
+};

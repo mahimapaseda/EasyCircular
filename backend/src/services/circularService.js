@@ -49,7 +49,7 @@ function canAccess(circular, user, sessionId) {
     );
   }
   if (circular.userId) return false;
-  if (!circular.sessionId) return true;
+  if (!circular.sessionId || !sessionId) return false;
   return circular.sessionId === sessionId;
 }
 

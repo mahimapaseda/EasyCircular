@@ -30,7 +30,9 @@ docker compose up --build
 | AI Service  | http://localhost:5000/health |
 | MongoDB     | localhost:27017              |
 
-Open http://localhost:3002 — the **System Status** panel should show all services as healthy.
+Open http://localhost:3002 — the **System Status** panel on the home page should show all services as healthy.
+
+**Note:** Docker Compose publishes the AI service on `127.0.0.1:5000` only (not the LAN). Backend Compose runs with `NODE_ENV=production`, so `JWT_SECRET` in `backend/.env` must not be the example placeholder. `AI_SERVICE_TOKEN` must match in `backend/.env` and `ai-service/.env`.
 
 **Note:** Docker Compose does **not** include Ollama. For LLM summaries with `LLM_PROVIDER=ollama`, run Ollama on the host at `http://127.0.0.1:11434` (see below).
 
@@ -96,7 +98,7 @@ python -m venv .venv
 # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --reload --port 5000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 5000
 ```
 
 ### 4. Backend
@@ -151,11 +153,11 @@ EasyCircular/
 
 ## Phase 2 — Document ingestion
 
-- [x] `POST /api/circulars/upload` — PDF upload (max 20 MB, multer)
+- [x] `POST /api/circulars/upload` — PDF upload (max 50 MB, multer + `%PDF-` magic bytes)
 - [x] `POST /api/circulars/:id/extract` — text extraction via AI service
 - [x] `PATCH /api/circulars/:id/text` — save edited text
 - [x] `GET /api/circulars` — list circulars (by account or browser session)
-- [x] AI `POST /parse/pdf` — pdfplumber → PyMuPDF → Tesseract OCR fallback (`sin+eng+tam` for MOE circulars)
+- [x] AI `POST /v1/parse/pdf` — pdfplumber → PyMuPDF → Tesseract OCR fallback (`sin+eng+tam` for MOE circulars)
 - [x] Frontend upload, extract, review UI on `/circular/[id]`
 
 **MongoDB must be running** before upload works (`docker compose up mongodb -d` or local MongoDB on port 27017).

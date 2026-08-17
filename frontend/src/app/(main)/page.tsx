@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import UploadDropzone, { UPLOAD_RETURN_TO } from "@/components/UploadDropzone";
+import HealthStatus from "@/components/HealthStatus";
 import { useAuth } from "@/context/AuthContext";
 import { MAX_UPLOAD_MB } from "@/lib/contracts";
 
@@ -248,6 +249,22 @@ export default function HomePage() {
               <p className="mt-1 text-sm text-slate-300">{step.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ─── System status ───────────────────────────────────────── */}
+      <section id="system-status" className="mx-auto max-w-2xl scroll-mt-20 px-5 py-10 sm:px-8">
+        <div className="mb-5 text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">System Status</p>
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+            Service health
+          </h2>
+          <p className="mt-2 text-sm text-slate-300">
+            Backend, MongoDB, AI pipeline, and local LLM should all show as healthy before you upload.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-black/30 p-5 backdrop-blur-md">
+          <HealthStatus />
         </div>
       </section>
 

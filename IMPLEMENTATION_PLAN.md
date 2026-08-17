@@ -3,7 +3,7 @@
 **Project:** EasyCircular — AI/NLP web application for Sri Lankan Ministry of Education circulars  
 **Methodology:** Agile (2-week sprints)  
 **Target stack:** Next.js · Node.js/Express · Python AI microservice · MongoDB  
-**Document version:** 1.1 — June 2026
+**Document version:** 1.2 — August 2026
 
 ---
 
@@ -40,7 +40,6 @@ Sprint: S0              S1   S2          S3   S4              S5      S6   S7   
 Deferred enhancements not required for the dissertation artefact MVP:
 
 - Full Sinhala/Tamil NLP pipeline (custom models, bilingual UI)
-- User authentication and role-based access
 - Batch upload and admin analytics dashboard
 - Direct MOE portal integration
 
@@ -69,7 +68,6 @@ Build a web application that lets school administrators upload PDF circulars, ex
 
 ### Phase 6+ success criteria (future)
 - Sinhala/English mixed circular support at production quality
-- User accounts and persistent circular history per user
 - Source sentence linking (summary bullet → original paragraph)
 
 ---
@@ -130,7 +128,7 @@ Features are grouped by the phase in which they are delivered.
 - [x] Root README with local run instructions
 
 ### Phase 2 — Document ingestion
-- [x] PDF upload (single file, max 20 MB)
+- [x] PDF upload (single file, max 50 MB, `%PDF-` magic-byte check)
 - [x] Text extraction (PyMuPDF + pdfplumber)
 - [x] Tesseract OCR fallback for scanned PDFs
 - [x] Manual text edit before AI processing
@@ -151,19 +149,19 @@ Features are grouped by the phase in which they are delivered.
 - [x] Processing status step indicator (upload → extract → review → summarize)
 - [x] Export summary (TXT/Markdown)
 - [x] Mobile-responsive layout
-- [x] Environment-based LLM provider (OpenAI / Gemini)
+- [x] Environment-based LLM provider (OpenAI / Gemini / Groq / Ollama)
+- [x] User authentication (email/password + Google) and per-user circular history
 
 ### Phase 5 — Validation & release
 - [ ] ROUGE evaluation script and reference dataset
 - [ ] Rate limiting and API cost logging
-- [ ] Security pass (upload validation, env audit)
+- [x] Security pass (JWT fail-fast, internal AI token, PDF magic bytes)
 - [ ] UAT sessions with school staff
-- [ ] Sinhala OCR language pack (Tesseract `sin`)
-- [ ] CI pipeline (GitHub Actions)
+- [x] Sinhala OCR language pack (Tesseract `sin`)
+- [x] CI pipeline (GitHub Actions: pytest, backend tests, Compose health)
 - [ ] Staging deployment + API docs + user guide
 
 ### Phase 6 — Future enhancements (post-MVP)
-- [ ] User authentication (email/password or Google)
 - [ ] Full Sinhala NER model or dedicated multilingual pipeline
 - [ ] Source sentence linking (summary bullet → original paragraph)
 - [ ] Admin dashboard (usage stats)
@@ -230,10 +228,10 @@ Features are grouped by the phase in which they are delivered.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/parse/pdf` | `{ file_path \| base64 }` → `{ text, pages, ocrUsed }` |
-| `POST` | `/extract/entities` | `{ text }` → `{ entities[] }` |
-| `POST` | `/summarize` | `{ text, entities? }` → `{ summary }` |
-| `POST` | `/pipeline` | Full pipeline in one call (optional) |
+| `POST` | `/v1/parse/pdf` | `{ base64, filename? }` → `{ text, pages, ocrUsed }` |
+| `POST` | `/v1/extract/entities` | `{ text }` → `{ entities[] }` |
+| `POST` | `/v1/summarize` | `{ text, entities? }` → `{ summary }` |
+| `POST` | `/v1/pipeline` | Full pipeline in one call |
 | `GET` | `/health` | Service health check |
 
 ---
@@ -278,17 +276,17 @@ Features are grouped by the phase in which they are delivered.
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Landing + upload dropzone |
+| `/` | Landing + upload dropzone + system status |
+| `/sign-in` / `/sign-up` | Email/password and Google sign-in |
 | `/circulars` | List of processed circulars |
-| `/circular/[id]` | Workflow: extract → edit text → process → view results |
-| `/circular/[id]/summary` | Summary + entity sidebar (optional split) |
+| `/circular/[id]` | Workflow: extract → edit text → process → view summary |
 
 ### Key UI components
 - `UploadDropzone` — drag-and-drop PDF
 - `TextEditor` — editable extracted text (textarea or lightweight editor)
 - `SummaryPanel` — structured sections + action items
 - `EntityHighlight` — inline highlights in source text
-- `ProcessingStatus` — step indicator (upload → extract → review → summarize)
+- `WorkflowStepper` — step indicator (upload → extract → review → summarize)
 
 ---
 
@@ -380,7 +378,7 @@ Features are grouped by the phase in which they are delivered.
 | Task | Deliverable |
 |------|-------------|
 | `POST /upload` with multer | Stored PDF + MongoDB record |
-| AI `/parse/pdf` | PyMuPDF + pdfplumber pipeline |
+| AI `/v1/parse/pdf` | PyMuPDF + pdfplumber pipeline |
 | Frontend upload page | File picker + progress |
 | Extract button + display raw text | `/circular/[id]` step 1 |
 
@@ -521,7 +519,7 @@ Features are grouped by the phase in which they are delivered.
 | Workstream | Items |
 |------------|-------|
 | Language | Full Sinhala/Tamil NER; bilingual UI; multilingual LLM fine-tuning |
-| Identity | User auth, roles (principal / teacher / admin), per-user history |
+| Identity | Roles beyond jobRole/district; admin vs teacher permissions |
 | Intelligence | Source sentence linking; async job queue for 20+ page circulars |
 | Operations | Admin dashboard, batch upload, usage analytics |
 | Integration | MOE portal API (if available) |
@@ -551,13 +549,17 @@ No fixed sprint schedule — prioritize based on UAT feedback from Phase 5.
 PORT=4000
 MONGODB_URI=mongodb://localhost:27017/easycircular
 AI_SERVICE_URL=http://localhost:5000
+AI_SERVICE_TOKEN=easycircular-dev-ai-token
 UPLOAD_DIR=./uploads
+JWT_SECRET=a-long-random-string
+CORS_ORIGINS=http://localhost:3002
 
 # ai-service/.env
 PORT=5000
-OPENAI_API_KEY=sk-...
-LLM_MODEL=gpt-4o-mini
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=llama3.2:3b
 SPACY_MODEL=en_core_web_sm
+AI_SERVICE_TOKEN=easycircular-dev-ai-token
 
 # frontend/.env.local
 NEXT_PUBLIC_API_URL=http://localhost:4000
@@ -574,20 +576,19 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 | API cost | Medium | 3–5 | Caching, smaller model for dev, chunk limits |
 | Sinhala NLP gap | High | 5–6 | Sinhala OCR in Phase 5; full NLP deferred to Phase 6 |
 | Slow processing | Medium | 6 | Async job pattern + progress UI |
-| Scope creep | Medium | All | Phase exit gates; defer auth and bilingual UI to Phase 6 |
+| Scope creep | Medium | All | Phase exit gates; bilingual UI stays in Phase 6 |
 | UAT rejection of AI | Medium | 5 | Human-in-the-loop text review (Phase 2); privacy controls |
 
 ---
 
 ## 14. Immediate next steps — Phase 5
 
-Phase 4 is complete. Run `npm run verify:phase4` before dissertation demos.
+Phase 4 is complete. Auth, CI, and the local security pass are in place. Run `npm run verify:phase4` before dissertation demos.
 
 1. Build ROUGE evaluation script and reference summary dataset.
-2. Add rate limiting and API cost logging on the backend.
-3. Security pass: upload validation audit, env secrets review.
-4. Plan UAT sessions with school staff (≥5 participants).
-5. Set up CI (GitHub Actions) and staging deployment.
+2. Add API cost logging on the backend (process route is already rate-limited).
+3. Plan UAT sessions with school staff (≥5 participants).
+4. Staging deployment.
 
 ---
 
@@ -613,7 +614,7 @@ Phase 5                                                   ███████�
 Validate & Release                                        S6  S7  S8
 
 Phase 6 (optional, post-MVP)                                   ─────────►
-Enhancement                                                    language, auth, analytics
+Enhancement                                                    language, analytics
 ```
 
 ### Phase summary timeline
@@ -625,7 +626,7 @@ Enhancement                                                    language, auth, a
 | 3 — AI Core | 4–6 | NER + summarization live |
 | 4 — MVP | 7 | Demo-ready product |
 | 5 — Validate & Release | 8–10 | ROUGE, UAT, staging deploy |
-| 6 — Enhancement | 11+ | Sinhala NLP, auth, advanced features |
+| 6 — Enhancement | 11+ | Sinhala NLP, advanced features |
 
 ---
 

@@ -18,6 +18,7 @@ const {
   saveEditedText,
   serializeCircular,
 } = require("../services/circularService");
+const { assertUploadedPdf } = require("../utils/pdf");
 
 const router = express.Router();
 
@@ -75,6 +76,15 @@ router.post("/upload", authRequired, upload.single("file"), async (req, res, nex
   try {
     if (!req.file) {
       return res.status(400).json({ error: "PDF file is required" });
+    }
+
+    try {
+      assertUploadedPdf(req.file);
+    } catch (error) {
+      if (req.file.path && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(error.status || 400).json({ error: error.message });
     }
 
     const circular = await createFromUpload({

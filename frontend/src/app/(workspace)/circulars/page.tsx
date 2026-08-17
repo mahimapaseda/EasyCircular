@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DocumentCard from "@/components/workspace/DocumentCard";
+import HealthStatus from "@/components/HealthStatus";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { deleteCircular, listCirculars, type Circular } from "@/lib/circulars";
@@ -138,6 +139,13 @@ export default function DocumentsPage() {
             </div>
           ))}
         </dl>
+
+        <div className="mb-6 rounded-xl border border-white/10 bg-black/30 p-4 backdrop-blur-xl">
+          <p className="mb-3 text-[9px] font-bold uppercase tracking-wider text-slate-500">
+            System status
+          </p>
+          <HealthStatus compact />
+        </div>
 
         <div className="mb-5 flex flex-col gap-3">
           <div className="relative w-full">

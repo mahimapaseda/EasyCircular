@@ -9,11 +9,31 @@ const { attachSession } = require("./middleware/session");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 const { securityHeaders, requestLogger } = require("./middleware/security");
 const { healthCheck } = require("./services/aiClient");
+const { assertJwtSecret } = require("./middleware/auth");
 
 const PORT = Number(process.env.PORT) || 4000;
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/easycircular";
 const CORS_ORIGINS = process.env.CORS_ORIGINS;
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+function resolveCorsOrigin() {
+  const configured = CORS_ORIGINS
+    ? CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
+    : [];
+
+  if (configured.length > 0) {
+    return configured;
+  }
+
+  if (IS_PRODUCTION) {
+    throw new Error(
+      "CORS_ORIGINS must be set in production (comma-separated allowed origins)",
+    );
+  }
+
+  return true;
+}
 
 const app = express();
 app.disable("x-powered-by");
@@ -23,7 +43,7 @@ app.use(securityHeaders);
 app.use(requestLogger);
 app.use(
   cors({
-    origin: CORS_ORIGINS ? CORS_ORIGINS.split(",").map((o) => o.trim()) : true,
+    origin: resolveCorsOrigin(),
     exposedHeaders: ["X-Session-Id", "X-Request-Id"],
   }),
 );
@@ -114,6 +134,14 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 async function start() {
+  try {
+    assertJwtSecret();
+    resolveCorsOrigin();
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+
   try {
     await connectMongo();
     console.log("MongoDB connected");

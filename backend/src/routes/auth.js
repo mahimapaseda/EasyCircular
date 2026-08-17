@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
-const { authRequired, JWT_SECRET } = require("../middleware/auth");
+const { authRequired, resolveJwtSecret } = require("../middleware/auth");
 const { claimSessionCirculars } = require("../services/circularService");
 
 const router = express.Router();
@@ -13,7 +13,7 @@ const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : nul
 function signToken(user) {
   return jwt.sign(
     { id: user._id.toString(), email: user.email, name: user.name },
-    JWT_SECRET,
+    resolveJwtSecret(),
     { expiresIn: "7d" },
   );
 }

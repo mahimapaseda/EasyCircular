@@ -21,6 +21,7 @@ from app.llm import (
     ollama_is_reachable,
 )
 from app.routes_v1 import router as v1_router
+from app.internal_auth import require_ai_token
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,6 +41,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.middleware("http")(require_ai_token)
 
 
 @app.middleware("http")

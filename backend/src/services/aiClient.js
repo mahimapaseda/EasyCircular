@@ -1,10 +1,14 @@
 const axios = require("axios");
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:5000";
+const AI_SERVICE_TOKEN = (process.env.AI_SERVICE_TOKEN || "").trim();
 
 const client = axios.create({
   baseURL: AI_SERVICE_URL,
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    ...(AI_SERVICE_TOKEN ? { "X-AI-Service-Token": AI_SERVICE_TOKEN } : {}),
+  },
 });
 
 const PARSE_TIMEOUT_MS = Number(process.env.AI_PARSE_TIMEOUT_MS || 600_000);

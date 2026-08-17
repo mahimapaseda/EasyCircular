@@ -54,7 +54,7 @@ $uvicorn = Join-Path $aiDir ".venv\Scripts\uvicorn.exe"
 if (-not (Test-Path $uvicorn)) {
     throw "AI venv missing at $uvicorn — create it and pip install -r requirements.txt first"
 }
-Start-DevWindow -Title "AI :5000" -WorkingDirectory $aiDir -Command "& `"$uvicorn`" app.main:app --reload --port 5000"
+Start-DevWindow -Title "AI :5000" -WorkingDirectory $aiDir -Command "& `"$uvicorn`" app.main:app --reload --host 127.0.0.1 --port 5000"
 
 # 4) Backend
 $backendDir = Join-Path $root "backend"

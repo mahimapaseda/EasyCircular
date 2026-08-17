@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from app.moe_text import (
     build_summary_title,
     extract_circular_number,
@@ -131,7 +133,7 @@ def test_fallback_summary_uses_subject_not_recipients():
 def test_sample_pdf_pipeline_if_present():
     sample = Path(__file__).resolve().parents[2] / "sample circulars" / "10-2026-En.pdf"
     if not sample.exists():
-        return
+        pytest.skip(f"Sample PDF missing: {sample}")
 
     result = parse_pdf_bytes(sample.read_bytes())
     assert result.text

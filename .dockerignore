@@ -1,0 +1,14 @@
+.git
+**/.venv
+**/node_modules
+**/.next
+**/uploads
+frontend
+ai-service
+screenshot
+docs
+scripts
+sample circulars
+*.md
+**/.env
+**/.env.local
