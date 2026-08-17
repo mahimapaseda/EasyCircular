@@ -37,7 +37,7 @@ function SidebarContent({
             <span className="text-sm font-bold tracking-tight text-white">
               Easy<span className="text-cyan-300">Circular</span>
             </span>
-            <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.15em] text-slate-500">
+            <span className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300">
               AI Workspace
             </span>
           </div>
@@ -58,7 +58,7 @@ function SidebarContent({
       </div>
 
       <div className="mt-4 px-5">
-        <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-300">
           Workspace
         </p>
       </div>
@@ -69,14 +69,14 @@ function SidebarContent({
           className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
             onDocuments
               ? "bg-white/10 text-white"
-              : "text-slate-400 hover:bg-white/5 hover:text-white"
+              : "text-slate-300 hover:bg-white/5 hover:text-white"
           }`}
         >
           {onDocuments && (
             <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-r-full bg-cyan-400" />
           )}
           <svg
-            className={`h-[18px] w-[18px] transition ${onDocuments ? "text-cyan-300" : "text-slate-500 group-hover:text-slate-300"}`}
+            className={`h-[18px] w-[18px] transition ${onDocuments ? "text-cyan-300" : "text-slate-400 group-hover:text-slate-200"}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -97,7 +97,7 @@ function SidebarContent({
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold text-white">{user.name.split(" ")[0]}</p>
-              <p className="truncate text-[10px] text-slate-500">Signed in</p>
+              <p className="truncate text-[11px] text-slate-300">Signed in</p>
             </div>
             <button
               type="button"
@@ -106,7 +106,7 @@ function SidebarContent({
                 onNavigate?.();
               }}
               aria-label="Sign out"
-              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/10 hover:text-white"
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
@@ -165,16 +165,19 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
       <div className="fixed inset-0 -z-10" suppressHydrationWarning>
         <LiquidChrome
           baseColor={[0.04, 0.12, 0.35]}
-          speed={0.25}
-          amplitude={0.5}
+          speed={0.12}
+          amplitude={0.28}
           frequencyX={2.5}
           frequencyY={1.8}
-          interactive={true}
+          interactive={false}
         />
-        <div className="absolute inset-0 bg-black/60" suppressHydrationWarning />
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/80 to-black/85"
+          suppressHydrationWarning
+        />
       </div>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[200px] flex-col border-r border-white/10 bg-black/50 backdrop-blur-2xl md:flex lg:w-[220px]">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[200px] flex-col border-r border-white/15 bg-slate-950/90 backdrop-blur-2xl md:flex lg:w-[220px]">
         <SidebarContent pathname={pathname} user={user} onSignOut={signOut} />
       </aside>
 
@@ -191,7 +194,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         role="dialog"
         aria-modal={mobileOpen}
         aria-label="Workspace menu"
-        className={`fixed inset-y-0 left-0 z-50 flex w-[min(85vw,280px)] flex-col border-r border-white/10 bg-black/80 backdrop-blur-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(85vw,280px)] flex-col border-r border-white/15 bg-slate-950/90 backdrop-blur-2xl transition-transform duration-300 md:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -204,7 +207,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col md:pl-[200px] lg:pl-[220px]" suppressHydrationWarning>
-        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-white/10 bg-black/30 px-4 backdrop-blur-xl md:hidden" suppressHydrationWarning>
+        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-white/15 bg-slate-950/90 px-4 backdrop-blur-xl md:hidden" suppressHydrationWarning>
           <button
             ref={menuButtonRef}
             type="button"

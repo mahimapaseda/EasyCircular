@@ -401,9 +401,9 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
             />
 
             {showManualGenerate && (
-              <div className="rounded-xl border border-white/[0.08] bg-black/20 px-5 py-5 text-center backdrop-blur-xl">
+              <div className="ws-panel px-5 py-5 text-center">
                 <p className="text-sm font-semibold text-white">Text is ready</p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="ws-muted mt-1 text-xs">
                   Generate a structured brief from the extracted circular.
                 </p>
                 <button

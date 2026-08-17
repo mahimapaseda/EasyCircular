@@ -298,8 +298,20 @@
     @apply bg-transparent;
   }
 
+  .ws-panel {
+    @apply rounded-xl border border-white/15 bg-slate-950/90 backdrop-blur-xl;
+  }
+
+  .ws-label {
+    @apply text-xs font-semibold uppercase tracking-wide text-slate-300;
+  }
+
+  .ws-muted {
+    @apply text-slate-300;
+  }
+
   .ws-card {
-    @apply rounded-2xl border border-white/10 bg-black/30 backdrop-blur-xl;
+    @apply rounded-2xl border border-white/15 bg-slate-950/90 backdrop-blur-xl;
   }
 
   .ws-card-header {
@@ -307,7 +319,7 @@
   }
 
   .ws-stat {
-    @apply rounded-xl border border-white/10 bg-black/30 px-4 py-3 backdrop-blur-xl;
+    @apply rounded-xl border border-white/15 bg-slate-950/90 px-4 py-3 backdrop-blur-xl;
   }
 
   .ws-segment {
@@ -319,11 +331,11 @@
   }
 
   .ws-segment-active {
-    @apply bg-white/15 text-white;
+    @apply bg-white/20 text-white;
   }
 
   .ws-segment-idle {
-    @apply text-slate-400 hover:text-white;
+    @apply text-slate-300 hover:text-white;
   }
 }
 

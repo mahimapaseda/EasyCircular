@@ -138,7 +138,7 @@ export default function HealthStatus({ compact = false }: HealthStatusProps) {
   return (
     <div>
       <div
-        className={`mb-4 flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${
+        className={`${compact ? "mb-3" : "mb-4"} flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${
           loading
             ? "border-white/10 bg-white/5 text-white/40"
             : allOk
@@ -154,7 +154,7 @@ export default function HealthStatus({ compact = false }: HealthStatusProps) {
         {loading ? "Connecting to services…" : allOk ? "All systems operational" : "Some services degraded"}
       </div>
 
-      <ul className="space-y-1.5">
+      <ul className={compact ? "grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4" : "space-y-1.5"}>
         <ServiceRow label="Backend API" status={apiStatus} detail={health?.status} />
         <ServiceRow label="MongoDB" status={dbStatus} detail={health?.mongodb} />
         <ServiceRow label="AI Service" status={aiStatus} detail={health?.aiService} />

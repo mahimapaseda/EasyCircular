@@ -26,7 +26,7 @@ type SourceTextPanelProps = {
 };
 
 const panelClass =
-  "rounded-xl border border-white/[0.08] bg-black/25 backdrop-blur-xl overflow-hidden";
+  "ws-panel overflow-hidden";
 
 export default function SourceTextPanel({
   circular,
@@ -55,8 +55,8 @@ export default function SourceTextPanel({
         <div className="flex flex-col items-center gap-4 text-center">
           <div>
             <p className="text-sm font-semibold text-white">Ready to extract</p>
-            <p className="mt-1 text-xs text-slate-400">{circular.originalFilename}</p>
-            <p className="mt-2 text-xs text-slate-500">PDF parsing with OCR fallback for scans</p>
+            <p className="ws-muted mt-1 text-xs">{circular.originalFilename}</p>
+            <p className="ws-muted mt-2 text-xs">PDF parsing with OCR fallback for scans</p>
           </div>
           <button
             type="button"
@@ -77,7 +77,7 @@ export default function SourceTextPanel({
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
           <div>
             <p className="text-sm font-semibold text-white">Extracting text…</p>
-            <p className="text-xs text-slate-400">OCR if needed — summary follows automatically</p>
+            <p className="ws-muted text-xs">OCR if needed — summary follows automatically</p>
           </div>
         </div>
       </div>
@@ -119,7 +119,7 @@ export default function SourceTextPanel({
           className="flex min-w-0 flex-1 items-center gap-2 text-left transition hover:opacity-80"
         >
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+            <p className="ws-label tracking-[0.16em]">
               Source text
             </p>
             {!(compact && !expanded) && (
@@ -131,19 +131,19 @@ export default function SourceTextPanel({
                 )}
                 {confidence !== null && (
                   <>
-                    {hasEntities && <span className="text-slate-600">·</span>}
+                    {hasEntities && <span className="text-slate-400">·</span>}
                     <span className={`font-medium ${confidenceColor}`}>
                       {confidence}% confidence
                     </span>
                   </>
                 )}
                 {!hasEntities && confidence === null && (
-                  <span className="text-slate-400">Extracted content</span>
+                  <span className="text-slate-300">Extracted content</span>
                 )}
               </div>
             )}
             {compact && !expanded && (
-              <p className="mt-0.5 truncate text-[11px] text-slate-400">
+              <p className="ws-muted mt-0.5 truncate text-[11px]">
                 {[
                   hasEntities && `${circular.entities.length} entities`,
                   confidence !== null && `${confidence}% confidence`,
@@ -168,7 +168,7 @@ export default function SourceTextPanel({
             type="button"
             onClick={onToggle}
             aria-label={expanded ? "Collapse source text" : "Expand source text"}
-            className="flex min-h-10 min-w-10 items-center justify-center rounded-md border border-white/10 text-slate-400 transition hover:bg-white/10 hover:text-white"
+            className="flex min-h-10 min-w-10 items-center justify-center rounded-md border border-white/10 text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
             <svg
               className={`h-3.5 w-3.5 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
@@ -194,7 +194,7 @@ export default function SourceTextPanel({
                   className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
                     textView === "highlights"
                       ? "bg-white/15 text-white"
-                      : "text-slate-400 hover:text-white"
+                      : "text-slate-300 hover:text-white"
                   }`}
                 >
                   Highlights
@@ -205,13 +205,13 @@ export default function SourceTextPanel({
                   className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
                     textView === "editor"
                       ? "bg-white/15 text-white"
-                      : "text-slate-400 hover:text-white"
+                      : "text-slate-300 hover:text-white"
                   }`}
                 >
                   Editor
                 </button>
               </div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              <span className="ws-label tracking-wider">
                 {textView === "highlights" ? "Entity view" : "Edit mode"}
               </span>
             </div>
@@ -219,7 +219,7 @@ export default function SourceTextPanel({
 
           <div className="px-5 pb-5">
             {textView === "highlights" && hasEntities ? (
-              <div className="max-h-[min(50vh,360px)] overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-3 scrollbar-thin sm:max-h-[360px] sm:p-4">
+              <div className="max-h-[min(50vh,360px)] overflow-y-auto rounded-xl border border-white/15 bg-slate-950/80 p-3 scrollbar-thin sm:max-h-[360px] sm:p-4">
                 <EntityHighlight text={sourceText} entities={circular.entities} />
               </div>
             ) : (
@@ -227,7 +227,7 @@ export default function SourceTextPanel({
                 value={draftText}
                 onChange={(e) => onDraftChange(e.target.value)}
                 disabled={!hasText && circular.status === "failed"}
-                className="min-h-[200px] w-full resize-y rounded-xl border border-white/15 bg-black/20 px-3 py-3 font-mono text-[12px] leading-relaxed text-slate-200 outline-none placeholder:text-slate-500 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 sm:min-h-[280px] sm:px-4 sm:text-[13px]"
+                className="min-h-[200px] w-full resize-y rounded-xl border border-white/15 bg-slate-950/80 px-3 py-3 font-mono text-[12px] leading-relaxed text-slate-100 outline-none placeholder:text-slate-400 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 sm:min-h-[280px] sm:px-4 sm:text-[13px]"
               />
             )}
 

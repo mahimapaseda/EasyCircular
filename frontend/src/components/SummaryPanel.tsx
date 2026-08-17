@@ -68,7 +68,7 @@ const inputClass =
 function MetaCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+      <dt className="ws-label">
         {label}
       </dt>
       <dd className="mt-1 text-sm leading-snug text-slate-100">{value}</dd>
@@ -164,20 +164,20 @@ export default function SummaryPanel({
     Boolean(summary?.effectiveDate);
 
   return (
-    <section className="relative flex min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/25 backdrop-blur-xl">
-      <div className="flex flex-col gap-2.5 border-b border-white/[0.06] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-3.5">
+    <section className="ws-panel relative flex min-h-0 w-full flex-col overflow-hidden rounded-2xl">
+      <div className="flex flex-col gap-2.5 border-b border-white/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-3.5">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+          <span className="ws-label tracking-[0.2em]">
             Brief
           </span>
           {modeLabel && (
-            <span className="text-[10px] font-medium text-slate-500">· {modeLabel}</span>
+            <span className="ws-muted text-[10px] font-medium">· {modeLabel}</span>
           )}
           {meta.cached && !editing && (
-            <span className="text-[10px] font-medium text-slate-600">· Cached</span>
+            <span className="ws-muted text-[10px] font-medium">· Cached</span>
           )}
           {meta.durationMs && circular.status === "completed" && !editing && (
-            <span className="text-[10px] font-medium text-slate-600">
+            <span className="ws-muted text-[10px] font-medium">
               · {(meta.durationMs / 1000).toFixed(1)}s
             </span>
           )}
@@ -199,14 +199,14 @@ export default function SummaryPanel({
               <button
                 type="button"
                 onClick={onEditStart}
-                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white sm:flex-none"
+                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white sm:flex-none"
               >
                 Edit
               </button>
               <button
                 type="button"
                 onClick={() => void handleCopy()}
-                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white sm:flex-none"
+                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white sm:flex-none"
               >
                 Copy
               </button>
@@ -214,7 +214,7 @@ export default function SummaryPanel({
                 type="button"
                 onClick={() => void handleExportPdf()}
                 disabled={exporting}
-                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white disabled:opacity-60 sm:flex-none"
+                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white disabled:opacity-60 sm:flex-none"
               >
                 {exporting ? "Exporting…" : "Export"}
               </button>
@@ -227,7 +227,7 @@ export default function SummaryPanel({
             <button
               type="button"
               onClick={onEditCancel}
-              className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-400 transition hover:bg-white/10 hover:text-white"
+              className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
               disabled={saving}
             >
               Cancel
@@ -274,7 +274,7 @@ export default function SummaryPanel({
         {!summary && !processing && circular.status !== "processing" && (
           <div className="flex min-h-[min(48vh,420px)] flex-col items-center justify-center px-4 text-center">
             <p className="font-display text-lg font-bold text-white">No summary yet</p>
-            <p className="mt-2 max-w-sm text-sm text-slate-400">
+            <p className="ws-muted mt-2 max-w-sm text-sm">
               {hasText
                 ? "Generate a structured brief with purpose, deadlines, and action items."
                 : "Extract text from the PDF first — summarization follows automatically."}
@@ -287,7 +287,7 @@ export default function SummaryPanel({
             <div className="h-10 w-10 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
             <div className="text-center">
               <p className="text-sm font-semibold text-white">Building brief…</p>
-              <p className="mt-0.5 text-xs text-slate-400">Reading structure and key references</p>
+              <p className="ws-muted mt-0.5 text-xs">Reading structure and key references</p>
             </div>
           </div>
         )}
@@ -316,10 +316,10 @@ export default function SummaryPanel({
                     )}
                     {summary.targetAudience && (
                       <div className="min-w-0 sm:col-span-2 lg:col-span-4">
-                        <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                        <dt className="ws-label">
                           Audience
                         </dt>
-                        <dd className="mt-1 text-sm leading-relaxed text-slate-200">
+                        <dd className="mt-1 text-sm leading-relaxed text-slate-100">
                           {summary.targetAudience}
                         </dd>
                       </div>
@@ -337,10 +337,10 @@ export default function SummaryPanel({
                       <span className="absolute left-0 top-0 font-display text-sm font-bold tabular-nums text-cyan-400/80">
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                      <h3 className="ws-label tracking-[0.16em]">
                         {section.heading}
                       </h3>
-                      <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7 text-slate-200 sm:text-base sm:leading-7">
+                      <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7 text-slate-100 sm:text-base sm:leading-7">
                         {section.content}
                       </p>
                     </section>
@@ -351,13 +351,13 @@ export default function SummaryPanel({
               <aside className="min-w-0 space-y-6 lg:sticky lg:top-4">
                 {summary.actionItems.length > 0 && (
                   <AnimateIn delay={80}>
-                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 sm:p-5">
-                      <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                    <div className="rounded-xl border border-white/15 bg-white/[0.06] p-4 sm:p-5">
+                      <h3 className="ws-label tracking-[0.16em]">
                         Action items
                       </h3>
                       <ol className="mt-4 space-y-3">
                         {summary.actionItems.map((item, i) => (
-                          <li key={item} className="flex gap-3 text-sm leading-relaxed text-slate-200">
+                          <li key={item} className="flex gap-3 text-sm leading-relaxed text-slate-100">
                             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/15 text-[10px] font-bold text-slate-300">
                               {i + 1}
                             </span>
@@ -371,8 +371,8 @@ export default function SummaryPanel({
 
                 {circular.entities.length > 0 && (
                   <AnimateIn delay={120}>
-                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 sm:p-5">
-                      <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                    <div className="rounded-xl border border-white/15 bg-white/[0.06] p-4 sm:p-5">
+                      <h3 className="ws-label tracking-[0.16em]">
                         Key references
                       </h3>
                       <div className="mt-3 flex flex-wrap gap-1.5">
@@ -404,7 +404,7 @@ export default function SummaryPanel({
                 )}
 
                 {summary.actionItems.length === 0 && circular.entities.length === 0 && (
-                  <p className="text-xs text-slate-500 lg:pt-2">
+                  <p className="ws-muted text-xs lg:pt-2">
                     Expand Source text above to review the original circular.
                   </p>
                 )}
@@ -415,12 +415,12 @@ export default function SummaryPanel({
 
         {summary && editing && draftSummary && (
           <div className="w-full max-w-5xl space-y-5">
-            <p className="text-sm text-slate-400">
+            <p className="ws-muted text-sm">
               Refine the brief before export. Changes stay on this document only.
             </p>
 
             <label className="block">
-              <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              <span className="ws-label mb-1.5 block tracking-widest">
                 Title
               </span>
               <input
@@ -433,7 +433,7 @@ export default function SummaryPanel({
 
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <span className="ws-label mb-1 block">
                   Number
                 </span>
                 <input
@@ -445,7 +445,7 @@ export default function SummaryPanel({
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <span className="ws-label mb-1 block">
                   Issued date
                 </span>
                 <input
@@ -457,7 +457,7 @@ export default function SummaryPanel({
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <span className="ws-label mb-1 block">
                   Issued by
                 </span>
                 <input
@@ -469,7 +469,7 @@ export default function SummaryPanel({
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <span className="ws-label mb-1 block">
                   Effective date
                 </span>
                 <input
@@ -481,7 +481,7 @@ export default function SummaryPanel({
                 />
               </label>
               <label className="block sm:col-span-2">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <span className="ws-label mb-1 block">
                   Audience
                 </span>
                 <input
@@ -504,12 +504,12 @@ export default function SummaryPanel({
                     <span className="font-display text-xs font-bold text-cyan-400/80">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    <span className="ws-label tracking-widest">
                       Section
                     </span>
                   </div>
                   <label className="mb-3 block">
-                    <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    <span className="ws-label mb-1.5 block tracking-widest">
                       Heading
                     </span>
                     <input
@@ -520,7 +520,7 @@ export default function SummaryPanel({
                     />
                   </label>
                   <label className="block">
-                    <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    <span className="ws-label mb-1.5 block tracking-widest">
                       Content
                     </span>
                     <textarea
@@ -535,10 +535,10 @@ export default function SummaryPanel({
             </div>
 
             <label className="block">
-              <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              <span className="ws-label mb-1.5 block tracking-widest">
                 Action items
               </span>
-              <span className="mb-2 block text-xs text-slate-500">One item per line</span>
+              <span className="ws-muted mb-2 block text-xs">One item per line</span>
               <textarea
                 value={actionItemsDraft}
                 onChange={(e) => commitActionItems(e.target.value)}

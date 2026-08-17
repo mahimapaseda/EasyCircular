@@ -97,18 +97,18 @@ export default function DocumentsPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-12 z-10 border-b border-white/10 bg-black/50 px-4 py-4 backdrop-blur-2xl md:top-0 sm:px-6">
+      <header className="sticky top-12 z-10 border-b border-white/15 bg-slate-950/90 px-4 py-4 backdrop-blur-2xl md:top-0 sm:px-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-white">Documents</h1>
-            <p className="text-sm text-slate-400">Your MOE circular analyses</p>
+            <p className="ws-muted text-sm">Your MOE circular analyses</p>
           </div>
           <button
             type="button"
             onClick={() => void load()}
             disabled={loading}
             aria-label="Refresh documents"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
             <svg className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -133,23 +133,16 @@ export default function DocumentsPage() {
             { label: "Summarized", value: stats.completed },
             { label: "In progress", value: stats.active },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 backdrop-blur-xl sm:px-4 sm:py-3">
-              <dt className="text-[9px] font-bold uppercase tracking-wider text-slate-500 sm:text-[10px]">{label}</dt>
-              <dd className="mt-1 text-xl font-bold tabular-nums text-white sm:text-2xl">{value}</dd>
+            <div key={label} className="ws-panel px-3 py-2.5 sm:px-4 sm:py-3">
+              <dt className="ws-label">{label}</dt>
+              <dd className="mt-1 text-2xl font-bold tabular-nums text-white">{value}</dd>
             </div>
           ))}
         </dl>
 
-        <div className="mb-6 rounded-xl border border-white/10 bg-black/30 p-4 backdrop-blur-xl">
-          <p className="mb-3 text-[9px] font-bold uppercase tracking-wider text-slate-500">
-            System status
-          </p>
-          <HealthStatus compact />
-        </div>
-
         <div className="mb-5 flex flex-col gap-3">
           <div className="relative w-full">
-            <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
             <input
@@ -157,10 +150,10 @@ export default function DocumentsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search documents…"
-              className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-9 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
+              className="ws-panel w-full py-2.5 pl-9 pr-4 text-sm text-white outline-none placeholder:text-slate-400 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
             />
           </div>
-          <div className="inline-flex w-full rounded-lg border border-white/10 bg-white/5 p-0.5 sm:w-auto">
+          <div className="inline-flex w-full rounded-lg border border-white/15 bg-slate-950/90 p-0.5 sm:w-auto">
             {FILTERS.map(({ key, label }) => (
               <button
                 key={key}
@@ -168,8 +161,8 @@ export default function DocumentsPage() {
                 onClick={() => setFilter(key)}
                 className={`min-h-10 flex-1 rounded-md px-3 py-2 text-xs font-semibold transition sm:flex-none sm:py-1.5 ${
                   filter === key
-                    ? "bg-white/15 text-white"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-white/20 text-white"
+                    : "text-slate-300 hover:text-white"
                 }`}
               >
                 {label}
@@ -198,7 +191,7 @@ export default function DocumentsPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center rounded-2xl border border-dashed border-white/15 py-20 text-center">
+          <div className="ws-panel flex flex-col items-center border-dashed py-20 text-center">
             {items.length === 0 ? (
               <>
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
@@ -207,14 +200,14 @@ export default function DocumentsPage() {
                   </svg>
                 </div>
                 <p className="font-semibold text-white">No documents yet</p>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="ws-muted mt-1 text-sm">
                   Tap New Analysis in the menu to upload a circular.
                 </p>
               </>
             ) : (
               <>
                 <p className="font-semibold text-white">No matches</p>
-                <p className="mt-1 text-sm text-slate-400">Try a different search or filter.</p>
+                <p className="ws-muted mt-1 text-sm">Try a different search or filter.</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -236,6 +229,13 @@ export default function DocumentsPage() {
           </div>
         )}
       </div>
+
+      <footer className="mt-auto border-t border-white/15 bg-slate-950/90">
+        <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6">
+          <p className="ws-label mb-3">System status</p>
+          <HealthStatus compact />
+        </div>
+      </footer>
     </div>
   );
 }

@@ -44,7 +44,7 @@ export default function DocumentCard({ item, onDelete }: DocumentCardProps) {
   }
 
   return (
-    <div className="group relative flex h-full flex-col rounded-2xl border border-white/10 bg-black/30 backdrop-blur-xl transition hover:border-white/20 hover:bg-black/40">
+    <div className="ws-panel group relative flex h-full flex-col rounded-2xl transition hover:border-white/25">
       <Link
         href={`/circular/${item.id}`}
         className="flex flex-1 flex-col p-5"
@@ -62,11 +62,11 @@ export default function DocumentCard({ item, onDelete }: DocumentCardProps) {
                 {item.originalFilename}
               </p>
               {item.summary?.title ? (
-                <p className="mt-1 line-clamp-2 text-sm leading-snug text-slate-400">
+                <p className="ws-muted mt-1 line-clamp-2 text-sm leading-snug">
                   {item.summary.title}
                 </p>
               ) : (
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="ws-muted mt-1 text-sm">
                   {item.status === "uploaded" ? "Awaiting extraction" : "Summary not generated"}
                 </p>
               )}
@@ -76,7 +76,7 @@ export default function DocumentCard({ item, onDelete }: DocumentCardProps) {
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/10 pt-4">
-          <p className="truncate text-xs text-slate-500">{meta}</p>
+          <p className="ws-muted truncate text-xs">{meta}</p>
           <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-cyan-400 opacity-0 transition group-hover:opacity-100">
             Open
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
