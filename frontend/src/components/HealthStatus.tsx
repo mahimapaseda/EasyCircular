@@ -132,8 +132,22 @@ export default function HealthStatus({ compact = false }: HealthStatusProps) {
     ? "ollama offline (extractive fallback)"
     : `${llmProvider} not configured`;
 
+  const combinedAiStatus: ServiceStatus = loading
+    ? "checking"
+    : aiStatus === "offline" || llmStatus === "offline"
+      ? "offline"
+      : aiStatus === "degraded" || llmStatus === "degraded"
+        ? "degraded"
+        : "ok";
+
+  const combinedAiDetail = loading
+    ? undefined
+    : [aiStatus === "ok" ? "ok" : health?.aiService || aiStatus, llmDetail]
+        .filter((part) => part && part !== "unknown")
+        .join(" · ");
+
   const allOk =
-    apiStatus === "ok" && dbStatus === "ok" && aiStatus === "ok" && llmStatus === "ok";
+    apiStatus === "ok" && dbStatus === "ok" && combinedAiStatus === "ok";
 
   return (
     <div>
@@ -154,11 +168,10 @@ export default function HealthStatus({ compact = false }: HealthStatusProps) {
         {loading ? "Connecting to services…" : allOk ? "All systems operational" : "Some services degraded"}
       </div>
 
-      <ul className={compact ? "grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4" : "space-y-1.5"}>
+      <ul className={compact ? "grid gap-1.5 sm:grid-cols-3" : "space-y-1.5"}>
         <ServiceRow label="Backend API" status={apiStatus} detail={health?.status} />
         <ServiceRow label="MongoDB" status={dbStatus} detail={health?.mongodb} />
-        <ServiceRow label="AI Service" status={aiStatus} detail={health?.aiService} />
-        <ServiceRow label="LLM" status={llmStatus} detail={llmDetail} />
+        <ServiceRow label="AI Service" status={combinedAiStatus} detail={combinedAiDetail} />
       </ul>
 
       {!loading && !compact && (
