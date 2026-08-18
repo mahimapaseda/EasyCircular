@@ -44,7 +44,7 @@ export default function DocumentCard({ item, onDelete }: DocumentCardProps) {
   }
 
   return (
-    <div className="ws-panel group relative flex h-full flex-col rounded-2xl transition hover:border-white/25">
+    <div className="ws-panel group relative flex h-full flex-col rounded-2xl transition hover:border-slate-300 dark:hover:border-white/25">
       <Link
         href={`/circular/${item.id}`}
         className="flex flex-1 flex-col p-5"
@@ -58,7 +58,7 @@ export default function DocumentCard({ item, onDelete }: DocumentCardProps) {
               </svg>
             </span>
             <div className="min-w-0">
-              <p className="truncate font-semibold text-white group-hover:text-cyan-300">
+              <p className="truncate font-semibold text-ink-900 group-hover:text-cyan-700 dark:text-white dark:group-hover:text-cyan-300">
                 {item.originalFilename}
               </p>
               {item.source === "moe" && (
@@ -80,7 +80,7 @@ export default function DocumentCard({ item, onDelete }: DocumentCardProps) {
           <StatusBadge status={item.status} className="shrink-0" />
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/10 pt-4">
+        <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-200 pt-4 dark:border-white/10">
           <p className="ws-muted truncate text-xs">{meta}</p>
           <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-cyan-400 opacity-0 transition group-hover:opacity-100">
             Open
@@ -97,7 +97,7 @@ export default function DocumentCard({ item, onDelete }: DocumentCardProps) {
           onClick={() => void handleDelete()}
           disabled={deleting}
           aria-label={`Delete ${item.originalFilename}`}
-          className="absolute right-3 top-3 flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/10 bg-black/40 text-slate-400 opacity-100 transition hover:border-rose-400/30 hover:bg-rose-400/10 hover:text-rose-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/40 md:opacity-0 md:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="absolute right-3 top-3 flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-slate-200 bg-white/90 text-ink-400 opacity-100 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/40 dark:border-white/10 dark:bg-black/40 dark:text-slate-400 dark:hover:border-rose-400/30 dark:hover:bg-rose-400/10 dark:hover:text-rose-400 md:opacity-0 md:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {deleting ? (
             <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">

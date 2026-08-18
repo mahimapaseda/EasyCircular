@@ -274,7 +274,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-        <p className="text-sm font-semibold text-slate-300">Loading document…</p>
+        <p className="text-sm font-semibold text-ink-600 dark:text-slate-300">Loading document…</p>
       </div>
     );
   }
@@ -282,10 +282,10 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   if (!circular) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-lg font-bold text-rose-300">{error || "Circular not found"}</p>
+        <p className="text-lg font-bold text-rose-700 dark:text-rose-300">{error || "Circular not found"}</p>
         <Link
           href="/circulars"
-          className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-ink-800 transition hover:bg-slate-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
         >
           ← Back to documents
         </Link>
@@ -314,11 +314,11 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
       type="button"
       onClick={() => void handleProcess()}
       disabled={busy}
-      className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
+      className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-cyan-500 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-white/95"
     >
       {busy ? (
         <>
-          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent dark:border-slate-900" />
           Summarizing…
         </>
       ) : (
@@ -330,7 +330,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
       type="button"
       onClick={() => void handleProcess()}
       disabled={busy}
-      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-60"
+      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-ink-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/10"
     >
       {busy ? "Summarizing…" : "Regenerate"}
     </button>
@@ -362,12 +362,12 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   return (
     <WorkflowLayout circular={circular} currentStep={step} actions={generateButton}>
       {error && (
-        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-rose-400/20 bg-rose-400/[0.08] px-4 py-3 text-sm text-rose-300 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-400/20 dark:bg-rose-400/[0.08] dark:text-rose-300 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-semibold">{error}</p>
           <button
             type="button"
             onClick={() => void load()}
-            className="shrink-0 rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10"
+            className="shrink-0 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-800 transition hover:bg-rose-50 dark:border-white/15 dark:bg-white/[0.06] dark:text-white dark:hover:bg-white/10"
           >
             Retry
           </button>
@@ -380,23 +380,23 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
           {sourcePanel}
           <aside className="ws-panel xl:sticky xl:top-36">
-            <div className="border-b border-white/10 px-5 py-4">
+            <div className="border-b border-slate-200 px-5 py-4 dark:border-white/10">
               <p className="ws-label tracking-[0.16em]">Step 3 · Review</p>
-              <p className="mt-2 text-sm font-semibold text-white">
+              <p className="mt-2 text-sm font-semibold text-ink-900 dark:text-white">
                 Check the extracted text before summarizing
               </p>
             </div>
-            <div className="space-y-3 px-5 py-4 text-sm text-slate-300">
+            <div className="space-y-3 px-5 py-4 text-sm text-ink-600 dark:text-slate-300">
               <p>Fix OCR mistakes in the editor, especially Sinhala or Tamil names, dates, and the circular number.</p>
               <p>The original PDF is the legal source. This text is only a working copy.</p>
             </div>
-            <div className="border-t border-white/10 px-5 py-4">
+            <div className="border-t border-slate-200 px-5 py-4 dark:border-white/10">
               {needsReview ? (
                 <button
                   type="button"
                   onClick={handleConfirmReview}
                   disabled={busy}
-                  className="flex w-full items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
+                  className="flex w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-cyan-500 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-white/95"
                 >
                   Text is correct
                 </button>
@@ -405,7 +405,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
                   type="button"
                   onClick={() => void handleProcess()}
                   disabled={busy}
-                  className="flex w-full items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
+                  className="flex w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-cyan-500 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-white/95"
                 >
                   {busy ? "Summarizing…" : "Generate summary"}
                 </button>

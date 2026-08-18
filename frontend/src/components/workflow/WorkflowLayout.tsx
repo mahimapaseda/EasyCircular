@@ -39,32 +39,32 @@ export default function WorkflowLayout({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-12 z-20 border-b border-white/10 bg-slate-950/90 backdrop-blur-2xl md:top-0">
+      <header className="sticky top-12 z-20 border-b border-slate-200 bg-white/90 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 md:top-0">
         <div className="mx-auto w-full max-w-[1400px] px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 flex-1">
               <nav className="flex items-center gap-1.5 text-[11px] font-medium">
-                <Link href="/circulars" className="text-slate-400 transition hover:text-cyan-300">
+                <Link href="/circulars" className="text-ink-600 transition hover:text-cyan-700 dark:text-slate-400 dark:hover:text-cyan-300">
                   Library
                 </Link>
-                <span className="text-slate-600" aria-hidden>
+                <span className="text-ink-300 dark:text-slate-600" aria-hidden>
                   /
                 </span>
-                <span className="truncate text-slate-300">{circular.originalFilename}</span>
+                <span className="truncate text-ink-600 dark:text-slate-300">{circular.originalFilename}</span>
               </nav>
 
               <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2.5">
-                <h1 className="min-w-0 truncate font-display text-lg font-bold tracking-tight text-white sm:text-xl">
+                <h1 className="min-w-0 truncate font-display text-lg font-bold tracking-tight text-ink-900 sm:text-xl dark:text-white">
                   {circular.originalFilename}
                 </h1>
                 <StatusBadge status={circular.status} className="shrink-0" />
               </div>
 
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400">
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-700 dark:text-slate-400">
                 <span>{formatRelativeTime(circular.updatedAt)}</span>
                 {stats.map((item) => (
                   <span key={item} className="flex items-center gap-2">
-                    <span className="h-1 w-1 rounded-full bg-slate-600" />
+                    <span className="h-1 w-1 rounded-full bg-ink-400 dark:bg-slate-600" />
                     {item}
                   </span>
                 ))}
@@ -81,14 +81,14 @@ export default function WorkflowLayout({
 
           <div className="mt-4 lg:hidden">
             <WorkflowSlider currentStep={allStepsDone ? WORKFLOW_STEPS.length + 1 : clamped} />
-            <p className="mt-2 text-center text-[11px] font-medium text-slate-400">
+            <p className="mt-2 text-center text-[11px] font-medium text-ink-700 dark:text-slate-400">
               {allStepsDone ? "Brief ready" : activeStep.description}
             </p>
           </div>
         </div>
 
         {actions && (
-          <div className="border-t border-white/10 px-4 py-2.5 lg:hidden">
+          <div className="border-t border-slate-200 px-4 py-2.5 dark:border-white/10 lg:hidden">
             <div className="mx-auto flex w-full max-w-[1400px] [&_button]:min-h-11 [&_button]:w-full">
               {actions}
             </div>

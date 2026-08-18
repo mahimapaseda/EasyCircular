@@ -111,7 +111,7 @@ export default function OfficialCatalog({ reloadToken = 0 }: { reloadToken?: num
           href={officialUrl}
           target="_blank"
           rel="noreferrer"
-          className="font-semibold text-cyan-400 hover:text-cyan-300"
+          className="font-semibold text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
         >
           moe.gov.lk/en/circulars
         </a>
@@ -131,20 +131,20 @@ export default function OfficialCatalog({ reloadToken = 0 }: { reloadToken?: num
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search official circulars…"
-          className="ws-panel min-h-10 flex-1 py-2.5 px-3 text-sm text-white outline-none placeholder:text-slate-400 focus:border-cyan-400/40"
+          className="ws-panel min-h-10 flex-1 py-2.5 px-3 text-sm text-ink-900 outline-none placeholder:text-ink-400 focus:border-cyan-400/40 dark:text-white dark:placeholder:text-slate-400"
         />
         <button
           type="submit"
-          className="rounded-lg bg-white px-4 text-sm font-bold text-slate-900"
+          className="rounded-lg bg-cyan-600 px-4 text-sm font-bold text-white dark:bg-white dark:text-slate-900"
         >
           Search
         </button>
       </form>
 
       {error && (
-        <div className="mb-3 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-300">
+        <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300">
           {error}
-          <button type="button" onClick={() => void load()} className="ml-3 font-semibold text-white">
+          <button type="button" onClick={() => void load()} className="ml-3 font-semibold text-rose-900 dark:text-white">
             Retry
           </button>
         </div>
@@ -168,7 +168,7 @@ export default function OfficialCatalog({ reloadToken = 0 }: { reloadToken?: num
                 className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left"
               >
                 <span>
-                  <span className="block text-sm font-semibold text-white">{item.title}</span>
+                  <span className="block text-sm font-semibold text-ink-900 dark:text-white">{item.title}</span>
                   <span className="ws-muted mt-1 block text-xs">{formatDate(item.date)}</span>
                 </span>
                 <span className="ws-muted shrink-0 text-xs font-semibold">
@@ -176,14 +176,14 @@ export default function OfficialCatalog({ reloadToken = 0 }: { reloadToken?: num
                 </span>
               </button>
               {openId === item.id && (
-                <div className="border-t border-white/10 px-4 py-3">
+                <div className="border-t border-slate-200 px-4 py-3 dark:border-white/10">
                   {pdfsLoading ? (
                     <p className="ws-muted text-xs">Loading official PDFs…</p>
                   ) : pdfs.length === 0 ? (
                     <p className="ws-muted text-xs">
                       No PDF attached. Open the{" "}
                       {item.link ? (
-                        <a href={item.link} target="_blank" rel="noreferrer" className="text-cyan-400">
+                        <a href={item.link} target="_blank" rel="noreferrer" className="text-cyan-700 dark:text-cyan-400">
                           official page
                         </a>
                       ) : (
@@ -195,7 +195,7 @@ export default function OfficialCatalog({ reloadToken = 0 }: { reloadToken?: num
                     <ul className="space-y-2">
                       {pdfs.map((pdf) => (
                         <li key={pdf.id} className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="text-sm text-slate-200">
+                          <span className="text-sm text-ink-700 dark:text-slate-200">
                             {pdf.filename}
                             <span className="ws-muted ml-2 text-xs">{LANG_LABEL[pdf.language]}</span>
                           </span>
@@ -203,7 +203,7 @@ export default function OfficialCatalog({ reloadToken = 0 }: { reloadToken?: num
                             type="button"
                             onClick={() => void handleImport(item.id, pdf)}
                             disabled={importingId === pdf.id}
-                            className="rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-slate-900 disabled:opacity-60"
+                            className="rounded-lg bg-cyan-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60 dark:bg-white dark:text-slate-900"
                           >
                             {importingId === pdf.id ? "Importing…" : user ? "Import" : "Sign in to import"}
                           </button>
@@ -224,7 +224,7 @@ export default function OfficialCatalog({ reloadToken = 0 }: { reloadToken?: num
             type="button"
             disabled={page <= 1 || loading}
             onClick={() => setPage((current) => Math.max(1, current - 1))}
-            className="rounded-lg border border-white/15 px-3 py-1.5 font-semibold text-slate-200 disabled:opacity-40"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 font-semibold text-ink-700 disabled:opacity-40 dark:border-white/15 dark:text-slate-200"
           >
             Previous
           </button>
@@ -235,7 +235,7 @@ export default function OfficialCatalog({ reloadToken = 0 }: { reloadToken?: num
             type="button"
             disabled={page >= totalPages || loading}
             onClick={() => setPage((current) => current + 1)}
-            className="rounded-lg border border-white/15 px-3 py-1.5 font-semibold text-slate-200 disabled:opacity-40"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 font-semibold text-ink-700 disabled:opacity-40 dark:border-white/15 dark:text-slate-200"
           >
             Next
           </button>

@@ -2,8 +2,11 @@
   try {
     var t = localStorage.getItem("theme");
     var d = t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (d) {
-      document.documentElement.classList.add("dark");
+    document.documentElement.classList.toggle("dark", d);
+    document.documentElement.style.colorScheme = d ? "dark" : "light";
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", d ? "#0a0f1a" : "#f8fafc");
     }
   } catch (e) {}
 

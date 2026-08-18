@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -36,7 +37,7 @@ function UserMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xs font-bold text-white ring-2 ring-white/10 transition hover:scale-105"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xs font-bold text-white ring-2 ring-ink-900/10 transition hover:scale-105 dark:ring-white/10"
       >
         {initial}
       </button>
@@ -44,18 +45,18 @@ function UserMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+10px)] z-50 w-52 animate-fade-up overflow-hidden rounded-2xl border border-white/10 bg-black/90 shadow-2xl backdrop-blur-2xl"
+          className="absolute right-0 top-[calc(100%+10px)] z-50 w-52 animate-fade-up overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
         >
-          <div className="border-b border-white/10 px-4 py-3">
-            <p className="truncate text-sm font-semibold text-white">{user.name}</p>
-            <p className="truncate text-xs text-slate-400">{user.email}</p>
+          <div className="border-b border-slate-200 px-4 py-3 dark:border-white/10">
+            <p className="truncate text-sm font-semibold text-ink-900 dark:text-white">{user.name}</p>
+            <p className="truncate text-xs text-ink-500 dark:text-slate-400">{user.email}</p>
           </div>
           <div className="p-1.5">
             <Link
               href="/#upload"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-ink-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
             >
               Upload circular
             </Link>
@@ -63,7 +64,7 @@ function UserMenu() {
               href="/circulars"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-ink-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
             >
               Library
             </Link>
@@ -74,7 +75,7 @@ function UserMenu() {
                 setOpen(false);
                 signOut();
               }}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-rose-300 transition hover:bg-rose-500/10"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-rose-600 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"
             >
               Sign out
             </button>
@@ -115,11 +116,10 @@ export default function Header() {
       <div
         className={`mx-auto flex h-12 max-w-3xl items-center justify-between gap-3 rounded-full border px-2 pl-3 transition-all duration-300 sm:h-14 sm:pl-4 ${
           scrolled
-            ? "border-white/15 bg-black/70 shadow-lg shadow-black/30 backdrop-blur-2xl"
-            : "border-white/10 bg-black/40 backdrop-blur-xl"
+            ? "border-slate-200 bg-white/85 shadow-lg shadow-slate-900/10 backdrop-blur-2xl dark:border-white/15 dark:bg-black/70 dark:shadow-black/30"
+            : "border-slate-200/80 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-black/40"
         }`}
       >
-        {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2 group">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 shadow-md shadow-blue-500/25 transition-transform group-hover:scale-105">
             <svg
@@ -136,14 +136,13 @@ export default function Header() {
               />
             </svg>
           </div>
-          <span className="inline text-sm font-bold text-white">
-            Easy<span className="text-cyan-300">Circular</span>
+          <span className="inline text-sm font-bold text-ink-900 dark:text-white">
+            Easy<span className="text-cyan-600 dark:text-cyan-300">Circular</span>
           </span>
         </Link>
 
-        {/* Center nav pills: signed-in users only */}
         {navItems.length > 0 && (
-          <nav className="hidden items-center rounded-full border border-white/10 bg-white/5 p-1 sm:flex">
+          <nav className="hidden items-center rounded-full border border-slate-200 bg-slate-100/80 p-1 sm:flex dark:border-white/10 dark:bg-white/5">
             {navItems.map((item) => {
               const active =
                 item.href === "/"
@@ -155,8 +154,8 @@ export default function Header() {
                   href={item.href}
                   className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all sm:text-sm ${
                     active
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-ink-900 text-white shadow-sm dark:bg-white dark:text-slate-900"
+                      : "text-ink-500 hover:text-ink-900 dark:text-slate-400 dark:hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -166,26 +165,25 @@ export default function Header() {
           </nav>
         )}
 
-        {/* Right actions */}
         <div className="flex items-center gap-2 pr-1">
+          <ThemeToggle compact />
           {showAuth && user ? (
             <UserMenu />
           ) : showAuth ? (
             <Link
               href="/sign-in"
-              className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-slate-900 transition-all hover:scale-[1.03] hover:shadow-md hover:shadow-white/10 sm:px-5 sm:py-2 sm:text-sm"
+              className="rounded-full bg-ink-900 px-4 py-1.5 text-xs font-bold text-white transition-all hover:scale-[1.03] hover:shadow-md dark:bg-white dark:text-slate-900 dark:hover:shadow-white/10 sm:px-5 sm:py-2 sm:text-sm"
             >
               Get Started
             </Link>
           ) : null}
 
-          {/* Mobile toggle: only when nav links exist */}
           {navItems.length > 0 && (
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Toggle menu"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-white transition hover:bg-white/10 sm:hidden"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-800 transition hover:bg-slate-100 dark:text-white dark:hover:bg-white/10 sm:hidden"
             >
               <svg
                 className="h-4 w-4"
@@ -205,9 +203,8 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {menuOpen && navItems.length > 0 && (
-        <div className="mx-auto mt-2 max-w-3xl animate-fade-up overflow-hidden rounded-2xl border border-white/10 bg-black/90 p-2 shadow-2xl backdrop-blur-2xl sm:hidden">
+        <div className="mx-auto mt-2 max-w-3xl animate-fade-up overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90 sm:hidden">
           <nav className="flex flex-col gap-0.5">
             {navItems.map((item) => {
               const active =
@@ -221,8 +218,8 @@ export default function Header() {
                   onClick={() => setMenuOpen(false)}
                   className={`rounded-xl px-4 py-2.5 text-sm font-medium transition ${
                     active
-                      ? "bg-white/10 text-white"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                      ? "bg-slate-100 text-ink-900 dark:bg-white/10 dark:text-white"
+                      : "text-ink-500 hover:bg-slate-50 hover:text-ink-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -234,7 +231,7 @@ export default function Header() {
             <Link
               href="/sign-in"
               onClick={() => setMenuOpen(false)}
-              className="mt-2 block rounded-full bg-white py-2.5 text-center text-sm font-bold text-slate-900"
+              className="mt-2 block rounded-full bg-ink-900 py-2.5 text-center text-sm font-bold text-white dark:bg-white dark:text-slate-900"
             >
               Get Started
             </Link>

@@ -17,29 +17,29 @@ function ServiceRow({
   const config = {
     ok: {
       dot: "bg-emerald-400 shadow-emerald-400/60",
-      text: "text-emerald-300",
+      text: "text-emerald-700 dark:text-emerald-300",
       label: "ok",
     },
     degraded: {
       dot: "bg-amber-400 shadow-amber-400/60",
-      text: "text-amber-300",
+      text: "text-amber-700 dark:text-amber-300",
       label: "degraded",
     },
     offline: {
       dot: "bg-rose-400 shadow-rose-400/60",
-      text: "text-rose-300",
+      text: "text-rose-700 dark:text-rose-300",
       label: "offline",
     },
     checking: {
-      dot: "bg-white/30 animate-pulse",
-      text: "text-white/40",
+      dot: "bg-ink-300 animate-pulse dark:bg-white/30",
+      text: "text-ink-400 dark:text-white/40",
       label: "checking…",
     },
   }[status];
 
   return (
-    <li className="flex items-center justify-between gap-3 rounded-xl bg-white/5 px-3 py-2.5">
-      <span className="text-sm font-semibold text-slate-200">{label}</span>
+    <li className="flex items-center justify-between gap-3 rounded-xl bg-slate-100 px-3 py-2.5 dark:bg-white/5">
+      <span className="text-sm font-semibold text-ink-700 dark:text-slate-200">{label}</span>
       <span className={`flex items-center gap-2 text-xs font-bold ${config.text}`}>
         <span className={`h-2 w-2 rounded-full shadow-sm ${config.dot}`} />
         {detail || config.label}
@@ -154,10 +154,10 @@ export default function HealthStatus({ compact = false }: HealthStatusProps) {
       <div
         className={`${compact ? "mb-3" : "mb-4"} flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${
           loading
-            ? "border-white/10 bg-white/5 text-white/40"
+            ? "border-slate-200 bg-slate-100 text-ink-400 dark:border-white/10 dark:bg-white/5 dark:text-white/40"
             : allOk
-            ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-            : "border-amber-400/20 bg-amber-400/10 text-amber-300"
+            ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300"
+            : "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300"
         }`}
       >
         <span
@@ -175,7 +175,7 @@ export default function HealthStatus({ compact = false }: HealthStatusProps) {
       </ul>
 
       {!loading && !compact && (
-        <p className="mt-3 text-right text-[11px] font-medium text-white/20">
+        <p className="mt-3 text-right text-[11px] font-medium text-ink-400 dark:text-white/20">
           Refreshes every 15s
         </p>
       )}

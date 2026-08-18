@@ -1,12 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-
-const LiquidChrome = dynamic(() => import("@/components/LiquidChrome"), {
-  ssr: false,
-});
+import ThemedBackdrop from "@/components/ThemedBackdrop";
 
 export default function MainShell({
   children,
@@ -15,17 +11,7 @@ export default function MainShell({
 }) {
   return (
     <div className="relative flex min-h-screen flex-col" suppressHydrationWarning>
-      <div className="fixed inset-0 -z-10" suppressHydrationWarning>
-        <LiquidChrome
-          baseColor={[0.04, 0.12, 0.35]}
-          speed={0.25}
-          amplitude={0.5}
-          frequencyX={2.5}
-          frequencyY={1.8}
-          interactive={true}
-        />
-        <div className="absolute inset-0 bg-black/60" />
-      </div>
+      <ThemedBackdrop overlay="main" interactive />
       <Header />
       <main className="flex-1 pt-20">{children}</main>
       <Footer />

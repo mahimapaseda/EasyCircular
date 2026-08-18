@@ -85,37 +85,37 @@ export default function HomePage() {
       {/* ─── Hero ────────────────────────────────────────────────── */}
       <section className="relative min-h-[90vh] overflow-hidden">
         {/* Sparkle decorations */}
-        <Sparkle className="absolute left-[15%] top-[18%] text-white/80 animate-pulse" />
-        <SparkleSmall className="absolute left-[25%] top-[12%] text-white/40" />
-        <Sparkle className="absolute left-[35%] top-[30%] text-white/50 animate-pulse" />
-        <SparkleSmall className="absolute right-[45%] top-[15%] text-white/30" />
-        <Sparkle className="absolute right-[15%] top-[10%] text-white/60 animate-pulse" />
-        <SparkleSmall className="absolute left-[10%] bottom-[35%] text-white/30" />
-        <Sparkle className="absolute left-[30%] bottom-[20%] text-white/40 animate-pulse" />
-        <SparkleSmall className="absolute right-[30%] bottom-[25%] text-white/50" />
+        <Sparkle className="absolute left-[15%] top-[18%] text-ink-400/70 animate-pulse dark:text-white/80" />
+        <SparkleSmall className="absolute left-[25%] top-[12%] text-ink-300 dark:text-white/40" />
+        <Sparkle className="absolute left-[35%] top-[30%] text-ink-300/80 animate-pulse dark:text-white/50" />
+        <SparkleSmall className="absolute right-[45%] top-[15%] text-ink-300 dark:text-white/30" />
+        <Sparkle className="absolute right-[15%] top-[10%] text-ink-400 animate-pulse dark:text-white/60" />
+        <SparkleSmall className="absolute left-[10%] bottom-[35%] text-ink-300 dark:text-white/30" />
+        <Sparkle className="absolute left-[30%] bottom-[20%] text-ink-300 animate-pulse dark:text-white/40" />
+        <SparkleSmall className="absolute right-[30%] bottom-[25%] text-ink-400 dark:text-white/50" />
 
         <div className="relative mx-auto grid max-w-7xl gap-8 px-5 pt-24 sm:px-8 lg:grid-cols-2 lg:items-center lg:gap-12 lg:pt-32">
           {/* Left: Text content */}
           <div className="animate-fade-up">
             {/* Top badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-300 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-sm text-ink-600 backdrop-blur-md dark:border-white/15 dark:bg-white/5 dark:text-slate-300">
               <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
               AI-powered, fast & easy.
             </div>
 
             {/* Main heading */}
-            <h1 className="mt-8 text-4xl font-black leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-[4.2rem]">
+            <h1 className="mt-8 text-4xl font-black leading-[1.08] tracking-tight text-ink-900 sm:text-6xl lg:text-[4.2rem] dark:text-white">
               Summarize.
               <br />
               Extract, Analyze, &amp;
               <br />
-              <span className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent dark:from-cyan-300 dark:to-blue-400">
                 Understand.
               </span>
             </h1>
 
             {/* Description */}
-            <p className="mt-6 max-w-lg text-[15px] leading-relaxed text-slate-300">
+            <p className="mt-6 max-w-lg text-[15px] leading-relaxed text-ink-600 dark:text-slate-300">
               Welcome to EasyCircular. Import circulars from the official Ministry of Education
               site, extract key information, and review AI-powered summaries. The original PDF
               remains the legal source.
@@ -125,7 +125,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
                 href={uploadHref}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-bold text-slate-900 shadow-xl shadow-white/10 transition-all hover:scale-[1.03] hover:shadow-2xl hover:shadow-white/15"
+                className="inline-flex items-center gap-2 rounded-full bg-ink-900 px-7 py-3 text-sm font-bold text-white shadow-xl shadow-slate-900/15 transition-all hover:scale-[1.03] dark:bg-white dark:text-slate-900 dark:shadow-white/10 dark:hover:shadow-white/15"
               >
                 Start Processing
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -134,7 +134,7 @@ export default function HomePage() {
               </Link>
               <Link
                 href="/circulars?tab=official"
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-7 py-3 text-sm font-bold text-white transition-all hover:bg-white/10"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-7 py-3 text-sm font-bold text-ink-800 transition-all hover:bg-white dark:border-white/20 dark:text-white dark:hover:bg-white/10"
               >
                 Official circulars
               </Link>
@@ -150,9 +150,9 @@ export default function HomePage() {
             {/* Floating info badges */}
             <div className="relative flex h-[500px] items-center justify-center">
               {/* Center visual element */}
-              <div className="relative h-72 w-72 rounded-full border border-white/10 bg-gradient-to-br from-white/5 to-white/0">
-                <div className="absolute inset-4 rounded-full border border-white/10 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 backdrop-blur-sm" />
-                <div className="absolute inset-12 flex items-center justify-center rounded-full border border-cyan-400/20 bg-black/40 backdrop-blur-xl">
+              <div className="relative h-72 w-72 rounded-full border border-slate-200 bg-gradient-to-br from-white/80 to-white/0 dark:border-white/10 dark:from-white/5 dark:to-white/0">
+                <div className="absolute inset-4 rounded-full border border-slate-200 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 backdrop-blur-sm dark:border-white/10" />
+                <div className="absolute inset-12 flex items-center justify-center rounded-full border border-cyan-400/30 bg-white/80 backdrop-blur-xl dark:border-cyan-400/20 dark:bg-black/40">
                   <svg className="h-16 w-16 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.8}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
                   </svg>
@@ -160,26 +160,23 @@ export default function HomePage() {
               </div>
 
               {/* Floating badge: Top right */}
-              <div className="absolute right-4 top-16 rounded-xl border border-white/15 bg-black/60 px-4 py-2.5 backdrop-blur-xl shadow-xl animate-float">
-                <p className="text-xs font-bold text-white">Multi-language OCR</p>
+              <div className="absolute right-4 top-16 rounded-xl border border-slate-200 bg-white/90 px-4 py-2.5 shadow-xl backdrop-blur-xl animate-float dark:border-white/15 dark:bg-black/60">
+                <p className="text-xs font-bold text-ink-900 dark:text-white">Multi-language OCR</p>
               </div>
 
 
-              {/* Floating badge: Bottom */}
-              <div className="absolute bottom-16 right-12 rounded-xl border border-white/15 bg-black/60 px-4 py-2.5 backdrop-blur-xl shadow-xl animate-float">
-                <p className="text-xs font-bold text-white">Process in &lt;60 seconds</p>
+              <div className="absolute bottom-16 right-12 rounded-xl border border-slate-200 bg-white/90 px-4 py-2.5 shadow-xl backdrop-blur-xl animate-float dark:border-white/15 dark:bg-black/60">
+                <p className="text-xs font-bold text-ink-900 dark:text-white">Process in &lt;60 seconds</p>
               </div>
 
-              {/* Floating badge: Left */}
-              <div className="absolute left-0 top-1/3 rounded-xl border border-white/15 bg-black/60 px-4 py-2.5 backdrop-blur-xl shadow-xl animate-float-delayed">
-                <p className="text-xs font-bold text-white">NER Highlights</p>
+              <div className="absolute left-0 top-1/3 rounded-xl border border-slate-200 bg-white/90 px-4 py-2.5 shadow-xl backdrop-blur-xl animate-float-delayed dark:border-white/15 dark:bg-black/60">
+                <p className="text-xs font-bold text-ink-900 dark:text-white">NER Highlights</p>
               </div>
 
-              {/* Sparkles around the circle */}
-              <Sparkle className="absolute left-12 top-10 text-white/70 animate-pulse" />
-              <SparkleSmall className="absolute right-20 top-8 text-white/40" />
-              <Sparkle className="absolute bottom-24 left-8 text-white/50 animate-pulse" />
-              <SparkleSmall className="absolute bottom-12 right-24 text-white/60" />
+              <Sparkle className="absolute left-12 top-10 text-ink-400 animate-pulse dark:text-white/70" />
+              <SparkleSmall className="absolute right-20 top-8 text-ink-300 dark:text-white/40" />
+              <Sparkle className="absolute bottom-24 left-8 text-ink-400 animate-pulse dark:text-white/50" />
+              <SparkleSmall className="absolute bottom-12 right-24 text-ink-400 dark:text-white/60" />
             </div>
           </div>
         </div>
@@ -188,11 +185,11 @@ export default function HomePage() {
       {/* ─── Features ─────────────────────────────────────────────── */}
       <section id="features" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 sm:px-8">
         <div className="mb-14 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">Features</p>
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-700 dark:text-cyan-300">Features</p>
+          <h2 className="mt-4 text-3xl font-black tracking-tight text-ink-900 sm:text-4xl dark:text-white">
             Powerful AI tools for education
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-slate-300">
+          <p className="mx-auto mt-3 max-w-xl text-sm text-ink-600 dark:text-slate-300">
             Built specifically for Sri Lankan Ministry of Education circulars with multi-language support.
           </p>
         </div>
@@ -200,7 +197,7 @@ export default function HomePage() {
           {FEATURES.map((feature, i) => (
             <div
               key={feature.title}
-              className="group flex gap-5 rounded-2xl border border-white/10 bg-black/30 p-6 backdrop-blur-md transition-all duration-300 hover:border-white/20 hover:bg-black/40 animate-fade-up"
+              className="group flex gap-5 rounded-2xl border border-slate-200 bg-white/70 p-6 backdrop-blur-md transition-all duration-300 hover:border-slate-300 hover:bg-white animate-fade-up dark:border-white/10 dark:bg-black/30 dark:hover:border-white/20 dark:hover:bg-black/40"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <div
@@ -209,8 +206,8 @@ export default function HomePage() {
                 {feature.icon}
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">{feature.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+                <h3 className="text-base font-bold text-ink-900 dark:text-white">{feature.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-ink-600 dark:text-slate-300">
                   {feature.desc}
                 </p>
               </div>
@@ -222,8 +219,8 @@ export default function HomePage() {
       {/* ─── How it works ─────────────────────────────────────────── */}
       <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 sm:px-8">
         <div className="mb-14 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">How it works</p>
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-700 dark:text-cyan-300">How it works</p>
+          <h2 className="mt-4 text-3xl font-black tracking-tight text-ink-900 sm:text-4xl dark:text-white">
             Four simple steps
           </h2>
         </div>
@@ -236,7 +233,7 @@ export default function HomePage() {
           ].map((step, i) => (
             <div
               key={step.num}
-              className="rounded-2xl border border-white/10 bg-black/30 p-6 text-center backdrop-blur-md transition-all hover:border-white/20 hover:bg-black/40 animate-fade-up"
+              className="rounded-2xl border border-slate-200 bg-white/70 p-6 text-center backdrop-blur-md transition-all hover:border-slate-300 hover:bg-white animate-fade-up dark:border-white/10 dark:bg-black/30 dark:hover:border-white/20 dark:hover:bg-black/40"
               style={{ animationDelay: `${i * 100}ms` }}
             >
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-blue-600/20 border border-cyan-400/20">
@@ -245,8 +242,8 @@ export default function HomePage() {
                 </svg>
               </div>
               <p className="text-[11px] font-bold text-cyan-400/80">STEP {step.num}</p>
-              <h3 className="mt-1 text-lg font-bold text-white">{step.title}</h3>
-              <p className="mt-1 text-sm text-slate-300">{step.desc}</p>
+              <h3 className="mt-1 text-lg font-bold text-ink-900 dark:text-white">{step.title}</h3>
+              <p className="mt-1 text-sm text-ink-600 dark:text-slate-300">{step.desc}</p>
             </div>
           ))}
         </div>
@@ -255,15 +252,15 @@ export default function HomePage() {
       {/* ─── System status ───────────────────────────────────────── */}
       <section id="system-status" className="mx-auto max-w-2xl scroll-mt-20 px-5 py-10 sm:px-8">
         <div className="mb-5 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">System Status</p>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-700 dark:text-cyan-300">System Status</p>
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-ink-900 dark:text-white">
             Service health
           </h2>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm text-ink-600 dark:text-slate-300">
             Backend, MongoDB, AI pipeline, and local LLM should all show as healthy before you upload.
           </p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-black/30 p-5 backdrop-blur-md">
+        <div className="rounded-2xl border border-slate-200 bg-white/70 p-5 backdrop-blur-md dark:border-white/10 dark:bg-black/30">
           <HealthStatus />
         </div>
       </section>
@@ -278,10 +275,10 @@ export default function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A3.375 3.375 0 006.75 21h10.5a3.375 3.375 0 003.375-3.375V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
             </div>
-            <h2 className="text-2xl font-black tracking-tight text-white">
+            <h2 className="text-2xl font-black tracking-tight text-ink-900 dark:text-white">
               Upload a circular
             </h2>
-            <p className="mt-2 text-sm text-slate-300">
+            <p className="mt-2 text-sm text-ink-600 dark:text-slate-300">
               PDF only · up to {MAX_UPLOAD_MB} MB · sign in to get started
             </p>
           </div>

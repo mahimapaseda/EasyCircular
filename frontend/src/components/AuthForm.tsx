@@ -37,7 +37,7 @@ function FieldLabel({
   required?: boolean;
 }) {
   return (
-    <label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold text-slate-200">
+    <label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold text-ink-700 dark:text-slate-200">
       {children}
       {required ? <span className="ml-1 text-rose-400">*</span> : null}
     </label>
@@ -56,7 +56,7 @@ function GoogleIcon() {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-white/15 bg-white/5 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400/40 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/20";
+  "w-full rounded-xl border border-slate-200 bg-white py-3 text-sm text-ink-900 outline-none transition placeholder:text-ink-400 focus:border-cyan-500/50 focus:bg-white focus:ring-2 focus:ring-cyan-400/20 dark:border-white/15 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-cyan-400/40 dark:focus:bg-white/10";
 
 export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: AuthFormProps) {
   const [name, setName] = useState("");
@@ -114,10 +114,10 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
     <div>
       {/* Title */}
       <div className="mb-7">
-        <h1 className="text-2xl font-black tracking-tight text-white">
+        <h1 className="text-2xl font-black tracking-tight text-ink-900 dark:text-white">
           {isSignUp ? "Create your account" : "Welcome back!"}
         </h1>
-        <p className="mt-1.5 text-sm text-slate-400">
+        <p className="mt-1.5 text-sm text-ink-500 dark:text-slate-400">
           {isSignUp
             ? "Create an account to upload and manage your circulars"
             : "Sign in to upload and manage your circulars"}
@@ -191,7 +191,7 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 transition hover:text-ink-800 dark:text-slate-400 dark:hover:text-white"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
@@ -223,7 +223,7 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
                   Select your role
                 </option>
                 {JOB_ROLE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value} className="bg-slate-900 text-white">
+                  <option key={option.value} value={option.value} className="bg-white text-ink-900 dark:bg-slate-900 dark:text-white">
                     {option.label}
                   </option>
                 ))}
@@ -259,13 +259,13 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
                 <ul
                   id="district-suggestions"
                   role="listbox"
-                  className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-white/15 bg-slate-950/95 py-1 shadow-lg backdrop-blur"
+                  className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg backdrop-blur dark:border-white/15 dark:bg-slate-950/95"
                 >
                   {districtSuggestions.map((name) => (
                     <li key={name} role="option">
                       <button
                         type="button"
-                        className="w-full px-4 py-2 text-left text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
+                        className="w-full px-4 py-2 text-left text-sm text-ink-700 transition hover:bg-slate-100 hover:text-ink-900 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           setDistrict(name);
@@ -289,7 +289,7 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
                 type="checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                className="h-4 w-4 rounded border-white/20 bg-white/5 accent-cyan-400"
+                className="h-4 w-4 rounded border-slate-300 bg-white accent-cyan-600 dark:border-white/20 dark:bg-white/5 dark:accent-cyan-400"
               />
               Remember me
             </label>
@@ -335,10 +335,10 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
       {/* Divider */}
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-white/10" />
+          <div className="w-full border-t border-slate-200 dark:border-white/10" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-black/40 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
+          <span className="bg-white px-3 text-xs font-semibold uppercase tracking-widest text-ink-400 dark:bg-black/40 dark:text-slate-500">
             Or continue with
           </span>
         </div>
@@ -354,7 +354,7 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
           type="button"
           disabled
           title="Google sign-in is not available"
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold text-slate-400 opacity-60"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-ink-400 opacity-60 dark:border-white/15 dark:bg-white/5 dark:text-slate-400"
         >
           <GoogleIcon />
           Continue with Google
@@ -362,13 +362,13 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
       )}
 
       {/* Switch mode */}
-      <p className="mt-7 text-center text-sm text-slate-400">
+      <p className="mt-7 text-center text-sm text-ink-500 dark:text-slate-400">
         {isSignUp ? (
           <>
             Already have an account?{" "}
             <Link
               href={returnTo ? `/sign-in?returnTo=${encodeURIComponent(returnTo)}` : "/sign-in"}
-              className="font-bold text-cyan-400 hover:text-cyan-300"
+              className="font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
             >
               Sign in
             </Link>
@@ -378,7 +378,7 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
             Don&apos;t have an account?{" "}
             <Link
               href={returnTo ? `/sign-up?returnTo=${encodeURIComponent(returnTo)}` : "/sign-up"}
-              className="font-bold text-cyan-400 hover:text-cyan-300"
+              className="font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
             >
               Sign up free
             </Link>

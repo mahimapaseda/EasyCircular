@@ -58,22 +58,22 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
 
   if (loading) {
     return (
-      <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-white/10 bg-white/5">
-        <p className="text-sm font-medium text-white/40">Loading…</p>
+      <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-slate-200 bg-white/70 dark:border-white/10 dark:bg-white/5">
+        <p className="text-sm font-medium text-ink-400 dark:text-white/40">Loading…</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="rounded-2xl border border-white/15 bg-white/5 p-8 text-center backdrop-blur-xl sm:p-10">
+      <div className="rounded-2xl border border-slate-200 bg-white/80 p-8 text-center backdrop-blur-xl dark:border-white/15 dark:bg-white/5 sm:p-10">
         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-xl shadow-blue-500/20">
           <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
           </svg>
         </div>
-        <h3 className="text-xl font-black text-white">Sign in to upload</h3>
-        <p className="mx-auto mt-2 max-w-md text-sm text-slate-300">
+        <h3 className="text-xl font-black text-ink-900 dark:text-white">Sign in to upload</h3>
+        <p className="mx-auto mt-2 max-w-md text-sm text-ink-600 dark:text-slate-300">
           Create a free account or sign in first, then you can upload your Ministry of Education circular.
         </p>
         <div className="mt-6 flex justify-center">
@@ -102,7 +102,7 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
             ? "border-cyan-400/60 bg-cyan-400/10"
             : uploading
             ? "border-purple-400/40 bg-purple-400/10"
-            : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10"
+            : "border-slate-300 bg-white/70 hover:border-cyan-500/50 hover:bg-white dark:border-white/20 dark:bg-white/5 dark:hover:border-white/40 dark:hover:bg-white/10"
         } ${disabled || uploading ? "cursor-not-allowed opacity-80" : ""}`}
       >
         {/* Icon */}
@@ -129,10 +129,10 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
           )}
         </div>
 
-        <p className="font-display text-lg font-bold tracking-tight text-white sm:text-xl">
+        <p className="font-display text-lg font-bold tracking-tight text-ink-900 sm:text-xl dark:text-white">
           {uploading ? "Uploading your circular…" : dragOver ? "Drop it here!" : "Drop PDF or browse"}
         </p>
-        <p className="mt-2 text-sm font-medium text-slate-300">
+        <p className="mt-2 text-sm font-medium text-ink-600 dark:text-slate-300">
           {uploading
             ? "Extracting next. Review the text before generating a summary."
             : `Ministry of Education circulars · PDF · max ${MAX_UPLOAD_MB} MB`}
@@ -143,12 +143,12 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
             {["Sinhala", "Tamil", "English"].map((lang) => (
               <span
                 key={lang}
-                className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-xs font-bold text-white/70"
+                className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-ink-600 dark:border-white/15 dark:bg-white/10 dark:text-white/70"
               >
                 {lang}
               </span>
             ))}
-            <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-xs font-bold text-cyan-300">
+            <span className="rounded-full border border-cyan-500/20 bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-800 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-cyan-300">
               OCR supported
             </span>
           </div>
@@ -164,7 +164,7 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
         )}
 
         {error && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-2.5 text-sm font-semibold text-rose-300">
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-800 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300">
             <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>

@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-
-const LiquidChrome = dynamic(() => import("@/components/LiquidChrome"), {
-  ssr: false,
-});
+import ThemeToggle from "@/components/ThemeToggle";
+import ThemedBackdrop from "@/components/ThemedBackdrop";
 
 const BROWSE = [
   {
@@ -66,10 +63,10 @@ function SidebarContent({
             </svg>
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-sm font-bold tracking-tight text-white">
-              Easy<span className="text-cyan-300">Circular</span>
+            <span className="text-sm font-bold tracking-tight text-ink-900 dark:text-white">
+              Easy<span className="text-cyan-600 dark:text-cyan-300">Circular</span>
             </span>
-            <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400 dark:text-slate-400">
               AI Workspace
             </span>
           </div>
@@ -80,7 +77,7 @@ function SidebarContent({
         <Link
           href="/#upload"
           onClick={onNavigate}
-          className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-lg shadow-black/20 transition hover:scale-[1.02]"
+          className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-600/20 transition hover:scale-[1.02] hover:bg-cyan-500 dark:bg-white dark:text-slate-900 dark:shadow-black/20 dark:hover:bg-white"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -90,14 +87,14 @@ function SidebarContent({
       </div>
 
       <div className="px-4">
-        <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+        <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-400 dark:text-slate-500">
           Browse
         </p>
         <nav className="relative">
           {sliderIndex >= 0 && (
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 h-[58px] rounded-xl border border-white/10 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-transform duration-300 ease-out"
+              className="pointer-events-none absolute inset-x-0 h-[58px] rounded-xl border border-slate-200 bg-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition-transform duration-300 ease-out dark:border-white/10 dark:bg-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
               style={{ transform: `translateY(${sliderIndex * 62}px)` }}
             />
           )}
@@ -111,12 +108,16 @@ function SidebarContent({
                   href={item.href}
                   onClick={onNavigate}
                   className={`flex h-[58px] items-center gap-3 rounded-xl px-3 text-sm font-medium transition ${
-                    active ? "text-white" : "text-slate-400 hover:text-white"
+                    active
+                      ? "text-ink-900 dark:text-white"
+                      : "text-ink-500 hover:text-ink-900 dark:text-slate-400 dark:hover:text-white"
                   }`}
                 >
                   <span
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                      active ? "bg-cyan-400/15 text-cyan-300" : "bg-white/5 text-slate-500"
+                      active
+                        ? "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300"
+                        : "bg-slate-100 text-ink-400 dark:bg-white/5 dark:text-slate-500"
                     }`}
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -125,7 +126,7 @@ function SidebarContent({
                   </span>
                   <span className="min-w-0">
                     <span className="block leading-tight">{item.label}</span>
-                    <span className="block text-[11px] font-normal text-slate-500">{item.hint}</span>
+                    <span className="block text-[11px] font-normal text-ink-400 dark:text-slate-500">{item.hint}</span>
                   </span>
                 </Link>
               );
@@ -134,16 +135,22 @@ function SidebarContent({
         </nav>
       </div>
 
+      <div className="mt-auto p-3">
+        <div className="mb-2 flex items-center justify-between gap-2 px-1">
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-400 dark:text-slate-500">
+            Appearance
+          </span>
+          <ThemeToggle compact />
+        </div>
       {user && (
-        <div className="mt-auto p-3">
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2">
+          <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white/80 px-2.5 py-2 dark:border-white/10 dark:bg-white/[0.04]">
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xs font-bold text-white shadow-md shadow-cyan-500/20">
               {user.name.charAt(0).toUpperCase()}
-              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-black/60 bg-emerald-400" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-black/60 bg-emerald-400" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-white">{user.name.split(" ")[0]}</p>
-              <p className="truncate text-[11px] text-slate-400">Signed in</p>
+              <p className="truncate text-xs font-semibold text-ink-900 dark:text-white">{user.name.split(" ")[0]}</p>
+              <p className="truncate text-[11px] text-ink-500 dark:text-slate-400">Signed in</p>
             </div>
             <button
               type="button"
@@ -152,15 +159,15 @@ function SidebarContent({
                 onNavigate?.();
               }}
               aria-label="Sign out"
-              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-ink-400 transition hover:bg-slate-100 hover:text-ink-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
               </svg>
             </button>
           </div>
-        </div>
       )}
+      </div>
     </div>
   );
 }
@@ -217,22 +224,14 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
 
   return (
     <div className="relative flex min-h-screen" suppressHydrationWarning>
-      <div className="fixed inset-0 -z-10" suppressHydrationWarning>
-        <LiquidChrome
-          baseColor={[0.04, 0.12, 0.35]}
-          speed={0.12}
-          amplitude={0.28}
-          frequencyX={2.5}
-          frequencyY={1.8}
-          interactive={false}
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/80 to-black/85"
-          suppressHydrationWarning
-        />
-      </div>
+      <ThemedBackdrop
+        overlay="workspace"
+        speed={0.12}
+        amplitude={0.28}
+        interactive={false}
+      />
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[240px] flex-col border-r border-white/10 bg-slate-950/80 backdrop-blur-2xl lg:w-[260px] md:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[240px] flex-col border-r border-slate-200 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/80 lg:w-[260px] md:flex">
         <SidebarContent {...sidebarProps} />
       </aside>
 
@@ -240,7 +239,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         <button
           type="button"
           aria-label="Close menu"
-          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm dark:bg-black/70 md:hidden"
           onClick={closeDrawer}
         />
       )}
@@ -249,7 +248,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
         role="dialog"
         aria-modal={mobileOpen}
         aria-label="Workspace menu"
-        className={`fixed inset-y-0 left-0 z-50 flex w-[min(85vw,300px)] flex-col border-r border-white/10 bg-slate-950/95 backdrop-blur-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(85vw,300px)] flex-col border-r border-slate-200 bg-white/95 backdrop-blur-2xl transition-transform duration-300 dark:border-white/10 dark:bg-slate-950/95 md:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -257,22 +256,23 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col md:pl-[240px] lg:pl-[260px]" suppressHydrationWarning>
-        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-white/10 bg-slate-950/90 px-4 backdrop-blur-xl md:hidden" suppressHydrationWarning>
+        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90 md:hidden" suppressHydrationWarning>
           <button
             ref={menuButtonRef}
             type="button"
             aria-label="Open menu"
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(true)}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-ink-800 dark:border-white/15 dark:bg-white/5 dark:text-white"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-sm font-bold text-white">
-            Easy<span className="text-cyan-300">Circular</span>
+          <span className="flex-1 text-sm font-bold text-ink-900 dark:text-white">
+            Easy<span className="text-cyan-600 dark:text-cyan-300">Circular</span>
           </span>
+          <ThemeToggle compact />
         </div>
         {children}
       </div>

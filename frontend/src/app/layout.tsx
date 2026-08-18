@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { ToastProvider } from "@/context/ToastContext";
 import "./globals.css";
 
@@ -40,7 +42,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0a0f1a",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0f1a" },
+  ],
 };
 
 export default function RootLayout({
@@ -49,17 +54,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${sourceSans.variable} ${sourceSerif.variable} font-sans`}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          <ToastProvider>
-            {children}
-            <ServiceWorkerRegister />
-          </ToastProvider>
-        </AuthProvider>
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>
+              {children}
+              <ServiceWorkerRegister />
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

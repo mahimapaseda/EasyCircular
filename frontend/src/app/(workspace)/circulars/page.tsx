@@ -30,11 +30,11 @@ function SourceSwitch({ active }: { active: SourceTab }) {
     <div
       role="tablist"
       aria-label="Document source"
-      className="relative grid h-10 w-full max-w-md grid-cols-2 rounded-xl border border-white/15 bg-black/35 p-1 sm:w-[340px]"
+      className="relative grid h-10 w-full max-w-md grid-cols-2 rounded-xl border border-slate-200 bg-white/80 p-1 sm:w-[340px] dark:border-white/15 dark:bg-black/35"
     >
       <span
         aria-hidden
-        className="absolute bottom-1 top-1 w-[calc(50%-6px)] rounded-lg bg-white shadow-lg shadow-black/30 transition-[left] duration-300 ease-out"
+        className="absolute bottom-1 top-1 w-[calc(50%-6px)] rounded-lg bg-cyan-600 shadow-lg shadow-cyan-600/20 transition-[left] duration-300 ease-out dark:bg-white dark:shadow-black/30"
         style={{ left: active === "official" ? "calc(50% + 2px)" : "4px" }}
       />
       <Link
@@ -42,7 +42,7 @@ function SourceSwitch({ active }: { active: SourceTab }) {
         aria-selected={active === "library"}
         href="/circulars"
         className={`relative z-10 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
-          active === "library" ? "text-slate-900" : "text-slate-300 hover:text-white"
+          active === "library" ? "text-white dark:text-slate-900" : "text-ink-500 hover:text-ink-900 dark:text-slate-300 dark:hover:text-white"
         }`}
       >
         Your library
@@ -52,7 +52,7 @@ function SourceSwitch({ active }: { active: SourceTab }) {
         aria-selected={active === "official"}
         href="/circulars?tab=official"
         className={`relative z-10 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
-          active === "official" ? "text-slate-900" : "text-slate-300 hover:text-white"
+          active === "official" ? "text-white dark:text-slate-900" : "text-ink-500 hover:text-ink-900 dark:text-slate-300 dark:hover:text-white"
         }`}
       >
         Official catalog
@@ -154,11 +154,11 @@ function DocumentsPageInner() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-12 z-10 border-b border-white/10 bg-slate-950/90 px-4 py-4 backdrop-blur-2xl md:top-0 sm:px-6">
+      <header className="sticky top-12 z-10 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 md:top-0 sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h1 className="text-xl font-bold text-white">
+              <h1 className="text-xl font-bold text-ink-900 dark:text-white">
                 {tab === "official" ? "Official catalog" : "Your library"}
               </h1>
               <p className="ws-muted text-sm">
@@ -172,7 +172,7 @@ function DocumentsPageInner() {
               onClick={handleRefresh}
               disabled={tab === "library" && loading}
               aria-label={tab === "official" ? "Refresh official catalog" : "Refresh documents"}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white lg:hidden"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-ink-600 transition hover:bg-slate-50 hover:text-ink-900 dark:border-white/15 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white lg:hidden"
             >
               <svg className={`h-4 w-4 ${tab === "library" && loading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -186,7 +186,7 @@ function DocumentsPageInner() {
               onClick={handleRefresh}
               disabled={tab === "library" && loading}
               aria-label={tab === "official" ? "Refresh official catalog" : "Refresh documents"}
-              className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white lg:flex"
+              className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-ink-600 transition hover:bg-slate-50 hover:text-ink-900 dark:border-white/15 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white lg:flex"
             >
               <svg className={`h-4 w-4 ${tab === "library" && loading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -202,8 +202,8 @@ function DocumentsPageInner() {
         ) : (
           <>
             {!authLoading && !user && (
-              <p className="mb-5 rounded-xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-slate-300">
-                <Link href="/sign-in" className="font-semibold text-cyan-400 hover:text-cyan-300">
+              <p className="mb-5 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-ink-700 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-slate-300">
+                <Link href="/sign-in" className="font-semibold text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300">
                   Sign in
                 </Link>{" "}
                 to sync documents across devices.
@@ -218,7 +218,7 @@ function DocumentsPageInner() {
               ].map(({ label, value }) => (
                 <div key={label} className="ws-panel px-3 py-2.5 sm:px-4 sm:py-3">
                   <dt className="ws-label">{label}</dt>
-                  <dd className="mt-1 text-2xl font-bold tabular-nums text-white">{value}</dd>
+                  <dd className="mt-1 text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{value}</dd>
                 </div>
               ))}
             </dl>
@@ -233,19 +233,17 @@ function DocumentsPageInner() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search your library…"
-                  className="ws-panel w-full py-2.5 pl-9 pr-4 text-sm text-white outline-none placeholder:text-slate-400 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
+                  className="ws-panel w-full py-2.5 pl-9 pr-4 text-sm text-ink-900 outline-none placeholder:text-ink-400 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 dark:text-white dark:placeholder:text-slate-400"
                 />
               </div>
-              <div className="inline-flex w-full rounded-lg border border-white/15 bg-slate-950/90 p-0.5 sm:w-auto">
+              <div className="ws-segment w-full sm:w-auto">
                 {FILTERS.map(({ key, label }) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setFilter(key)}
-                    className={`min-h-10 flex-1 rounded-md px-3 py-2 text-xs font-semibold transition sm:flex-none sm:py-1.5 ${
-                      filter === key
-                        ? "bg-white/20 text-white"
-                        : "text-slate-300 hover:text-white"
+                    className={`ws-segment-btn min-h-10 flex-1 sm:flex-none ${
+                      filter === key ? "ws-segment-active" : "ws-segment-idle"
                     }`}
                   >
                     {label}
@@ -255,12 +253,12 @@ function DocumentsPageInner() {
             </div>
 
             {error && (
-              <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-300">
+              <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300">
                 <span>{error}</span>
                 <button
                   type="button"
                   onClick={() => void load()}
-                  className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white"
+                  className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-800 dark:border-white/20 dark:bg-white/10 dark:text-white"
                 >
                   Retry
                 </button>
@@ -282,20 +280,20 @@ function DocumentsPageInner() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H18A2.25 2.25 0 0120.25 6v12m-8.5-3h7.5m-7.5 3H12" />
                       </svg>
                     </div>
-                    <p className="font-semibold text-white">No documents yet</p>
+                    <p className="font-semibold text-ink-900 dark:text-white">No documents yet</p>
                     <p className="ws-muted mt-1 max-w-sm text-sm">
                       Upload from New Analysis, or import a PDF from the official catalog.
                     </p>
                     <Link
                       href="/circulars?tab=official"
-                      className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-900"
+                      className="mt-4 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-bold text-white dark:bg-white dark:text-slate-900"
                     >
                       Browse official circulars
                     </Link>
                   </>
                 ) : (
                   <>
-                    <p className="font-semibold text-white">No matches</p>
+                    <p className="font-semibold text-ink-900 dark:text-white">No matches</p>
                     <p className="ws-muted mt-1 text-sm">Try a different search or filter.</p>
                     <button
                       type="button"
@@ -303,7 +301,7 @@ function DocumentsPageInner() {
                         setQuery("");
                         setFilter("all");
                       }}
-                      className="mt-3 rounded-lg px-3 py-1.5 text-sm font-medium text-cyan-400 hover:text-cyan-300"
+                      className="mt-3 rounded-lg px-3 py-1.5 text-sm font-medium text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300"
                     >
                       Clear filters
                     </button>
@@ -321,7 +319,7 @@ function DocumentsPageInner() {
         )}
       </div>
 
-      <footer className="mt-auto border-t border-white/10 bg-slate-950/90">
+      <footer className="mt-auto border-t border-slate-200 bg-white/90 dark:border-white/10 dark:bg-slate-950/90">
         <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6">
           <p className="ws-label mb-3">System status</p>
           <HealthStatus compact />
@@ -335,7 +333,7 @@ export default function DocumentsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[50vh] items-center justify-center text-sm text-slate-400">
+        <div className="flex min-h-[50vh] items-center justify-center text-sm text-ink-500 dark:text-slate-400">
           Loading documents…
         </div>
       }

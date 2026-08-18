@@ -30,11 +30,15 @@
   }
 
   body {
-    background-color: #0a0f1a;
-    color: #e2e8f0;
+    background-color: rgb(var(--bg));
+    color: rgb(var(--text));
     @apply antialiased font-sans;
     font-feature-settings: "kern" 1, "liga" 1;
     scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.45) rgba(226, 232, 240, 0.8);
+  }
+
+  .dark body {
     scrollbar-color: rgba(125, 211, 252, 0.28) rgba(15, 23, 42, 0.45);
   }
 
@@ -227,8 +231,8 @@
   }
 
   .auth-group-sign-in {
-    @apply px-4 py-2 text-sm font-semibold text-white/80
-      transition hover:bg-white/10 hover:text-white;
+    @apply px-4 py-2 text-sm font-semibold text-ink-600
+      transition hover:bg-slate-100 hover:text-ink-900;
   }
 
   .dark .auth-group-sign-in {
@@ -236,14 +240,18 @@
   }
 
   .auth-group-sign-up {
-    @apply bg-white/20
+    @apply bg-ink-900
       px-4 py-2 text-sm font-semibold text-white
-      transition hover:bg-white/30;
+      transition hover:bg-ink-800;
+  }
+
+  .dark .auth-group-sign-up {
+    @apply bg-white/20 hover:bg-white/30;
   }
 
   /* ── SECTION HEADERS ─────────────────────────────────────────── */
   .section-label {
-    @apply text-xs font-bold uppercase tracking-[0.2em] text-white/60;
+    @apply text-xs font-bold uppercase tracking-[0.2em] text-ink-700;
   }
 
   .dark .section-label {
@@ -346,31 +354,59 @@
   }
 
   .ws-panel {
-    @apply rounded-xl border border-white/15 bg-slate-950/90 backdrop-blur-xl;
+    @apply rounded-xl border border-slate-200 bg-white/90 backdrop-blur-xl;
+  }
+
+  .dark .ws-panel {
+    @apply border-white/15 bg-slate-950/90;
   }
 
   .ws-label {
-    @apply text-xs font-semibold uppercase tracking-wide text-slate-300;
+    @apply text-xs font-semibold uppercase tracking-wide text-ink-700;
+  }
+
+  .dark .ws-label {
+    @apply text-slate-300;
   }
 
   .ws-muted {
+    @apply text-ink-700;
+  }
+
+  .dark .ws-muted {
     @apply text-slate-300;
   }
 
   .ws-card {
-    @apply rounded-2xl border border-white/15 bg-slate-950/90 backdrop-blur-xl;
+    @apply rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-xl;
+  }
+
+  .dark .ws-card {
+    @apply border-white/15 bg-slate-950/90;
   }
 
   .ws-card-header {
-    @apply flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4;
+    @apply flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4;
+  }
+
+  .dark .ws-card-header {
+    @apply border-white/10;
   }
 
   .ws-stat {
-    @apply rounded-xl border border-white/15 bg-slate-950/90 px-4 py-3 backdrop-blur-xl;
+    @apply rounded-xl border border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-xl;
+  }
+
+  .dark .ws-stat {
+    @apply border-white/15 bg-slate-950/90;
   }
 
   .ws-segment {
-    @apply inline-flex rounded-lg border border-white/10 bg-white/5 p-0.5;
+    @apply inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5;
+  }
+
+  .dark .ws-segment {
+    @apply border-white/10 bg-white/5;
   }
 
   .ws-segment-btn {
@@ -378,10 +414,18 @@
   }
 
   .ws-segment-active {
-    @apply bg-white/20 text-white;
+    @apply bg-cyan-600 text-white;
+  }
+
+  .dark .ws-segment-active {
+    @apply bg-white text-slate-900;
   }
 
   .ws-segment-idle {
+    @apply text-ink-500 hover:text-ink-900;
+  }
+
+  .dark .ws-segment-idle {
     @apply text-slate-300 hover:text-white;
   }
 }

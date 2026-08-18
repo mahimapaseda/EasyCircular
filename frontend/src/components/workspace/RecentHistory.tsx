@@ -40,14 +40,14 @@ export default function RecentHistory({ currentId }: RecentHistoryProps) {
           <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h3 className="text-sm font-bold text-white">Recent History</h3>
+          <h3 className="text-sm font-bold text-ink-900 dark:text-white">Recent History</h3>
         </div>
-        <Link href="/circulars" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300">
+        <Link href="/circulars" className="text-xs font-semibold text-cyan-700 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300">
           View all
         </Link>
       </div>
 
-      <div className="divide-y divide-white/10">
+      <div className="divide-y divide-slate-200 dark:divide-white/10">
         {loading && (
           <div className="space-y-3 p-5">
             {[1, 2, 3].map((i) => (
@@ -62,10 +62,10 @@ export default function RecentHistory({ currentId }: RecentHistoryProps) {
           <Link
             key={item.id}
             href={`/circular/${item.id}`}
-            className="flex items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-white/5"
+            className="flex items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-slate-50 dark:hover:bg-white/5"
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">
+              <p className="truncate text-sm font-semibold text-ink-900 dark:text-white">
                 {item.originalFilename}
               </p>
               <p className="mt-0.5 text-xs text-slate-500">{formatRelativeTime(item.updatedAt)}</p>
