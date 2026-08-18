@@ -50,7 +50,7 @@ logger = logging.getLogger("easycircular.ai.summarize")
 
 FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
 # Bump when prompt/few-shot/guardrail behaviour changes so the backend cache misses.
-SUMMARIZER_VERSION = "v9-si-source-brief"
+SUMMARIZER_VERSION = "v10-si-extractive-facts"
 
 _OVERLAP_STOPWORDS = frozenset(
     {

@@ -49,21 +49,20 @@ LETTERHEAD_MARKERS = (
     "ministry of education",
     "higher education and vocational education",
     "battaramulla",
+    "isurupaya",
     "moe.gov",
     "www.moe",
     "my ref",
     "your ref",
     "මගේ යොමුව",
     "ඔබේ යොමුව",
-    "අධ්‍යාපන",
-    "චක්‍රලේඛ",
-    "கல்வி",
-    "அமைச்சு",
+    "අධ්‍යාපන අමාත්‍යාංශය",
+    "ඉසුරුපාය",
+    "බත්තරමුල්ල",
+    "கல்வி அமைச்சு",
     "இசுருபாய",
     "எனது இல",
     "உமது இல",
-    "சுற்றறிக்கை",
-    "சுற்றுநிருபம்",
 )
 
 RECIPIENT_PREFIXES = (
@@ -120,14 +119,23 @@ BODY_START_PATTERN = re.compile(
     r"the\s+provisions|"
     r"this\s+circular|"
     r"accordingly[,.]?|"
-    r"\d{1,2}\s*[\.\)])",
+    r"\d{1,2}\s*[\.\)]|"
+    r"විෂය|"
+    r"පිළිබඳ|"
+    r"මෙයින්|"
+    r"දැනුම්\s*දෙ|"
+    r"කළ\s*යුතු|"
+    r"විය\s*යුතු|"
+    r"ක්‍රියාත්මක)",
     re.IGNORECASE,
 )
 
 POLICY_SUBJECT_PATTERN = re.compile(
     r"(?:establishing|providing|regarding|implement(?:ing)?|celebrat|duty hours|"
     r"actions have|financial incentive|vesak week|amending|conducting|organizing|organising|"
-    r"mandatory\s+to\s+consider|ten-day\s+teacher\s+train)",
+    r"mandatory\s+to\s+consider|ten-day\s+teacher\s+train|"
+    r"විෂය|පිළිබඳ|දැනුම්\s*දෙ|මෙයින්|කළ\s*යුතු|විය\s*යුතු|"
+    r"ක්‍රියාත්මක|වැඩසටහන|ඩෙංගු|සංශෝධනය)",
     re.IGNORECASE,
 )
 
@@ -135,7 +143,8 @@ ACTION_SENTENCE_PATTERN = re.compile(
     r"(?:\b(?:must|shall|should|required to|need to|arranged to|expected to|"
     r"instructed to|directed to|requested to|ensure|implement|submit|complete|"
     r"conduct|organize|organise|celebrate|observe|report|forward|inform|"
-    r"mandatory|hereby|to be (?:considered|mentioned|confirmed|implemented))\b)",
+    r"mandatory|hereby|to be (?:considered|mentioned|confirmed|implemented))\b|"
+    r"යුතුය|කළ\s*යුතු|විය\s*යුතුය?|ක්‍රියාත්මක\s*කළ|දැනුම්වත්)",
     re.IGNORECASE,
 )
 
@@ -611,6 +620,28 @@ def extract_register_purpose(text: str) -> str | None:
     return re.sub(r"\s+", " ", " ".join(parts)).strip()[:1200]
 
 
+def _split_requirement_sentences(body: str) -> list[str]:
+    """Split body into requirement-sized chunks.
+
+    English sentences end with `.!?` plus space. Sinhala circulars also use
+    danda (।) and numbered items, often wrapped across lines; keep wrapped
+    lines together and split on blank lines / item numbers.
+    """
+    text = re.sub(r"\bNo\.\s*", "No ", body or "")
+    paragraphs = re.split(r"\n\s*\n+", text)
+    sentences: list[str] = []
+    for paragraph in paragraphs:
+        pieces = re.split(
+            r"(?<=[.!?])\s+|।|(?=\n\d{1,2}\s*[\.\)])",
+            paragraph,
+        )
+        for piece in pieces:
+            cleaned = re.sub(r"\s+", " ", piece).strip()
+            if cleaned:
+                sentences.append(cleaned)
+    return sentences
+
+
 def extract_key_requirements(text: str, max_items: int = 8) -> list[str]:
     if looks_like_staff_register(text):
         register_items = extract_register_requirements(text, max_items=max_items)
@@ -618,7 +649,7 @@ def extract_key_requirements(text: str, max_items: int = 8) -> list[str]:
             return register_items
 
     body = extract_body_text(text)
-    sentences = re.split(r"(?<=[.!?])\s+", body)
+    sentences = _split_requirement_sentences(body)
     requirements: list[str] = []
     seen: set[str] = set()
 
@@ -626,8 +657,8 @@ def extract_key_requirements(text: str, max_items: int = 8) -> list[str]:
         cleaned = re.sub(r"\s+", " ", sentence).strip()
         if len(cleaned) < 40 or len(cleaned) > 500:
             continue
-        # Skip OCR fragments that start mid-clause.
-        if cleaned[0].islower():
+        # Skip OCR fragments that start mid-clause (Latin only; Sinhala has no case).
+        if cleaned[0].islower() and cleaned[0].isascii():
             continue
         if not ACTION_SENTENCE_PATTERN.search(cleaned):
             continue
@@ -846,6 +877,8 @@ def extract_effective_date(text: str) -> str | None:
     # "with immediate effect"
     if re.search(r"with\s+immediate\s+effect", search_text, re.IGNORECASE):
         return "With immediate effect"
+    if re.search(r"ක්ෂණිකව", search_text):
+        return "ක්ෂණිකව බලපැවැත්වේ"
 
     # "w.e.f. <date>" or "with effect from <date>"
     wef_match = re.search(

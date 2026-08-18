@@ -5,7 +5,10 @@ import pytest
 from app.moe_text import (
     build_summary_title,
     extract_circular_number,
+    extract_effective_date,
+    extract_key_requirements,
     extract_subject,
+    is_letterhead_line,
     is_valid_date_text,
 )
 from app.ner import extract_entities
@@ -142,3 +145,52 @@ def test_sample_pdf_pipeline_if_present():
     purpose = summary["sections"][0]["content"]
     assert "Collective Circles" in purpose or "Drug-free Country" in purpose
     assert len(entities) > 0
+
+
+def test_sinhala_body_line_is_not_letterhead():
+    assert is_letterhead_line("අධ්‍යාපන ක්ෂේත්‍රයේ නියුතු සිසුන්") is False
+    assert is_letterhead_line("අධ්‍යාපන අමාත්‍යාංශය") is True
+    assert is_letterhead_line("Ministry of Education, Higher Education and Vocational Education") is True
+
+
+def test_extract_effective_date_detects_ksanika():
+    text = """
+Circular No. 10/2026
+All Provincial Directors of Education
+මෙම චක්‍රලේඛය ක්ෂණිකව බලපැවැත්වේ.
+"""
+    assert extract_effective_date(text) == "ක්ෂණිකව බලපැවැත්වේ"
+
+
+def _dengue_sinhala_text() -> str:
+    path = Path(__file__).resolve().parents[1] / "training" / "tmp_preview" / "Dengue_Sinhala.txt"
+    if not path.exists():
+        pytest.skip(f"Dengue fixture missing: {path}")
+    return path.read_text(encoding="utf-8")
+
+
+def test_extract_subject_dengue_sinhala_is_programme_not_letterhead():
+    text = _dengue_sinhala_text()
+    subject = extract_subject(text)
+    assert subject is not None
+    assert "ඩෙංගු" in subject
+    assert "වැඩසටහන" in subject
+    assert "වෙත" not in subject
+    assert "අමාත්‍යාංශය" not in subject
+
+
+def test_extract_key_requirements_dengue_sinhala_includes_yuthuya():
+    text = _dengue_sinhala_text()
+    requirements = extract_key_requirements(text)
+    assert requirements
+    assert any("යුතුය" in item for item in requirements)
+
+
+def test_fallback_summary_dengue_sinhala_purpose_is_programme():
+    text = _dengue_sinhala_text()
+    summary = fallback_summarize(text, [])
+    purpose = summary["sections"][0]["content"]
+    assert "ඩෙංගු" in purpose
+    assert "වැඩසටහන" in purpose
+    assert not purpose.strip().endswith("වෙත")
+    assert "අමාත්‍යාංශය" not in purpose or "ඩෙංගු" in purpose

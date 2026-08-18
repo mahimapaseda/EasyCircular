@@ -8,7 +8,7 @@ const { assertUploadedPdf } = require("../utils/pdf");
 const { MAX_UPLOAD_BYTES } = require("../../../shared/api-contract");
 
 // Must match ai-service/app/summarize.py SUMMARIZER_VERSION
-const SUMMARIZER_VERSION = "v9-si-source-brief";
+const SUMMARIZER_VERSION = "v10-si-extractive-facts";
 
 function hashText(text) {
   return crypto.createHash("sha256").update(text).digest("hex");
