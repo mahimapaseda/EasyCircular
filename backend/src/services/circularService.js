@@ -1,10 +1,14 @@
 const fs = require("fs");
+const path = require("path");
 const crypto = require("crypto");
 const Circular = require("../models/Circular");
-const { parsePdf, runPipeline } = require("./aiClient");
+const { parsePdf, runPipeline, translateSummary } = require("./aiClient");
+const { downloadOfficialPdf, getOfficialCircular } = require("./moeCatalog");
+const { assertUploadedPdf } = require("../utils/pdf");
+const { MAX_UPLOAD_BYTES } = require("../../../shared/api-contract");
 
 // Must match ai-service/app/summarize.py SUMMARIZER_VERSION
-const SUMMARIZER_VERSION = "v2-source-fewshot";
+const SUMMARIZER_VERSION = "v6-action-sanitize";
 
 function hashText(text) {
   return crypto.createHash("sha256").update(text).digest("hex");
@@ -27,6 +31,8 @@ function serializeCircular(doc) {
         actionItems: doc.summary.actionItems,
         rawMarkdown: doc.summary.rawMarkdown,
         mode: doc.summary.mode,
+        language: doc.summary.language || "en",
+        translations: doc.summary.translations || {},
       }
     : null;
 
@@ -34,6 +40,9 @@ function serializeCircular(doc) {
     id: doc._id.toString(),
     originalFilename: doc.originalFilename,
     status: doc.status,
+    source: doc.source || "upload",
+    sourceUrl: doc.sourceUrl || null,
+    moeId: doc.moeId || null,
     extractedText: doc.extractedText,
     editedText: doc.editedText,
     contentHash: doc.contentHash,
@@ -63,13 +72,25 @@ function listFilter(user, sessionId) {
   return { userId: null, sessionId };
 }
 
-async function createFromUpload({ file, user, sessionId }) {
+async function createFromUpload({
+  file,
+  user,
+  sessionId,
+  source = "upload",
+  sourceUrl = null,
+  moeId = null,
+  moeMediaId = null,
+}) {
   return Circular.create({
     userId: user?.id || null,
     sessionId: user?.id ? null : sessionId,
     originalFilename: file.originalname,
     filePath: file.path,
     status: "uploaded",
+    source,
+    sourceUrl,
+    moeId,
+    moeMediaId,
   });
 }
 
@@ -244,6 +265,11 @@ function normalizeSummaryInput(summary) {
     actionItems,
     rawMarkdown: "",
     mode: typeof summary.mode === "string" ? summary.mode : "edited",
+    language: ["en", "si", "ta"].includes(summary.language) ? summary.language : "en",
+    translations:
+      summary.translations && typeof summary.translations === "object"
+        ? summary.translations
+        : {},
   };
   normalized.rawMarkdown = buildSummaryMarkdown(normalized);
   return normalized;
@@ -259,6 +285,8 @@ async function saveEditedSummary(circular, summary) {
   const normalized = normalizeSummaryInput({
     ...summary,
     mode: summary?.mode || circular.summary.mode || "edited",
+    language: summary?.language || circular.summary.language || "en",
+    translations: circular.summary.translations || {},
   });
 
   circular.summary = normalized;
@@ -413,16 +441,149 @@ async function claimSessionCirculars(user, sessionId) {
   return { claimed: result.modifiedCount };
 }
 
+async function importOfficialPdf({ moeId, mediaId, user, sessionId }) {
+  if (user?.id) {
+    const existing = await Circular.findOne({
+      userId: user.id,
+      moeMediaId: mediaId,
+    });
+    if (existing) {
+      return { circular: serializeCircular(existing), created: false };
+    }
+  }
+
+  const detail = await getOfficialCircular(moeId);
+  const pdf = detail.pdfs.find((item) => item.id === Number(mediaId));
+  if (!pdf) {
+    const error = new Error("That PDF is not attached to this official circular");
+    error.status = 404;
+    error.expose = true;
+    throw error;
+  }
+
+  let buffer;
+  try {
+    ({ buffer } = await downloadOfficialPdf(pdf.sourceUrl, {
+      maxBytes: MAX_UPLOAD_BYTES,
+    }));
+  } catch (error) {
+    if (error.status) throw error;
+    const wrapped = new Error("Could not download the official PDF from moe.gov.lk");
+    wrapped.status = 502;
+    wrapped.expose = true;
+    throw wrapped;
+  }
+
+  const uploadDir = path.resolve(
+    process.env.UPLOAD_DIR || path.join(__dirname, "../../uploads"),
+  );
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  const unique = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}`;
+  const safeName = pdf.filename.replace(/[^\w.\-() ]/g, "_");
+  const filePath = path.join(uploadDir, `${unique}-${safeName}`);
+  fs.writeFileSync(filePath, buffer);
+
+  const file = { originalname: pdf.filename, path: filePath };
+  try {
+    assertUploadedPdf(file);
+  } catch (error) {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    throw error;
+  }
+
+  const circular = await createFromUpload({
+    file,
+    user,
+    sessionId,
+    source: "moe",
+    sourceUrl: detail.circular.link,
+    moeId,
+    moeMediaId: mediaId,
+  });
+
+  return { circular: serializeCircular(circular), created: true };
+}
+
+function summaryPayloadForTranslate(summary) {
+  return {
+    circularNumber: summary.circularNumber || null,
+    issuedDate: summary.issuedDate || null,
+    issuedBy: summary.issuedBy || null,
+    targetAudience: summary.targetAudience || null,
+    effectiveDate: summary.effectiveDate || null,
+    title: summary.title,
+    sections: summary.sections,
+    actionItems: summary.actionItems,
+    rawMarkdown: summary.rawMarkdown,
+    mode: summary.mode,
+    language: summary.language || "en",
+  };
+}
+
+async function translateCircular(circular, targetLang) {
+  if (!circular.summary) {
+    const error = new Error("Generate a summary before translating");
+    error.status = 400;
+    throw error;
+  }
+
+  const allowed = new Set(["en", "si", "ta"]);
+  if (!allowed.has(targetLang)) {
+    const error = new Error("targetLang must be en, si, or ta");
+    error.status = 400;
+    throw error;
+  }
+
+  const sourceLang = circular.summary.language || "en";
+  if (targetLang === sourceLang) {
+    return circular;
+  }
+
+  const existing = circular.summary.translations || {};
+  if (existing[targetLang]?.title) {
+    return circular;
+  }
+
+  let translated;
+  try {
+    translated = await translateSummary(summaryPayloadForTranslate(circular.summary), targetLang);
+  } catch (error) {
+    const message =
+      error.response?.data?.detail ||
+      error.response?.data?.error ||
+      error.message ||
+      "Translation failed";
+    const wrapped = new Error(String(message));
+    wrapped.status = error.response?.status || 502;
+    throw wrapped;
+  }
+
+  circular.summary.translations = {
+    ...existing,
+    [targetLang]: translated,
+  };
+  circular.markModified("summary");
+  await circular.save();
+  return circular;
+}
+
 module.exports = {
   canAccess,
   claimSessionCirculars,
   createFromUpload,
   extractText,
   hashText,
+  importOfficialPdf,
   listFilter,
   processCircular,
   saveEditedSummary,
   saveEditedText,
   serializeCircular,
+  translateCircular,
   workingText,
 };

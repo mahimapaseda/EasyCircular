@@ -36,12 +36,12 @@ function SignInContent() {
       returnTo={returnTo}
       onSubmit={async ({ email, password }) => {
         await signIn(email, password);
-        showToast("Signed in — you can now upload your circular.", "success");
+        showToast("Signed in. You can now upload your circular.", "success");
         router.push(returnTo);
       }}
       onGoogleSignIn={async (credential) => {
         await signInWithGoogle(credential);
-        showToast("Signed in with Google — you can now upload your circular.", "success");
+        showToast("Signed in with Google. You can now upload your circular.", "success");
         router.push(returnTo);
       }}
     />

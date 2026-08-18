@@ -153,7 +153,7 @@ Features are grouped by the phase in which they are delivered.
 - [x] User authentication (email/password + Google) and per-user circular history
 
 ### Phase 5 — Validation & release
-- [ ] ROUGE evaluation script and reference dataset
+- [x] ROUGE evaluation script and reference dataset
 - [ ] Rate limiting and API cost logging
 - [x] Security pass (JWT fail-fast, internal AI token, PDF magic bytes)
 - [ ] UAT sessions with school staff
@@ -522,7 +522,7 @@ Features are grouped by the phase in which they are delivered.
 | Identity | Roles beyond jobRole/district; admin vs teacher permissions |
 | Intelligence | Source sentence linking; async job queue for 20+ page circulars |
 | Operations | Admin dashboard, batch upload, usage analytics |
-| Integration | MOE portal API (if available) |
+| Integration | MOE portal API (if available) | **Done:** live catalog + PDF import from moe.gov.lk/en/circulars |
 
 No fixed sprint schedule — prioritize based on UAT feedback from Phase 5.
 

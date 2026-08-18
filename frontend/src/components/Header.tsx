@@ -141,7 +141,7 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Center nav pills — signed-in users only */}
+        {/* Center nav pills: signed-in users only */}
         {navItems.length > 0 && (
           <nav className="hidden items-center rounded-full border border-white/10 bg-white/5 p-1 sm:flex">
             {navItems.map((item) => {
@@ -179,7 +179,7 @@ export default function Header() {
             </Link>
           ) : null}
 
-          {/* Mobile toggle — only when nav links exist */}
+          {/* Mobile toggle: only when nav links exist */}
           {navItems.length > 0 && (
             <button
               type="button"

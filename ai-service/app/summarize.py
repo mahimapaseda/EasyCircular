@@ -1,4 +1,4 @@
-"""Circular summarization — LLM-powered and extractive fallback."""
+"""Circular summarization: LLM-powered and extractive fallback."""
 
 import json
 import logging
@@ -30,13 +30,19 @@ from app.moe_text import (
     normalize_moe_text,
     top_org_entities,
 )
-from app.output_schema import validate_llm_output
+from app.output_schema import sanitize_action_items, validate_llm_output
+from app.summary_language import (
+    FALLBACK_HEADINGS,
+    OUTPUT_LANGUAGE_INSTRUCTIONS,
+    detect_output_language,
+    summary_matches_output_language,
+)
 
 logger = logging.getLogger("easycircular.ai.summarize")
 
 FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
 # Bump when prompt/few-shot/guardrail behaviour changes so the backend cache misses.
-SUMMARIZER_VERSION = "v2-source-fewshot"
+SUMMARIZER_VERSION = "v6-action-sanitize"
 
 _OVERLAP_STOPWORDS = frozenset(
     {
@@ -271,8 +277,17 @@ def _build_system_prompt_summarize(
     source_text: str = "",
     filename: str | None = None,
 ) -> str:
-    fewshot = _format_fewshot_block(source_text, filename)
-    return SYSTEM_PROMPT_SUMMARIZE_BASE + ("\n\n" + fewshot if fewshot else "")
+    language = detect_output_language(source_text, filename)
+    prompt = (
+        SYSTEM_PROMPT_SUMMARIZE_BASE
+        + "\n\n## Output language\n"
+        + OUTPUT_LANGUAGE_INSTRUCTIONS[language]
+    )
+    if language == "en":
+        fewshot = _format_fewshot_block(source_text, filename)
+        if fewshot:
+            prompt += "\n\n" + fewshot
+    return prompt
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -290,43 +305,46 @@ object with this exact schema:
 
 ```json
 {
-  "circularNumber": "string or null — e.g. '10/2026'",
-  "issuedDate": "string or null — the date the circular was issued",
-  "issuedBy": "string or null — the issuing authority, e.g. 'Ministry of Education'",
-  "targetAudience": "string or null — who receives this, e.g. 'All Provincial Education Secretaries, All Zonal Directors of Education'",
-  "effectiveDate": "string or null — when it takes effect, e.g. 'With immediate effect' or '01 April 2026'",
-  "title": "string — concise descriptive title including circular number if available",
+  "circularNumber": "string or null, e.g. '10/2026'",
+  "issuedDate": "string or null: the date the circular was issued",
+  "issuedBy": "string or null: the issuing authority, e.g. 'Ministry of Education'",
+  "targetAudience": "string or null: who receives this, e.g. 'All Provincial Education Secretaries, All Zonal Directors of Education'",
+  "effectiveDate": "string or null: when it takes effect, e.g. 'With immediate effect' or '01 April 2026'",
+  "title": "string: concise descriptive title including circular number if available",
   "sections": [
-    {"heading": "string", "content": "string — rich detail, not just bullet headers"}
+    {"heading": "string", "content": "string: rich detail, not just bullet headers"}
   ],
-  "actionItems": ["string — concrete steps for school staff"]
+  "actionItems": ["string: concrete steps for school staff"]
 }
 ```
 
 ## Mandatory Sections (include all that apply, omit only if truly absent)
-1. **Purpose** — State what this circular is about in plain language. Include the policy
+1. **Purpose**: State what this circular is about in plain language. Include the policy
    objective, not just the subject line. Mention any amending/superseding circulars.
-2. **Key requirements** — The specific rules, criteria, amounts, percentages, eligibility
+2. **Key requirements**: The specific rules, criteria, amounts, percentages, eligibility
    conditions, or procedures mandated. Include financial figures, grade thresholds,
-   time limits, and any tables of values. Be thorough — missing a requirement is a
+   time limits, and any tables of values. Be thorough. Missing a requirement is a
    failure.
-3. **Legal & circular references** — List every referenced circular number, act,
+3. **Legal & circular references**: List every referenced circular number, act,
    ordinance, section, and regulation with its context.
-4. **Deadlines & dates** — Every deadline, effective date, and date range mentioned.
-5. **Responsible parties** — Who must act and their specific responsibilities.
-6. **Compliance & penalties** — Any consequences for non-compliance, reporting
+4. **Deadlines & dates**: Every deadline, effective date, and date range mentioned.
+5. **Responsible parties**: Who must act and their specific responsibilities.
+6. **Compliance & penalties**: Any consequences for non-compliance, reporting
    requirements, or audit provisions.
 
 ## Rules
 - Preserve legal meaning; do not paraphrase legal terms loosely.
 - Every date in the summary MUST appear in the source text or entity list.
-  If a date is not in the source, write "Not specified" — do NOT fabricate.
+  If a date is not in the source, write "Not specified". Do NOT fabricate.
 - Include specific numbers: monetary amounts, percentages, student counts, distances.
 - Skip letterhead and distribution-list boilerplate; focus on operative instructions.
 - Content should be detailed paragraphs, not single-line headers.
-- actionItems: 4-8 concrete steps that a school principal must take.
+- actionItems: 4-8 concrete natural-language steps a school principal must take.
+  Each item must be a sentence (or Sinhala/Tamil sentence when that is the output language).
+  Never copy entity JSON, Python dicts, or records with text/label/start/end into
+  actionItems or section content. Extracted entities are hints for names, dates, and laws only.
 - Return ONLY valid JSON. No markdown fences, no commentary outside the JSON.
-- Few-shot examples are format only — never copy their circular numbers, dates, or topics
+- Few-shot examples are format only. Never copy their circular numbers, dates, or topics
   into a different circular. If the source is an Annexure/form, say so in the title.
 """
 
@@ -353,6 +371,17 @@ def _prioritise_entities(entities: list[dict[str, Any]]) -> list[dict[str, Any]]
 
     unique.sort(key=lambda e: -ENTITY_PRIORITY.get(e.get("label", "OTHER"), 0))
     return unique[:MAX_ENTITIES_IN_PROMPT]
+
+
+def _format_entities_for_prompt(entities: list[dict[str, Any]]) -> str:
+    """Compact LABEL: text lines so the LLM cannot copy NER offsets into actionItems."""
+    lines: list[str] = []
+    for entity in _prioritise_entities(entities):
+        text = str(entity.get("text") or "").strip()
+        label = str(entity.get("label") or "OTHER").strip() or "OTHER"
+        if text:
+            lines.append(f"- {label}: {text}")
+    return "\n".join(lines) if lines else "(none)"
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -429,7 +458,8 @@ Return ONLY valid JSON with this exact schema:
 Rules:
 - Preserve legal meaning and all specific numbers/amounts/dates.
 - Deduplicate sections with the same heading by merging their content.
-- Keep all unique action items.
+- Keep all unique action items. Each action item must be a natural-language sentence.
+  Never copy entity JSON, Python dicts, or text/label/start/end records into actionItems.
 - If partial summaries disagree on metadata (circularNumber, issuedDate, etc.),
   prefer the value from the earliest partial summary.
 - Do not invent dates or requirements not present in the partials.
@@ -482,7 +512,7 @@ def _parse_llm_json(content: str) -> dict[str, Any]:
 def _describe_llm_error(exc: Exception) -> str:
     message = str(exc)
     if "RESOURCE_EXHAUSTED" in message or "429" in message:
-        return "LLM quota exceeded (429). The provider rate/usage limit was hit — try again later."
+        return "LLM quota exceeded (429). The provider rate/usage limit was hit. Try again later."
     if isinstance(exc, json.JSONDecodeError):
         return "LLM returned a response that could not be parsed as JSON."
     return f"{type(exc).__name__}: {message[:200]}"
@@ -539,7 +569,7 @@ def _invoke_with_retry(llm, messages, *, max_attempts: int = 2) -> Any:
             if not is_transient or attempt == max_attempts - 1:
                 raise
             wait = 2 ** attempt
-            logger.warning("LLM call failed (attempt %d/%d): %s — retrying in %ds", attempt + 1, max_attempts, error_str[:120], wait)
+            logger.warning("LLM call failed (attempt %d/%d): %s. Retrying in %ds", attempt + 1, max_attempts, error_str[:120], wait)
             time.sleep(wait)
     raise last_exc  # type: ignore[misc]
 
@@ -553,9 +583,7 @@ def _summarize_chunk(
     source_text: str | None = None,
     filename: str | None = None,
 ) -> tuple[dict[str, Any], int]:
-    # Cap entities for small local models
-    capped = entities[:24]
-    entity_summary = json.dumps(capped, ensure_ascii=False)
+    entity_summary = _format_entities_for_prompt(entities)
     circ_hint = ""
     if known_circular:
         circ_hint = (
@@ -565,18 +593,22 @@ def _summarize_chunk(
     if re.search(r"\bannexure\b", chunk[:1500], re.IGNORECASE):
         circ_hint += (
             "This source looks like an Annexure/form. Title should mention Annexure/"
-            "staff return — do NOT invent an unrelated policy topic.\n"
+            "staff return. Do NOT invent an unrelated policy topic.\n"
         )
 
 
+    language = detect_output_language(source_text or chunk, filename)
+    lang_rule = OUTPUT_LANGUAGE_INSTRUCTIONS[language]
+
     if is_reduce:
-        system_prompt = SYSTEM_PROMPT_REDUCE
+        system_prompt = SYSTEM_PROMPT_REDUCE + "\n\n## Output language\n" + lang_rule
         user_prompt = f"""{circ_hint}Partial summaries to merge:
 {chunk}
 
-Extracted entities:
+Extracted entities (hints only; do not copy these lines into actionItems):
 {entity_summary}
 
+{lang_rule}
 Return ONLY a single JSON object."""
     else:
         system_prompt = _build_system_prompt_summarize(
@@ -587,9 +619,10 @@ Return ONLY a single JSON object."""
         user_prompt = f"""{circ_hint}Source circular text:
 {body}
 
-Extracted entities (JSON):
+Extracted entities (hints only; do not copy these lines into actionItems):
 {entity_summary}
 
+{lang_rule}
 Return ONLY one JSON object with keys circularNumber, issuedDate, issuedBy,
 targetAudience, effectiveDate, title, sections, actionItems.
 Do not invent circular numbers (never use Annexure as a circular number).
@@ -637,6 +670,7 @@ No markdown fences, no commentary."""
     if known_circular and not validated.get("circularNumber"):
         validated["circularNumber"] = known_circular
     validated["mode"] = "llm"
+    validated["language"] = detect_output_language(source_text or chunk, filename)
     validated["rawMarkdown"] = _build_markdown(validated)
     return validated, _token_usage(response)
 
@@ -714,6 +748,8 @@ def fallback_summarize(
     filename: str | None = None,
 ) -> dict[str, Any]:
     text = normalize_moe_text(text)
+    language = detect_output_language(text, filename)
+    labels = FALLBACK_HEADINGS[language]
     collapsed = re.sub(r"\s+", " ", text).strip()
     if (
         not collapsed
@@ -730,22 +766,18 @@ def fallback_summarize(
             "issuedBy": None,
             "targetAudience": None,
             "effectiveDate": None,
-            "title": "MOE circular summary",
+            "title": labels["empty_title"],
             "sections": [
                 {
-                    "heading": "Purpose",
-                    "content": (
-                        "No usable circular text was available to summarize. "
-                        "This often happens when Extract only captured a scanner watermark "
-                        "(e.g. CamScanner). Re-run Extract so OCR can read the scanned PDF, then Process again."
-                    ),
+                    "heading": labels["purpose"],
+                    "content": labels["empty_purpose"],
                 }
             ],
-            "actionItems": [
-                "Re-run Extract on the original PDF (OCR), then Process again.",
-            ],
+            "actionItems": [labels["empty_action"]],
             "rawMarkdown": "",
             "mode": "fallback",
+            "language": language,
+            "translations": {},
         }
         summary["rawMarkdown"] = _build_markdown(summary)
         return summary
@@ -766,14 +798,17 @@ def fallback_summarize(
     else:
         purpose = subject or _first_paragraph(text)
     sections = [
-        {"heading": "Purpose", "content": purpose or "See the circular text for full context."},
+        {
+            "heading": labels["purpose"],
+            "content": purpose or labels["missing_purpose"],
+        },
     ]
 
     requirements = extract_key_requirements(text)
     if requirements:
         sections.append(
             {
-                "heading": "Key requirements",
+                "heading": labels["requirements"],
                 "content": "\n".join(f"• {item}" for item in requirements),
             }
         )
@@ -781,7 +816,7 @@ def fallback_summarize(
     if laws:
         sections.append(
             {
-                "heading": "Legal & circular references",
+                "heading": labels["legal"],
                 "content": "\n".join(f"• {item}" for item in laws[:12]),
             }
         )
@@ -789,7 +824,7 @@ def fallback_summarize(
     if dates:
         sections.append(
             {
-                "heading": "Deadlines & dates",
+                "heading": labels["dates"],
                 "content": "\n".join(f"• {item}" for item in dates),
             }
         )
@@ -807,7 +842,7 @@ def fallback_summarize(
         if parties:
             sections.append(
                 {
-                    "heading": "Responsible parties",
+                    "heading": labels["parties"],
                     "content": "\n".join(f"• {item}" for item in parties[:10]),
                 }
             )
@@ -815,7 +850,7 @@ def fallback_summarize(
     # Build target audience section if extracted
     if target_audience:
         sections.insert(1, {
-            "heading": "Target audience",
+            "heading": labels["audience"],
             "content": "\n".join(f"• {item}" for item in target_audience),
         })
 
@@ -830,17 +865,29 @@ def fallback_summarize(
     if not issued_by and orgs:
         issued_by = orgs[0]
 
+    title = build_summary_title(text, filename)
+    if language == "si":
+        title = title.replace("MOE Circular", labels["title_prefix"])
+        if title == "MOE circular summary":
+            title = labels["generic_title"]
+    elif language == "ta":
+        title = title.replace("MOE Circular", labels["title_prefix"])
+        if title == "MOE circular summary":
+            title = labels["generic_title"]
+
     summary = {
         "circularNumber": circular_no,
         "issuedDate": issued_date,
         "issuedBy": issued_by,
         "targetAudience": ", ".join(target_audience) if target_audience else None,
         "effectiveDate": effective_date,
-        "title": build_summary_title(text, filename),
+        "title": title,
         "sections": sections,
         "actionItems": action_items,
         "rawMarkdown": "",
         "mode": "fallback",
+        "language": language,
+        "translations": {},
     }
     summary["rawMarkdown"] = _build_markdown(summary)
     return summary
@@ -890,6 +937,58 @@ def _normalize_circular_metadata(
     return summary, warnings
 
 
+def translate_summary(summary: dict[str, Any], target_lang: str) -> dict[str, Any]:
+    """Translate a structured brief into English, Sinhala, or Tamil."""
+    if target_lang not in {"en", "si", "ta"}:
+        raise ValueError("target language must be en, si, or ta")
+    source_lang = summary.get("language") or "en"
+    if target_lang == source_lang:
+        return {**summary, "translations": {}}
+
+    if not llm_is_configured():
+        raise RuntimeError("Translation needs a configured LLM (Ollama or cloud provider).")
+
+    payload = {
+        "circularNumber": summary.get("circularNumber"),
+        "issuedDate": summary.get("issuedDate"),
+        "issuedBy": summary.get("issuedBy"),
+        "targetAudience": summary.get("targetAudience"),
+        "effectiveDate": summary.get("effectiveDate"),
+        "title": summary.get("title"),
+        "sections": summary.get("sections") or [],
+        "actionItems": summary.get("actionItems") or [],
+    }
+    system_prompt = (
+        "You translate Sri Lankan Ministry of Education circular briefs. "
+        "Return ONLY valid JSON with the same keys as the input. "
+        f"{OUTPUT_LANGUAGE_INSTRUCTIONS[target_lang]} "
+        "Do not add facts. Keep circularNumber, issuedDate, and effectiveDate unchanged "
+        "when they are numbers or ISO-like dates."
+    )
+    user_prompt = (
+        f"Source language: {source_lang}\nTarget language: {target_lang}\n\n"
+        f"{json.dumps(payload, ensure_ascii=False)}\n\n"
+        "Return ONLY the translated JSON object."
+    )
+    llm = get_chat_model()
+    response = _invoke_with_retry(llm, _llm_messages(system_prompt, user_prompt), max_attempts=2)
+    content = response.content
+    if isinstance(content, list):
+        content = "".join(
+            block.get("text", "") if isinstance(block, dict) else str(block)
+            for block in content
+        )
+    translated = validate_llm_output(_parse_llm_json(str(content)))
+    translated["circularNumber"] = summary.get("circularNumber")
+    translated["issuedDate"] = summary.get("issuedDate")
+    translated["effectiveDate"] = summary.get("effectiveDate")
+    translated["mode"] = summary.get("mode") or "llm"
+    translated["language"] = target_lang
+    translated["translations"] = {}
+    translated["rawMarkdown"] = _build_markdown(translated)
+    return translated
+
+
 def summarize_text(
     text: str,
     entities: list[dict[str, Any]] | None = None,
@@ -936,10 +1035,12 @@ def summarize_text(
             "chunkCount": 1,
         }
 
+    summary["actionItems"] = sanitize_action_items(summary.get("actionItems") or [])
     summary, circ_warnings = _normalize_circular_metadata(
         summary, text, filename=filename
     )
     bleed_warnings: list[str] = []
+    date_hardfail: list[str] = []
     if summary.get("mode") == "llm":
         bleed_warnings = detect_topic_bleed(
             text,
@@ -948,9 +1049,22 @@ def summarize_text(
             fewshot_examples=_load_fewshot_examples(),
             document_circular=extract_circular_number(text, filename),
         )
+        date_hardfail = verify_summary_dates(text, entities, summary)
+        expected_lang = detect_output_language(text, filename)
+        lang_mismatch = not summary_matches_output_language(summary, expected_lang)
+        reject_reasons: list[str] = []
         if bleed_warnings:
+            reject_reasons.append("topic-bleed")
+        if date_hardfail:
+            reject_reasons.append("invented-dates")
+        if lang_mismatch:
+            reject_reasons.append("wrong-language")
+        if reject_reasons:
+            reason = ", ".join(reject_reasons)
             logger.warning(
-                "Discarding LLM summary due to topic bleed: %s", bleed_warnings
+                "Discarding LLM summary due to %s: %s",
+                reason,
+                bleed_warnings + date_hardfail,
             )
             summary = fallback_summarize(text, entities, filename=filename)
             summary, extra_circ = _normalize_circular_metadata(
@@ -961,11 +1075,15 @@ def summarize_text(
                 **meta,
                 "model": "extractive-fallback",
                 "mode": "fallback",
-                "llmError": "topic-bleed: discarded LLM summary",
+                "llmError": f"{reason}: discarded LLM summary",
             }
 
-    if summary.get("rawMarkdown"):
-        summary["rawMarkdown"] = _build_markdown(summary)
+    language = detect_output_language(text, filename)
+    summary["language"] = language
+    summary.setdefault("translations", {})
+    if not summary.get("actionItems"):
+        summary["actionItems"] = extract_action_items(text, entities)
+    summary["rawMarkdown"] = _build_markdown(summary)
 
     meta["summarizerVersion"] = SUMMARIZER_VERSION
     warnings = verify_summary_dates(text, entities, summary) + circ_warnings + bleed_warnings

@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from app.config import settings
 from app.ner import extract_entities
 from app.pdf_parser import parse_pdf_bytes
-from app.summarize import summarize_text
+from app.summarize import summarize_text, translate_summary
 
 router = APIRouter(prefix="/v1", tags=["v1"])
 
@@ -32,6 +32,11 @@ class PipelineRequest(BaseModel):
     filename: str | None = None
 
 
+class TranslateSummaryRequest(BaseModel):
+    summary: dict
+    targetLang: str = Field(..., pattern="^(en|si|ta)$")
+
+
 @router.post("/parse/pdf")
 def parse_pdf(request: ParsePdfRequest):
     try:
@@ -44,7 +49,7 @@ def parse_pdf(request: ParsePdfRequest):
         raise HTTPException(status_code=400, detail=f"PDF exceeds {max_mb} MB limit")
 
     try:
-        result = parse_pdf_bytes(pdf_bytes)
+        result = parse_pdf_bytes(pdf_bytes, filename=request.filename)
     except Exception as exc:
         raise HTTPException(
             status_code=422,
@@ -83,3 +88,19 @@ def pipeline_endpoint(request: PipelineRequest):
         "entities": entities,
         **result,
     }
+
+
+@router.post("/translate/summary")
+def translate_summary_endpoint(request: TranslateSummaryRequest):
+    try:
+        translated = translate_summary(request.summary, request.targetLang)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Could not translate summary: {exc}",
+        ) from exc
+    return {"summary": translated}

@@ -8,7 +8,7 @@ from app.moe_text import (
     extract_effective_date,
 )
 from app.chunking import split_text
-from app.summarize import _invoke_with_retry, _prioritise_entities
+from app.summarize import _format_entities_for_prompt, _invoke_with_retry, _prioritise_entities, summarize_text
 
 def test_validate_llm_output_defaults():
     # Test that missing fields are gracefully handled and defaulted
@@ -53,6 +53,67 @@ def test_validate_llm_output_full():
     assert validated["title"] == "Circular Title"
     assert validated["sections"] == [{"heading": "Introduction", "content": "Details"}]
     assert validated["actionItems"] == ["Item 1", "Item 2"]
+
+
+def test_validate_llm_output_drops_ner_entity_dicts():
+    raw = {
+        "title": "Syllabus",
+        "actionItems": [
+            {
+                "text": "අධ්‍යාපන මණ්ඩලය විසින් අනිවාර්ය කර ඇත.",
+                "label": "ORG",
+                "start": 1523,
+                "end": 1533,
+            },
+            "Register students within one week.",
+        ],
+    }
+    validated = validate_llm_output(raw)
+    assert validated["actionItems"] == ["Register students within one week."]
+    blob = " ".join(validated["actionItems"])
+    assert "start" not in blob
+    assert "label" not in blob
+
+
+def test_validate_llm_output_drops_python_repr_entity_dumps():
+    dump = str(
+        {
+            "text": "අධ්‍යාපන මණ්ඩලය විසින් අනිවාර්ය කර ඇත.",
+            "label": "ORG",
+            "start": 1523,
+            "end": 1533,
+        }
+    )
+    validated = validate_llm_output({"title": "Syllabus", "actionItems": [dump]})
+    assert validated["actionItems"] == []
+    assert "start" not in str(validated["actionItems"])
+
+
+def test_validate_llm_output_drops_json_string_entity_dumps():
+    dump = json.dumps(
+        {
+            "text": "Ministry of Education",
+            "label": "ORG",
+            "start": 10,
+            "end": 32,
+        }
+    )
+    validated = validate_llm_output({"title": "Syllabus", "actionItems": [dump]})
+    assert validated["actionItems"] == []
+
+
+def test_format_entities_for_prompt_is_text_only():
+    prompt = _format_entities_for_prompt(
+        [
+            {"text": "Ministry of Education", "label": "ORG", "start": 1, "end": 24},
+            {"text": "2026.06.03", "label": "DATE", "start": 40, "end": 50},
+        ]
+    )
+    assert "- ORG: Ministry of Education" in prompt
+    assert "- DATE: 2026.06.03" in prompt
+    assert "start" not in prompt
+    assert "end" not in prompt
+    assert "{" not in prompt
 
 def test_extract_issued_date():
     text = """
@@ -143,3 +204,46 @@ def test_invoke_with_retry_permanent_failure():
 
     with pytest.raises(Exception, match="Permanent 500 error"):
         _invoke_with_retry(llm, [], max_attempts=2)
+
+
+@patch("app.summarize.llm_is_configured", return_value=True)
+@patch("app.summarize.llm_summarize")
+def test_empty_action_items_refilled_from_source(mock_llm, _configured):
+    mock_llm.return_value = (
+        {
+            "title": "Vesak Week",
+            "circularNumber": "15/2026",
+            "sections": [
+                {
+                    "heading": "Purpose",
+                    "content": "Vesak Week from 26.05.2026 to 02.06.2026.",
+                }
+            ],
+            "actionItems": [
+                {
+                    "text": "Ministry of Education",
+                    "label": "ORG",
+                    "start": 1,
+                    "end": 24,
+                }
+            ],
+            "rawMarkdown": "",
+            "mode": "llm",
+            "language": "en",
+        },
+        12,
+        1,
+    )
+    source = (
+        "Circular No. 15/2026\n"
+        "All principals must implement Vesak Week from 26.05.2026 to 02.06.2026 "
+        "and submit reports after the programme."
+    )
+    result = summarize_text(source, [], filename="15-2026-En.pdf")
+    items = result["summary"]["actionItems"]
+    assert items
+    blob = " ".join(items)
+    assert "start" not in blob
+    assert "'label'" not in blob
+    assert '"label"' not in blob
+

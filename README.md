@@ -2,6 +2,8 @@
 
 AI/NLP web application for Sri Lankan Ministry of Education circulars — upload PDFs, extract text, identify key entities, and produce structured summaries with human review.
 
+EasyCircular can list and import PDFs from the official catalog at [moe.gov.lk/en/circulars](https://moe.gov.lk/en/circulars/). Summaries are still generated from that PDF in EasyCircular — they are not a substitute for the ministry page. Guardrails catch invented dates and mixed-up circular topics, then fall back to extractive text. Use the original circular as the legal source.
+
 **Stack:** Next.js · Express · FastAPI · MongoDB  
 **Architecture:** API v1 · service-layer backend · session-scoped guest access · map-reduce summarization
 
@@ -180,7 +182,7 @@ Then restart the AI service and click **Re-extract** on the circular page.
 - [x] LangChain summarization (`POST /summarize`) with extractive fallback when LLM is unavailable
 - [x] `POST /api/circulars/:id/process` — NER + summary with content-hash cache
 - [x] Entity highlights + summary panel on `/circular/[id]`
-- [x] Date guardrails (warnings when summary dates are not in source)
+- [x] Date guardrails (LLM summaries with invented dates are discarded; extractive fallback is used)
 
 For LLM summaries set `LLM_PROVIDER=ollama` (local) or a cloud provider key (`OPENAI_API_KEY` / `GOOGLE_API_KEY` / `GROQ_API_KEY`). Without a reachable LLM, an extractive fallback is used.
 
@@ -202,9 +204,10 @@ Tune and evaluate against local sample circulars:
 
 ```bash
 npm run evaluate:samples
+npm run evaluate:rouge
 ```
 
-Uses PDFs in `sample circulars/` and `docs/sample-circulars/`. See [docs/sample-circulars/README.md](./docs/sample-circulars/README.md).
+Uses PDFs in `sample circulars/` and `docs/sample-circulars/`, and gold briefs in `ai-service/training/fewshot/`. See [docs/sample-circulars/README.md](./docs/sample-circulars/README.md) and [docs/evaluation/README.md](./docs/evaluation/README.md).
 
 ## System redesign (v0.2)
 

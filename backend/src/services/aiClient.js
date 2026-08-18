@@ -37,9 +37,19 @@ async function healthCheck() {
   return data;
 }
 
+async function translateSummary(summary, targetLang) {
+  const { data } = await client.post(
+    "/v1/translate/summary",
+    { summary, targetLang },
+    { timeout: PIPELINE_TIMEOUT_MS },
+  );
+  return data.summary;
+}
+
 module.exports = {
   parsePdf,
   runPipeline,
+  translateSummary,
   healthCheck,
   AI_SERVICE_URL,
 };

@@ -27,7 +27,7 @@ export default function AuthLayout({
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      {/* Left panel – branding */}
+      {/* Left panel: branding */}
       <div className="relative hidden w-1/2 overflow-hidden border-r border-white/10 lg:flex lg:flex-col lg:justify-between">
         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
         <div className="pointer-events-none absolute -left-20 top-20 h-64 w-64 rounded-full bg-cyan-500/10 blur-[80px]" />
@@ -61,7 +61,7 @@ export default function AuthLayout({
             </span>
           </h2>
           <p className="mt-4 max-w-xs text-sm font-medium leading-relaxed text-slate-300">
-            AI-powered summaries, entity highlighting, and human review — all in one workflow.
+            AI-powered summaries, entity highlighting, and human review, all in one workflow.
           </p>
 
           {/* Feature chips */}
@@ -82,7 +82,7 @@ export default function AuthLayout({
               &ldquo;This tool saves us hours every time a new circular arrives from the ministry.&rdquo;
             </p>
             <p className="mt-3 text-xs font-semibold text-slate-400">
-              — School Principal, Western Province
+              School Principal, Western Province
             </p>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function AuthLayout({
         </div>
       </div>
 
-      {/* Right panel – form */}
+      {/* Right panel: form */}
       <div className="relative flex w-full flex-col lg:w-1/2">
         {/* Mobile logo */}
         <div className="flex items-center px-6 py-5 sm:px-10 lg:hidden">

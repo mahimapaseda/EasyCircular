@@ -26,7 +26,7 @@ const FEATURES = [
     ),
     gradient: "from-purple-400 to-fuchsia-500",
     title: "AI-Powered Summaries",
-    desc: "LangChain map-reduce summaries using GPT-4o or Gemini with anti-hallucination guardrails.",
+    desc: "Local LLM or extractive summaries with date and topic guardrails. Not official MOE text. Always check the original circular.",
   },
   {
     icon: (
@@ -46,7 +46,7 @@ const FEATURES = [
     ),
     gradient: "from-emerald-400 to-teal-500",
     title: "Human-in-the-Loop",
-    desc: "Edit extracted text before AI processing. Every output is reviewed, never blindly trusted.",
+    desc: "Review and correct extracted text before AI runs. Treat summaries as helpers, never as the legal source.",
   },
 ];
 
@@ -116,9 +116,9 @@ export default function HomePage() {
 
             {/* Description */}
             <p className="mt-6 max-w-lg text-[15px] leading-relaxed text-slate-300">
-              Welcome to EasyCircular. Effortlessly process Ministry of Education circulars,
-              extract key information, and stay ahead with AI-powered summaries.
-              No technical knowledge required. Experience a streamlined workflow that boosts productivity.
+              Welcome to EasyCircular. Import circulars from the official Ministry of Education
+              site, extract key information, and review AI-powered summaries. The original PDF
+              remains the legal source.
             </p>
 
             {/* Buttons */}
@@ -133,10 +133,10 @@ export default function HomePage() {
                 </svg>
               </Link>
               <Link
-                href="#features"
+                href="/circulars?tab=official"
                 className="inline-flex items-center gap-2 rounded-full border border-white/20 px-7 py-3 text-sm font-bold text-white transition-all hover:bg-white/10"
               >
-                Learn More
+                Official circulars
               </Link>
             </div>
           </div>

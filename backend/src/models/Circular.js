@@ -33,6 +33,15 @@ const summarySchema = new mongoose.Schema(
     actionItems: [String],
     rawMarkdown: String,
     mode: String,
+    language: {
+      type: String,
+      enum: ["en", "si", "ta"],
+      default: "en",
+    },
+    translations: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
   },
   { _id: false },
 );
@@ -52,6 +61,14 @@ const circularSchema = new mongoose.Schema(
     },
     originalFilename: { type: String, required: true },
     filePath: { type: String, required: true },
+    source: {
+      type: String,
+      enum: ["upload", "moe"],
+      default: "upload",
+    },
+    sourceUrl: { type: String, default: null },
+    moeId: { type: Number, default: null, index: true },
+    moeMediaId: { type: Number, default: null, index: true },
     contentHash: { type: String, default: "", index: true },
     extractedText: { type: String, default: "" },
     editedText: { type: String, default: null },

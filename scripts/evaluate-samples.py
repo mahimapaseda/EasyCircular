@@ -43,7 +43,7 @@ def collect_samples(sample_dirs: list[Path]) -> list[Path]:
 def evaluate(sample_dirs: list[Path], *, use_llm: bool) -> list[dict]:
     results: list[dict] = []
     for path in collect_samples(sample_dirs):
-        parsed = parse_pdf_bytes(path.read_bytes())
+        parsed = parse_pdf_bytes(path.read_bytes(), filename=path.name)
         entities = extract_entities(parsed.text)
         if use_llm:
             result = summarize_text(parsed.text, entities)

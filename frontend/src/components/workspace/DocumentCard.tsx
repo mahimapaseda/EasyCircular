@@ -61,6 +61,11 @@ export default function DocumentCard({ item, onDelete }: DocumentCardProps) {
               <p className="truncate font-semibold text-white group-hover:text-cyan-300">
                 {item.originalFilename}
               </p>
+              {item.source === "moe" && (
+                <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-400/80">
+                  Official moe.gov.lk
+                </p>
+              )}
               {item.summary?.title ? (
                 <p className="ws-muted mt-1 line-clamp-2 text-sm leading-snug">
                   {item.summary.title}

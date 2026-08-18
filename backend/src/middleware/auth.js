@@ -27,7 +27,7 @@ function resolveJwtSecret() {
     if (!warnedWeakSecret) {
       warnedWeakSecret = true;
       console.warn(
-        "JWT_SECRET is missing or uses the example value — using a dev-only fallback. Do not deploy with this secret.",
+        "JWT_SECRET is missing or uses the example value. Using a dev-only fallback. Do not deploy with this secret.",
       );
     }
     return DEV_FALLBACK_SECRET;
@@ -54,7 +54,7 @@ function authRequired(req, res, next) {
     if (error.message?.includes("JWT_SECRET")) {
       return res.status(500).json({ error: "Server auth is not configured" });
     }
-    return res.status(401).json({ error: "Session expired — sign in again" });
+    return res.status(401).json({ error: "Session expired. Sign in again" });
   }
 }
 

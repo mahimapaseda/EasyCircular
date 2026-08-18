@@ -15,9 +15,11 @@ import {
   processCircular,
   saveCircularSummary,
   saveCircularText,
+  translateCircularSummary,
   workflowStep,
   type Circular,
   type CircularSummary,
+  type SummaryLang,
 } from "@/lib/circulars";
 
 type CircularWorkflowProps = {
@@ -40,7 +42,8 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
-  const autoPipelineStarted = useRef<string | null>(null);
+  const autoExtractStarted = useRef<string | null>(null);
+  const [textReviewed, setTextReviewed] = useState(false);
   const draftTextRef = useRef(draftText);
   const circularRef = useRef(circular);
 
@@ -88,8 +91,9 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
           showToast(message, "error");
           return null;
         }
+        setTextReviewed(false);
         if (!options?.quietSuccess) {
-          showToast("Text extracted successfully.", "success");
+          showToast("Text extracted. Review it before generating a summary.", "success");
         }
         return response.circular;
       } catch (err) {
@@ -142,7 +146,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         );
         if (result.guardrailWarnings?.length) {
           showToast(
-            `${result.guardrailWarnings.length} date warning(s) — review suggested.`,
+            `${result.guardrailWarnings.length} date warning(s). Review suggested.`,
             "info",
           );
         }
@@ -160,27 +164,26 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
     [id, load, showToast],
   );
 
-  const runAutoPipeline = useCallback(async () => {
-    const extracted = await extractOnce({ quietSuccess: true });
-    if (!extracted) return;
-    await processOnce({ sourceCircular: extracted });
-  }, [extractOnce, processOnce]);
+  const runAutoExtract = useCallback(async () => {
+    await extractOnce({ quietSuccess: true });
+  }, [extractOnce]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   useEffect(() => {
-    autoPipelineStarted.current = null;
+    autoExtractStarted.current = null;
+    setTextReviewed(false);
   }, [id]);
 
   useEffect(() => {
     if (!circular || circular.id !== id) return;
     if (circular.status !== "uploaded") return;
-    if (autoPipelineStarted.current === id) return;
-    autoPipelineStarted.current = id;
-    void runAutoPipeline();
-  }, [circular, id, runAutoPipeline]);
+    if (autoExtractStarted.current === id) return;
+    autoExtractStarted.current = id;
+    void runAutoExtract();
+  }, [circular, id, runAutoExtract]);
 
   async function handleExtract() {
     await extractOnce();
@@ -216,6 +219,26 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
     setEditingSummary(false);
   }
 
+  async function handleTranslate(targetLang: SummaryLang) {
+    try {
+      const updated = await translateCircularSummary(id, targetLang);
+      setCircular(updated);
+      if (updated.summary) setDraftSummary(cloneSummary(updated.summary));
+      showToast(
+        targetLang === "si"
+          ? "Brief translated to Sinhala."
+          : targetLang === "ta"
+            ? "Brief translated to Tamil."
+            : "Brief translated to English.",
+        "success",
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Translation failed";
+      showToast(message, "error");
+      throw err;
+    }
+  }
+
   async function handleSave() {
     setSaving(true);
     setError(null);
@@ -223,7 +246,8 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
       const updated = await saveCircularText(id, draftText);
       setCircular(updated);
       setDraftText(displayText(updated));
-      showToast("Your edits were saved.", "success");
+      setTextReviewed(true);
+      showToast("Your edits were saved. You can generate a summary.", "success");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not save text";
       setError(message);
@@ -234,7 +258,16 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
   }
 
   async function handleProcess() {
+    if (!circular?.summary && !textReviewed) {
+      showToast("Review the extracted text before generating a summary.", "info");
+      return;
+    }
     await processOnce();
+  }
+
+  function handleConfirmReview() {
+    setTextReviewed(true);
+    showToast("Text marked as reviewed.", "success");
   }
 
   if (loading) {
@@ -271,21 +304,22 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
     circular.status === "completed" ||
     circular.status === "failed";
   const hasEntities = circular.entities.length > 0;
-  const showManualGenerate =
-    !circular.summary && canProcess && hasText && !extracting && !processing;
+  const needsReview = !hasSummary && canProcess && hasText && !textReviewed;
+  const extractPhase = extracting || circular.status === "uploaded" || (!hasText && !hasSummary);
+  const reviewPhase = !extractPhase && !hasSummary && hasText && circular.status !== "processing";
 
-  const showHeaderGenerate = canProcess && hasText && !hasSummary;
+  const showHeaderGenerate = canProcess && hasText && !hasSummary && textReviewed;
   const generateButton = showHeaderGenerate ? (
     <button
       type="button"
       onClick={() => void handleProcess()}
       disabled={busy}
-      className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-3.5 py-2 text-xs font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
+      className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
     >
       {busy ? (
         <>
           <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
-          {extracting ? "Extracting…" : "Summarizing…"}
+          Summarizing…
         </>
       ) : (
         "Generate summary"
@@ -296,16 +330,39 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
       type="button"
       onClick={() => void handleProcess()}
       disabled={busy}
-      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-3.5 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-60"
+      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-60"
     >
       {busy ? "Summarizing…" : "Regenerate"}
     </button>
   ) : null;
 
+  const sourcePanel = (
+    <SourceTextPanel
+      circular={circular}
+      draftText={draftText}
+      textView={textView}
+      sourceText={sourceText}
+      confidence={confidence}
+      extracting={extracting || circular.status === "uploaded"}
+      saving={saving}
+      hasText={hasText}
+      hasEntities={hasEntities}
+      expanded={reviewPhase || sourceExpanded}
+      compact={hasSummary && !sourceExpanded}
+      collapsible={!reviewPhase && hasSummary}
+      onToggle={() => setSourceExpanded((v) => !v)}
+      onTextViewChange={setTextView}
+      onDraftChange={setDraftText}
+      onExtract={() => void handleExtract()}
+      onSave={() => void handleSave()}
+      onReset={() => setDraftText(circular.extractedText ?? "")}
+    />
+  );
+
   return (
     <WorkflowLayout circular={circular} currentStep={step} actions={generateButton}>
       {error && (
-        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-rose-400/20 bg-rose-400/[0.08] px-4 py-3 text-sm text-rose-300 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-rose-400/20 bg-rose-400/[0.08] px-4 py-3 text-sm text-rose-300 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-semibold">{error}</p>
           <button
             type="button"
@@ -317,108 +374,92 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
         </div>
       )}
 
-      <div
-        className={
-          hasSummary
-            ? sourceExpanded
-              ? "grid w-full gap-4 md:grid-cols-[minmax(0,1fr)_minmax(260px,36%)] md:items-start md:gap-5"
-              : "flex w-full flex-col gap-3"
-            : "mx-auto w-full max-w-2xl space-y-4"
-        }
-      >
-        {hasSummary && !sourceExpanded && (
-          <div className="w-full shrink-0">
-            <SourceTextPanel
-              circular={circular}
-              draftText={draftText}
-              textView={textView}
-              sourceText={sourceText}
-              confidence={confidence}
-              extracting={extracting || circular.status === "uploaded"}
-              saving={saving}
-              hasText={hasText}
-              hasEntities={hasEntities}
-              expanded={sourceExpanded}
-              compact
-              onToggle={() => setSourceExpanded((v) => !v)}
-              onTextViewChange={setTextView}
-              onDraftChange={setDraftText}
-              onExtract={() => void handleExtract()}
-              onSave={() => void handleSave()}
-              onReset={() => setDraftText(circular.extractedText ?? "")}
-            />
-          </div>
-        )}
+      {extractPhase && sourcePanel}
 
-        <div className={`min-w-0 ${hasSummary && sourceExpanded ? "order-1" : ""}`}>
-          <SummaryPanel
-            circular={circular}
-            processing={processing}
-            editing={editingSummary}
-            saving={savingSummary}
-            draftSummary={draftSummary}
-            onEditStart={handleStartSummaryEdit}
-            onEditCancel={handleCancelSummaryEdit}
-            onDraftChange={setDraftSummary}
-            onSave={() => void handleSaveSummary()}
-            onRegenerate={
-              canProcess && hasText && hasSummary
-                ? () => void handleProcess()
-                : undefined
-            }
-            onExport={(format) =>
-              showToast(`Summary exported as ${format.toUpperCase()}.`, "success")
-            }
-          />
-        </div>
-
-        {(!hasSummary || sourceExpanded) && (
-          <div
-            className={`space-y-3 ${
-              hasSummary && sourceExpanded
-                ? "order-2 md:sticky md:top-28 md:max-h-[calc(100vh-8rem)] md:overflow-y-auto lg:top-32"
-                : ""
-            }`}
-          >
-            <SourceTextPanel
-              circular={circular}
-              draftText={draftText}
-              textView={textView}
-              sourceText={sourceText}
-              confidence={confidence}
-              extracting={extracting || circular.status === "uploaded"}
-              saving={saving}
-              hasText={hasText}
-              hasEntities={hasEntities}
-              expanded={sourceExpanded}
-              compact={hasSummary}
-              onToggle={() => setSourceExpanded((v) => !v)}
-              onTextViewChange={setTextView}
-              onDraftChange={setDraftText}
-              onExtract={() => void handleExtract()}
-              onSave={() => void handleSave()}
-              onReset={() => setDraftText(circular.extractedText ?? "")}
-            />
-
-            {showManualGenerate && (
-              <div className="ws-panel px-5 py-5 text-center">
-                <p className="text-sm font-semibold text-white">Text is ready</p>
-                <p className="ws-muted mt-1 text-xs">
-                  Generate a structured brief from the extracted circular.
-                </p>
+      {reviewPhase && (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+          {sourcePanel}
+          <aside className="ws-panel xl:sticky xl:top-36">
+            <div className="border-b border-white/10 px-5 py-4">
+              <p className="ws-label tracking-[0.16em]">Step 3 · Review</p>
+              <p className="mt-2 text-sm font-semibold text-white">
+                Check the extracted text before summarizing
+              </p>
+            </div>
+            <div className="space-y-3 px-5 py-4 text-sm text-slate-300">
+              <p>Fix OCR mistakes in the editor, especially Sinhala or Tamil names, dates, and the circular number.</p>
+              <p>The original PDF is the legal source. This text is only a working copy.</p>
+            </div>
+            <div className="border-t border-white/10 px-5 py-4">
+              {needsReview ? (
+                <button
+                  type="button"
+                  onClick={handleConfirmReview}
+                  disabled={busy}
+                  className="flex w-full items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
+                >
+                  Text is correct
+                </button>
+              ) : (
                 <button
                   type="button"
                   onClick={() => void handleProcess()}
                   disabled={busy}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
+                  className="flex w-full items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-white/95 disabled:opacity-60"
                 >
-                  Generate summary
+                  {busy ? "Summarizing…" : "Generate summary"}
                 </button>
-              </div>
-            )}
+              )}
+              <p className="ws-muted mt-3 text-center text-[11px]">
+                {needsReview
+                  ? "Saving edits also marks the text as reviewed."
+                  : "Ready to generate a structured brief from this text."}
+              </p>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {!extractPhase && !reviewPhase && (
+        <div
+          className={
+            sourceExpanded
+              ? "grid w-full gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,38%)] lg:items-start"
+              : "flex w-full flex-col gap-4"
+          }
+        >
+          {hasSummary && !sourceExpanded && <div className="w-full">{sourcePanel}</div>}
+
+          <div className={`min-w-0 ${sourceExpanded ? "order-1" : ""}`}>
+            <SummaryPanel
+              circular={circular}
+              processing={processing}
+              editing={editingSummary}
+              saving={savingSummary}
+              draftSummary={draftSummary}
+              onEditStart={handleStartSummaryEdit}
+              onEditCancel={handleCancelSummaryEdit}
+              onDraftChange={setDraftSummary}
+              onSave={() => void handleSaveSummary()}
+              onRegenerate={
+                canProcess && hasText && hasSummary
+                  ? () => void handleProcess()
+                  : undefined
+              }
+              onExport={(format) =>
+                showToast(`Summary exported as ${format.toUpperCase()}.`, "success")
+              }
+              onTranslate={handleTranslate}
+            />
           </div>
-        )}
-      </div>
+
+          {sourceExpanded && (
+            <div className="order-2 lg:sticky lg:top-36 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto">
+              {sourcePanel}
+            </div>
+          )}
+        </div>
+      )}
     </WorkflowLayout>
   );
 }

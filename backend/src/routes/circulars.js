@@ -17,6 +17,7 @@ const {
   saveEditedSummary,
   saveEditedText,
   serializeCircular,
+  translateCircular,
 } = require("../services/circularService");
 const { assertUploadedPdf } = require("../utils/pdf");
 
@@ -215,6 +216,26 @@ router.patch("/:id/summary", authOptional, async (req, res, next) => {
     await saveEditedSummary(circular, summary);
     setSessionHeader(res, req);
     res.json({ circular: serializeCircular(circular) });
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    next(error);
+  }
+});
+
+router.post("/:id/translate", authOptional, processRateLimit, async (req, res, next) => {
+  try {
+    const targetLang = String(req.body?.targetLang || "").trim();
+    const circular = await Circular.findById(req.params.id);
+    if (!circular) {
+      return res.status(404).json({ error: "Circular not found" });
+    }
+    if (!denyUnlessOwner(circular, req, res)) return;
+
+    const updated = await translateCircular(circular, targetLang);
+    setSessionHeader(res, req);
+    res.json({ circular: serializeCircular(updated) });
   } catch (error) {
     if (error.status) {
       return res.status(error.status).json({ error: error.message });

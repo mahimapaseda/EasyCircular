@@ -74,7 +74,7 @@ def main() -> int:
 
     written = 0
     for pdf_path in samples:
-        parsed = parse_pdf_bytes(pdf_path.read_bytes())
+        parsed = parse_pdf_bytes(pdf_path.read_bytes(), filename=pdf_path.name)
         status = "ocr" if parsed.ocr_used else "text"
         if not parsed.text.strip():
             print(f"SKIP  {pdf_path.name} (no text; error: {parsed.error})")

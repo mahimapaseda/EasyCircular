@@ -42,12 +42,12 @@ function SignUpContent() {
           jobRole: jobRole!,
           district,
         });
-        showToast("Account created — you can now upload your circular.", "success");
+        showToast("Account created. You can now upload your circular.", "success");
         router.push(returnTo);
       }}
       onGoogleSignIn={async (credential) => {
         await signInWithGoogle(credential);
-        showToast("Signed in with Google — you can now upload your circular.", "success");
+        showToast("Signed in with Google. You can now upload your circular.", "success");
         router.push(returnTo);
       }}
     />

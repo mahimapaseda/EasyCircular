@@ -21,6 +21,8 @@ export type Entity = {
   end: number;
 };
 
+export type SummaryLang = "en" | "si" | "ta";
+
 export type CircularSummary = {
   circularNumber?: string | null;
   issuedDate?: string | null;
@@ -32,6 +34,8 @@ export type CircularSummary = {
   actionItems: string[];
   rawMarkdown: string;
   mode?: string;
+  language?: SummaryLang;
+  translations?: Partial<Record<SummaryLang, CircularSummary>>;
 };
 
 export type CircularProcessingMeta = {
@@ -53,6 +57,9 @@ export type Circular = {
   id: string;
   originalFilename: string;
   status: CircularStatus;
+  source?: "upload" | "moe";
+  sourceUrl?: string | null;
+  moeId?: number | null;
   extractedText: string;
   editedText: string | null;
   contentHash: string;
@@ -68,6 +75,32 @@ export type CircularListResponse = {
   page: number;
   limit: number;
   total: number;
+};
+
+export type OfficialCircular = {
+  id: number;
+  title: string;
+  date: string | null;
+  link: string | null;
+  slug: string | null;
+};
+
+export type OfficialPdf = {
+  id: number;
+  filename: string;
+  title: string;
+  sourceUrl: string;
+  filesize: number | null;
+  language: "en" | "si" | "ta" | "unknown";
+};
+
+export type OfficialCatalogResponse = {
+  items: OfficialCircular[];
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+  officialUrl: string;
 };
 
 function authHeaders(): Record<string, string> {
@@ -112,6 +145,54 @@ export async function uploadCircular(file: File): Promise<Circular> {
     throw new Error(await parseError(response));
   }
 
+  const data = await response.json();
+  return data.circular;
+}
+
+export async function listOfficialCirculars(options?: {
+  page?: number;
+  search?: string;
+}): Promise<OfficialCatalogResponse> {
+  const params = new URLSearchParams();
+  if (options?.page) params.set("page", String(options.page));
+  if (options?.search) params.set("search", options.search);
+  const query = params.toString();
+  const response = await apiFetch(
+    `${API_URL}/api/moe/circulars${query ? `?${query}` : ""}`,
+    { cache: "no-store" },
+  );
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+  return response.json();
+}
+
+export async function fetchOfficialCircular(id: number): Promise<{
+  circular: OfficialCircular;
+  pdfs: OfficialPdf[];
+  officialUrl: string;
+}> {
+  const response = await apiFetch(`${API_URL}/api/moe/circulars/${id}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+  return response.json();
+}
+
+export async function importOfficialCircular(
+  moeId: number,
+  mediaId: number,
+): Promise<Circular> {
+  const response = await apiFetch(`${API_URL}/api/moe/import`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ moeId, mediaId }),
+  });
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
   const data = await response.json();
   return data.circular;
 }
@@ -171,6 +252,8 @@ export function cloneSummary(summary: CircularSummary): CircularSummary {
     actionItems: [...summary.actionItems],
     rawMarkdown: summary.rawMarkdown,
     mode: summary.mode,
+    language: summary.language || "en",
+    translations: summary.translations || {},
   };
 }
 
@@ -235,6 +318,23 @@ export async function processCircular(
   }
 
   return data;
+}
+
+export async function translateCircularSummary(
+  id: string,
+  targetLang: SummaryLang,
+): Promise<Circular> {
+  const response = await apiFetch(`${API_URL}/api/circulars/${id}/translate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetLang }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || data.detail || "Translation failed");
+  }
+  return data.circular;
 }
 
 export async function deleteCircular(id: string): Promise<void> {

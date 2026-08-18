@@ -19,7 +19,7 @@ const sourceSerif = Source_Serif_4({
 
 export const metadata: Metadata = {
   applicationName: "EasyCircular",
-  title: "EasyCircular — MOE Circular Summaries",
+  title: "EasyCircular: MOE Circular Summaries",
   description:
     "Upload Ministry of Education circulars, review extracted text, and get structured summaries.",
   appleWebApp: {

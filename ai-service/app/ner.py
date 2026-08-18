@@ -149,7 +149,7 @@ def _looks_like_ocr_noise(text: str) -> bool:
             return True
 
     # Long scrambled tokens from reversed/columnar OCR:
-    # "NgnidnettasloohcsW3tShPleoee" — digits or repeated case flips inside
+    # "NgnidnettasloohcsW3tShPleoee": digits or repeated case flips inside
     # a single long token never occur in real names.
     for token in tokens:
         if len(token) < 12:
@@ -201,7 +201,7 @@ def _extract_spacy_entities(text: str) -> list[Entity]:
     except (ImportError, OSError):
         return []
 
-    # Cap very long OCR (e.g. 100+ page annexures) — header carries circular/FR refs.
+    # Cap very long OCR (e.g. 100+ page annexures). Header carries circular/FR refs.
     doc = nlp(text[:25000])
     found: list[Entity] = []
     for ent in doc.ents:

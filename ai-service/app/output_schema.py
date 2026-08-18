@@ -2,7 +2,80 @@
 
 from __future__ import annotations
 
+import ast
+import json
+import re
+
 from pydantic import BaseModel, Field, field_validator
+
+_NER_DUMP_KEYS = frozenset({"text", "label", "start", "end"})
+_NER_DUMP_HINT = re.compile(
+    r"""['"]text['"]\s*:.*['"]label['"]\s*:.*['"](?:start|end)['"]\s*:""",
+    re.DOTALL,
+)
+
+
+def _looks_like_ner_record(item: dict) -> bool:
+    keys = {str(key).lower() for key in item}
+    return "label" in keys and ("start" in keys or "end" in keys)
+
+
+def _parse_serialized_object(value: str):
+    stripped = value.strip()
+    if not stripped or stripped[0] not in "{[":
+        return None
+    try:
+        parsed = json.loads(stripped)
+        if isinstance(parsed, (dict, list)):
+            return parsed
+    except (TypeError, ValueError, json.JSONDecodeError):
+        pass
+    try:
+        parsed = ast.literal_eval(stripped)
+        if isinstance(parsed, (dict, list)):
+            return parsed
+    except (TypeError, ValueError, SyntaxError, MemoryError):
+        pass
+    return None
+
+
+def _coerce_action_item(item) -> str | None:
+    """Keep natural-language steps; drop NER entity objects and dict dumps."""
+    if isinstance(item, dict):
+        if _looks_like_ner_record(item):
+            return None
+        text = str(item.get("content") or item.get("text") or "").strip()
+        return text or None
+    if isinstance(item, (list, tuple)):
+        return None
+    if not isinstance(item, str):
+        return None
+    text = item.strip()
+    if not text:
+        return None
+    parsed = _parse_serialized_object(text)
+    if isinstance(parsed, dict) and (
+        _looks_like_ner_record(parsed) or set(parsed) <= _NER_DUMP_KEYS
+    ):
+        return None
+    if isinstance(parsed, list):
+        return None
+    if _NER_DUMP_HINT.search(text) and ("start" in text or "end" in text):
+        return None
+    return text
+
+
+def sanitize_action_items(items) -> list[str]:
+    if not isinstance(items, list):
+        return []
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        text = _coerce_action_item(item)
+        if text and text not in seen:
+            seen.add(text)
+            cleaned.append(text)
+    return cleaned
 
 
 class SummarySection(BaseModel):
@@ -65,9 +138,7 @@ class CircularSummaryOutput(BaseModel):
     @field_validator("action_items", mode="before")
     @classmethod
     def _clean_actions(cls, v):
-        if not isinstance(v, list):
-            return []
-        return [str(item).strip() for item in v if item and str(item).strip()]
+        return sanitize_action_items(v)
 
     def to_summary_dict(self) -> dict:
         """Convert to the dictionary shape expected by the rest of the pipeline."""

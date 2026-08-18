@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AnimateIn from "@/components/AnimateIn";
 import { exportSummaryAsPdf } from "@/lib/exportSummary";
-import type { Circular, CircularSummary } from "@/lib/circulars";
+import type { Circular, CircularSummary, SummaryLang } from "@/lib/circulars";
 
 const ENTITY_STYLE: Record<string, { pill: string; dot: string; label: string }> = {
   DATE: {
@@ -49,6 +49,7 @@ type SummaryPanelProps = {
   onSave: () => void;
   onRegenerate?: () => void;
   onExport?: (format: "txt" | "pdf") => void;
+  onTranslate?: (targetLang: SummaryLang) => Promise<void>;
 };
 
 function actionItemsToText(items: string[]): string {
@@ -62,8 +63,38 @@ function textToActionItems(text: string): string[] {
     .filter(Boolean);
 }
 
-const inputClass =
-  "w-full rounded-lg border border-white/12 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-cyan-400/35 focus:ring-1 focus:ring-cyan-400/20";
+const META_LABELS: Record<SummaryLang, Record<string, string>> = {
+  en: {
+    brief: "Brief",
+    number: "Number",
+    issued: "Issued",
+    issuedBy: "Issued by",
+    effective: "Effective",
+    audience: "Audience",
+    actions: "Action items",
+    refs: "Key references",
+  },
+  si: {
+    brief: "සාරාංශය",
+    number: "අංකය",
+    issued: "නිකුත් කළ දිනය",
+    issuedBy: "නිකුත් කළේ",
+    effective: "බලපැවැත්වෙන",
+    audience: "පිළිගන්නන්",
+    actions: "ක්‍රියාමාර්ග",
+    refs: "යොමු",
+  },
+  ta: {
+    brief: "சுருக்கம்",
+    number: "எண்",
+    issued: "வெளியிடப்பட்டது",
+    issuedBy: "வெளியிட்டவர்",
+    effective: "நடைமுறை",
+    audience: "பெறுநர்கள்",
+    actions: "நடவடிக்கைகள்",
+    refs: "குறிப்புகள்",
+  },
+};
 
 function MetaCell({ label, value }: { label: string; value: string }) {
   return (
@@ -88,13 +119,18 @@ export default function SummaryPanel({
   onSave,
   onRegenerate,
   onExport,
+  onTranslate,
 }: SummaryPanelProps) {
-  const summary = circular.summary;
-  const meta = circular.processingMeta;
-  const hasText = Boolean(circular.extractedText || circular.editedText);
+  const sourceSummary = circular.summary;
+  const sourceLang: SummaryLang = sourceSummary?.language || "en";
+  const [viewLang, setViewLang] = useState<SummaryLang>(sourceLang);
+  const [translating, setTranslating] = useState(false);
   const [actionItemsDraft, setActionItemsDraft] = useState("");
   const [showAllEntities, setShowAllEntities] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const meta = circular.processingMeta;
+  const hasText = Boolean(circular.extractedText || circular.editedText);
+  const labels = META_LABELS[viewLang] || META_LABELS.en;
 
   const entityCap = 12;
   const visibleEntities = useMemo(() => {
@@ -109,11 +145,42 @@ export default function SummaryPanel({
     }
   }, [editing, draftSummary]);
 
+  useEffect(() => {
+    setViewLang(sourceLang);
+  }, [circular.id, sourceLang]);
+
+  const displayed: CircularSummary | null = editing
+    ? draftSummary
+    : !sourceSummary
+      ? null
+      : viewLang === sourceLang
+        ? sourceSummary
+        : sourceSummary.translations?.[viewLang] || null;
+
+  const langOptions: { id: SummaryLang; label: string }[] =
+    sourceLang === "ta"
+      ? [
+          { id: "ta", label: "தமிழ்" },
+          { id: "en", label: "English" },
+        ]
+      : sourceLang === "si"
+        ? [
+            { id: "si", label: "සිංහල" },
+            { id: "en", label: "English" },
+          ]
+        : [
+            { id: "en", label: "English" },
+            { id: "si", label: "සිංහල" },
+          ];
+
   async function handleExportPdf() {
     if (exporting) return;
     setExporting(true);
     try {
-      await exportSummaryAsPdf(circular);
+      await exportSummaryAsPdf({
+        ...circular,
+        summary: displayed || circular.summary,
+      });
       onExport?.("pdf");
     } finally {
       setExporting(false);
@@ -122,12 +189,28 @@ export default function SummaryPanel({
 
   async function handleCopy() {
     const text =
-      summary?.rawMarkdown ||
-      summary?.sections.map((s) => `${s.heading}\n${s.content}`).join("\n\n") ||
+      displayed?.rawMarkdown ||
+      displayed?.sections.map((s) => `${s.heading}\n${s.content}`).join("\n\n") ||
       "";
     if (!text) return;
     await navigator.clipboard.writeText(text);
     onExport?.("txt");
+  }
+
+  async function selectLang(next: SummaryLang) {
+    if (next === viewLang || editing) return;
+    if (next !== sourceLang && !sourceSummary?.translations?.[next]?.title) {
+      if (!onTranslate) return;
+      setTranslating(true);
+      try {
+        await onTranslate(next);
+        setViewLang(next);
+      } finally {
+        setTranslating(false);
+      }
+      return;
+    }
+    setViewLang(next);
   }
 
   function updateDraft(patch: Partial<CircularSummary>) {
@@ -150,26 +233,45 @@ export default function SummaryPanel({
   }
 
   const modeLabel = (() => {
-    if (editing || summary?.mode === "edited") return "Edited";
-    if (summary?.mode === "fallback") return "Extractive";
-    if (summary?.mode === "llm") return "AI";
+    if (editing || sourceSummary?.mode === "edited") return "Edited";
+    if (sourceSummary?.mode === "fallback") return "Extractive";
+    if (sourceSummary?.mode === "llm") return "AI";
     return null;
   })();
 
   const hasMeta =
-    Boolean(summary?.circularNumber) ||
-    Boolean(summary?.issuedDate) ||
-    Boolean(summary?.issuedBy) ||
-    Boolean(summary?.targetAudience) ||
-    Boolean(summary?.effectiveDate);
+    Boolean(displayed?.circularNumber) ||
+    Boolean(displayed?.issuedDate) ||
+    Boolean(displayed?.issuedBy) ||
+    Boolean(displayed?.targetAudience) ||
+    Boolean(displayed?.effectiveDate);
 
   return (
     <section className="ws-panel relative flex min-h-0 w-full flex-col overflow-hidden rounded-2xl">
       <div className="flex flex-col gap-2.5 border-b border-white/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-3.5">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="ws-label tracking-[0.2em]">
-            Brief
-          </span>
+          <span className="ws-label tracking-[0.2em]">{labels.brief}</span>
+          {sourceSummary && langOptions.length > 1 && !editing && (
+            <div className="ml-2 inline-flex rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+              {langOptions.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => void selectLang(option.id)}
+                  disabled={translating || processing}
+                  className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-60 ${
+                    viewLang === option.id
+                      ? "bg-white/15 text-white"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {translating && viewLang !== option.id && option.id !== sourceLang
+                    ? "…"
+                    : option.label}
+                </button>
+              ))}
+            </div>
+          )}
           {modeLabel && (
             <span className="ws-muted text-[10px] font-medium">· {modeLabel}</span>
           )}
@@ -183,7 +285,7 @@ export default function SummaryPanel({
           )}
         </div>
 
-        {summary && !editing && (
+        {sourceSummary && !editing && (
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             {onRegenerate && (
               <button
@@ -199,7 +301,8 @@ export default function SummaryPanel({
               <button
                 type="button"
                 onClick={onEditStart}
-                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white sm:flex-none"
+                disabled={viewLang !== sourceLang}
+                className="min-h-10 flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white disabled:opacity-40 sm:flex-none"
               >
                 Edit
               </button>
@@ -222,7 +325,7 @@ export default function SummaryPanel({
           </div>
         )}
 
-        {summary && editing && (
+        {sourceSummary && editing && (
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -245,13 +348,33 @@ export default function SummaryPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-7 lg:px-9 lg:py-8">
-        {summary?.mode === "fallback" && meta.llmError && !editing && (
+        {displayed && !editing && !translating && (
+          <p className="ws-muted mb-6 text-xs leading-relaxed">
+            This brief is generated from the uploaded PDF. It is not official Ministry of
+            Education text and can miss or invent details. Use the original circular as the
+            legal source.
+            {circular.sourceUrl && (
+              <>
+                {" "}
+                <a
+                  href={circular.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-cyan-400 hover:text-cyan-300"
+                >
+                  Open on moe.gov.lk
+                </a>
+              </>
+            )}
+          </p>
+        )}
+        {sourceSummary?.mode === "fallback" && meta.llmError && !editing && (
           <div className="mb-6 rounded-lg border border-rose-400/20 bg-rose-400/[0.06] px-4 py-3">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-300">
               AI summary unavailable
             </p>
             <p className="mt-1.5 text-sm leading-relaxed text-rose-100/85">
-              {meta.llmError} A basic extractive summary is shown instead — use Regenerate to retry.
+              {meta.llmError} A basic extractive summary is shown instead. Use Regenerate to retry.
             </p>
           </div>
         )}
@@ -271,13 +394,13 @@ export default function SummaryPanel({
           </div>
         )}
 
-        {!summary && !processing && circular.status !== "processing" && (
+        {!sourceSummary && !processing && circular.status !== "processing" && (
           <div className="flex min-h-[min(48vh,420px)] flex-col items-center justify-center px-4 text-center">
             <p className="font-display text-lg font-bold text-white">No summary yet</p>
             <p className="ws-muted mt-2 max-w-sm text-sm">
               {hasText
-                ? "Generate a structured brief with purpose, deadlines, and action items."
-                : "Extract text from the PDF first — summarization follows automatically."}
+                ? "Review the extracted text first, then generate a brief. The original circular is the legal source."
+                : "Extract text from the PDF, review it, then generate a summary."}
             </p>
           </div>
         )}
@@ -292,35 +415,42 @@ export default function SummaryPanel({
           </div>
         )}
 
-        {summary && !editing && (
+        {(translating || (sourceSummary && viewLang !== sourceLang && !displayed && !editing)) && (
+          <div className="flex min-h-[min(32vh,280px)] flex-col items-center justify-center gap-3">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+            <p className="text-sm font-semibold text-white">Translating brief…</p>
+          </div>
+        )}
+
+        {displayed && !editing && !translating && !(processing || circular.status === "processing") && (
           <article className="w-full">
             <AnimateIn>
               <header className="border-b border-white/[0.06] pb-6">
                 <h2 className="max-w-4xl font-display text-xl font-bold leading-[1.25] tracking-tight text-white sm:text-2xl lg:text-[1.85rem]">
-                  {summary.title}
+                  {displayed.title}
                 </h2>
 
                 {hasMeta && (
                   <dl className="mt-5 grid gap-x-8 gap-y-4 border-t border-white/[0.05] pt-5 sm:grid-cols-2 lg:grid-cols-4">
-                    {summary.circularNumber && (
-                      <MetaCell label="Number" value={summary.circularNumber} />
+                    {displayed.circularNumber && (
+                      <MetaCell label={labels.number} value={displayed.circularNumber} />
                     )}
-                    {summary.issuedDate && (
-                      <MetaCell label="Issued" value={summary.issuedDate} />
+                    {displayed.issuedDate && (
+                      <MetaCell label={labels.issued} value={displayed.issuedDate} />
                     )}
-                    {summary.issuedBy && (
-                      <MetaCell label="Issued by" value={summary.issuedBy} />
+                    {displayed.issuedBy && (
+                      <MetaCell label={labels.issuedBy} value={displayed.issuedBy} />
                     )}
-                    {summary.effectiveDate && (
-                      <MetaCell label="Effective" value={summary.effectiveDate} />
+                    {displayed.effectiveDate && (
+                      <MetaCell label={labels.effective} value={displayed.effectiveDate} />
                     )}
-                    {summary.targetAudience && (
+                    {displayed.targetAudience && (
                       <div className="min-w-0 sm:col-span-2 lg:col-span-4">
                         <dt className="ws-label">
-                          Audience
+                          {labels.audience}
                         </dt>
                         <dd className="mt-1 text-sm leading-relaxed text-slate-100">
-                          {summary.targetAudience}
+                          {displayed.targetAudience}
                         </dd>
                       </div>
                     )}
@@ -331,7 +461,7 @@ export default function SummaryPanel({
 
             <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,34%)] lg:items-start lg:gap-10">
               <div className="min-w-0 space-y-7">
-                {summary.sections.map((section, index) => (
+                {displayed.sections.map((section, index) => (
                   <AnimateIn key={`${section.heading}-${index}`} delay={40 * (index + 1)}>
                     <section className="relative pl-12 sm:pl-14">
                       <span className="absolute left-0 top-0 font-display text-sm font-bold tabular-nums text-cyan-400/80">
@@ -349,14 +479,14 @@ export default function SummaryPanel({
               </div>
 
               <aside className="min-w-0 space-y-6 lg:sticky lg:top-4">
-                {summary.actionItems.length > 0 && (
+                {displayed.actionItems.length > 0 && (
                   <AnimateIn delay={80}>
                     <div className="rounded-xl border border-white/15 bg-white/[0.06] p-4 sm:p-5">
                       <h3 className="ws-label tracking-[0.16em]">
-                        Action items
+                        {labels.actions}
                       </h3>
                       <ol className="mt-4 space-y-3">
-                        {summary.actionItems.map((item, i) => (
+                        {displayed.actionItems.map((item, i) => (
                           <li key={item} className="flex gap-3 text-sm leading-relaxed text-slate-100">
                             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/15 text-[10px] font-bold text-slate-300">
                               {i + 1}
@@ -373,7 +503,7 @@ export default function SummaryPanel({
                   <AnimateIn delay={120}>
                     <div className="rounded-xl border border-white/15 bg-white/[0.06] p-4 sm:p-5">
                       <h3 className="ws-label tracking-[0.16em]">
-                        Key references
+                        {labels.refs}
                       </h3>
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {visibleEntities.map((e, i) => {
@@ -403,7 +533,7 @@ export default function SummaryPanel({
                   </AnimateIn>
                 )}
 
-                {summary.actionItems.length === 0 && circular.entities.length === 0 && (
+                {displayed.actionItems.length === 0 && circular.entities.length === 0 && (
                   <p className="ws-muted text-xs lg:pt-2">
                     Expand Source text above to review the original circular.
                   </p>
@@ -413,7 +543,7 @@ export default function SummaryPanel({
           </article>
         )}
 
-        {summary && editing && draftSummary && (
+        {sourceSummary && editing && draftSummary && (
           <div className="w-full max-w-5xl space-y-5">
             <p className="ws-muted text-sm">
               Refine the brief before export. Changes stay on this document only.

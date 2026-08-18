@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "EasyCircular — MOE Circular Summaries",
+    name: "EasyCircular: MOE Circular Summaries",
     short_name: "EasyCircular",
     description:
       "Upload Ministry of Education circulars, review the text, and get clear summaries.",

@@ -5,6 +5,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const authRoutes = require("./routes/auth");
 const circularRoutes = require("./routes/circulars");
+const moeRoutes = require("./routes/moe");
 const { attachSession } = require("./middleware/session");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 const { securityHeaders, requestLogger } = require("./middleware/security");
@@ -66,6 +67,7 @@ async function connectMongo() {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/circulars", circularRoutes);
+app.use("/api/moe", moeRoutes);
 
 app.get("/health", async (_req, res) => {
   const checks = {
@@ -154,7 +156,7 @@ async function start() {
   });
 
   async function shutdown(signal) {
-    console.log(`\n${signal} received — shutting down gracefully`);
+    console.log(`\n${signal} received. Shutting down gracefully`);
     server.close(() => console.log("HTTP server closed"));
     try {
       await mongoose.connection.close();
