@@ -152,12 +152,18 @@ export default function SummaryPanel({
     setViewLang(sourceLang);
   }, [circular.id, sourceLang]);
 
+  const sourceUsable = translationIsUsable(
+    sourceSummary ? { ...sourceSummary, language: sourceLang } : null,
+  );
+
   const displayed: CircularSummary | null = editing
     ? draftSummary
     : !sourceSummary
       ? null
       : viewLang === sourceLang
-        ? sourceSummary
+        ? sourceUsable
+          ? sourceSummary
+          : null
         : translationIsUsable(sourceSummary.translations?.[viewLang])
           ? sourceSummary.translations?.[viewLang] || null
           : null;
@@ -399,6 +405,18 @@ export default function SummaryPanel({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {sourceSummary && !sourceUsable && viewLang === sourceLang && !editing && !(processing || circular.status === "processing") && (
+          <div className="mb-6 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 dark:border-rose-400/20 dark:bg-rose-400/[0.06]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-800 dark:text-rose-300">
+              Unreadable brief
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-rose-900/80 dark:text-rose-100/85">
+              The local model mixed scripts and invented text. Click Regenerate to rebuild
+              the brief from the circular itself.
+            </p>
           </div>
         )}
 

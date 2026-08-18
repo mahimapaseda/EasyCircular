@@ -75,6 +75,103 @@ FALLBACK_HEADINGS: dict[SummaryLang, dict[str, str]] = {
     },
 }
 
+_HEADING_KEYS = (
+    "purpose",
+    "audience",
+    "requirements",
+    "legal",
+    "dates",
+    "parties",
+    "actions",
+    "annexure",
+)
+
+_HEADING_ALIASES = {
+    "purpose": ("purpose", "introduction"),
+    "audience": ("target audience", "audience"),
+    "requirements": ("key requirements", "requirements"),
+    "legal": ("legal and circular references", "legal & circular references"),
+    "dates": ("deadlines and dates", "deadlines & dates"),
+    "parties": ("responsible parties",),
+    "actions": ("action items", "actions"),
+    "annexure": ("annexure / staff return form", "annexure"),
+}
+
+# Longest phrases first. Used when the 3B model cannot be trusted on a whole brief.
+_GLOSSARY: dict[tuple[SummaryLang, SummaryLang], list[tuple[str, str]]] = {
+    ("en", "si"): [
+        (
+            "Ministry of Education, Higher Education and Vocational Education",
+            "අධ්‍යාපන, උසස් අධ්‍යාපන සහ වෘත්තීය අධ්‍යාපන අමාත්‍යාංශය",
+        ),
+        ("Ministry of Education", "අධ්‍යාපන අමාත්‍යාංශය"),
+        ("All Provincial Secretaries of Education", "සියලු පළාත් අධ්‍යාපන ලේකම්වරුන්"),
+        ("All Provincial Directors of Education", "සියලු පළාත් අධ්‍යාපන අධ්‍යක්ෂවරුන්"),
+        ("All Zonal Directors of Education", "සියලු කලාප අධ්‍යාපන අධ්‍යක්ෂවරුන්"),
+        ("letter of appointment", "පත්වීම් ලිපිය"),
+        ("Letter of Appointment", "පත්වීම් ලිපිය"),
+        ("With immediate effect", "ක්ෂණිකව බලපැවැත්වේ"),
+        ("teacher training", "ගුරු පුහුණුව"),
+        ("new teachers", "නව ගුරුවරුන්"),
+        ("circular", "චක්‍රලේඛය"),
+        ("certificate", "සහතිකය"),
+    ],
+    ("en", "ta"): [
+        (
+            "Ministry of Education, Higher Education and Vocational Education",
+            "கல்வி, உயர்கல்வி மற்றும் தொழில் கல்வி அமைச்சு",
+        ),
+        ("Ministry of Education", "கல்வி அமைச்சு"),
+        ("With immediate effect", "உடனடி நடைமுறை"),
+        ("letter of appointment", "நியமனக் கடிதம்"),
+        ("circular", "சுற்றறிக்கை"),
+        ("certificate", "சான்றிதழ்"),
+    ],
+}
+
+
+def apply_glossary(text: str, source_lang: SummaryLang, target_lang: SummaryLang) -> str:
+    """Replace known MOE phrases. Safe even when the local model loops."""
+    if not text or source_lang == target_lang:
+        return text
+    pairs = list(_GLOSSARY.get((source_lang, target_lang), []))
+    reverse = _GLOSSARY.get((target_lang, source_lang), [])
+    if not pairs and reverse:
+        pairs = [(dst, src) for src, dst in reverse]
+    updated = text
+    for src, dst in pairs:
+        if not src:
+            continue
+        if src.isascii():
+            updated = re.sub(rf"\b{re.escape(src)}\b", dst, updated, flags=re.IGNORECASE)
+        else:
+            updated = updated.replace(src, dst)
+    return updated
+
+
+def map_section_heading(heading: str, target_lang: SummaryLang) -> str | None:
+    needle = re.sub(r"\s+", " ", (heading or "").strip()).lower()
+    if not needle:
+        return None
+    for labels in FALLBACK_HEADINGS.values():
+        for key in _HEADING_KEYS:
+            if labels.get(key, "").strip().lower() == needle:
+                return FALLBACK_HEADINGS[target_lang][key]
+    for key, aliases in _HEADING_ALIASES.items():
+        if needle in aliases:
+            return FALLBACK_HEADINGS[target_lang][key]
+    return None
+
+
+def text_has_target_script(text: str, language: SummaryLang) -> bool:
+    blob = text or ""
+    if language == "si":
+        return len(re.findall(r"[\u0D80-\u0DFF]", blob)) >= 4
+    if language == "ta":
+        return len(re.findall(r"[\u0B80-\u0BFF]", blob)) >= 4
+    return True
+
+
 OUTPUT_LANGUAGE_INSTRUCTIONS: dict[SummaryLang, str] = {
     "en": (
         "Write the entire brief in English. Section headings must be in English. "
@@ -118,13 +215,23 @@ def counterpart_language(language: SummaryLang) -> SummaryLang:
 _SHORT_LOOP = re.compile(r"(.{2,12})\1{6,}", re.DOTALL)
 _LONG_LOOP = re.compile(r"(.{13,80})\1{3,}", re.DOTALL)
 _TOKEN_SPLIT = re.compile(r"\S+")
+_TEX_JUNK = re.compile(r"\\frac|\\text|\\u0[0-9a-f]{2,}|\{u0[0-9a-f]{2,}", re.IGNORECASE)
+# Scripts that never belong in an MOE brief (Thai/Lao/Tibetan/Hebrew/Arabic/Indic-other/CJK).
+_UNEXPECTED_SCRIPTS = re.compile(
+    r"[\u0E00-\u0EFF\u0F00-\u0FFF\u0590-\u05FF\u0600-\u06FF"
+    r"\u0900-\u097F\u0980-\u09FF\u0A00-\u0AFF\u0C00-\u0CFF"
+    r"\u0D00-\u0D7F\u1000-\u109F\u1780-\u17FF\u3040-\u30FF"
+    r"\u4E00-\u9FFF\uAC00-\uD7AF\uE000-\uF8FF\uFFF0-\uFFFF\uFFFD]"
+)
 
 
 def text_looks_degenerate(text: str) -> bool:
-    """True when a model looped (repeated chunks) or collapsed to a few unique tokens."""
+    """True when a model looped, mixed in foreign scripts, or collapsed to a few unique tokens."""
     raw = (text or "").strip()
     if not raw:
         return False
+    if _TEX_JUNK.search(raw) or _UNEXPECTED_SCRIPTS.search(raw):
+        return True
     compact = re.sub(r"\s+", "", raw)
     if _SHORT_LOOP.search(compact) or _LONG_LOOP.search(compact):
         return True
@@ -148,6 +255,17 @@ def _field_too_long(translated: str, source: str) -> bool:
     return len(dst) > max(400, len(src) * 4)
 
 
+def leftover_english_dominates(text: str, language: SummaryLang) -> bool:
+    """True when Latin letters outnumber the target script (glossary word-swap)."""
+    blob = text or ""
+    latin = len(re.findall(r"[A-Za-z]", blob))
+    if language == "si":
+        return latin > len(re.findall(r"[\u0D80-\u0DFF]", blob))
+    if language == "ta":
+        return latin > len(re.findall(r"[\u0B80-\u0BFF]", blob))
+    return False
+
+
 def translation_quality_error(
     translated: dict[str, Any],
     source: dict[str, Any],
@@ -159,11 +277,20 @@ def translation_quality_error(
         f"{lang_name} translation from the local model was unreadable. "
         "Stay on English or use a stronger model."
     )
-    if language in ("si", "ta") and not summary_matches_output_language(translated, language):
-        return message
     blob = _summary_text_blob(translated)
     if text_looks_degenerate(blob):
         return message
+    if language in ("si", "ta"):
+        sinhala = len(re.findall(r"[\u0D80-\u0DFF]", blob))
+        tamil = len(re.findall(r"[\u0B80-\u0BFF]", blob))
+        if language == "si" and (sinhala < 12 or tamil >= 24):
+            return message
+        if language == "ta" and (tamil < 12 or sinhala >= 24):
+            return message
+        if leftover_english_dominates(blob, language):
+            return message
+        if leftover_english_dominates(str(translated.get("title") or ""), language):
+            return message
 
     pairs = [
         (str(translated.get("title") or ""), str(source.get("title") or "")),

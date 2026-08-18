@@ -35,6 +35,8 @@ class PipelineRequest(BaseModel):
 class TranslateSummaryRequest(BaseModel):
     summary: dict
     targetLang: str = Field(..., pattern="^(en|si|ta)$")
+    sourceText: str | None = None
+    filename: str | None = None
 
 
 @router.post("/parse/pdf")
@@ -93,7 +95,12 @@ def pipeline_endpoint(request: PipelineRequest):
 @router.post("/translate/summary")
 def translate_summary_endpoint(request: TranslateSummaryRequest):
     try:
-        translated = translate_summary(request.summary, request.targetLang)
+        translated = translate_summary(
+            request.summary,
+            request.targetLang,
+            source_text=request.sourceText,
+            filename=request.filename,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:

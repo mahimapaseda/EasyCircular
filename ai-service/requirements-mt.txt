@@ -1,0 +1,10 @@
+# Optional EN→Sinhala/Tamil translator (NLLB-200 distilled 600M).
+# Keep this out of the lean API runtime. From ai-service/:
+#   pip install -r requirements-mt.txt
+#
+# First translate downloads ~1.2 GB (set HF_HOME if you want a shared cache).
+
+torch>=2.4.0
+transformers>=4.45.0
+sentencepiece>=0.2.0
+protobuf>=4.25.0

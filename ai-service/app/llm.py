@@ -83,6 +83,7 @@ def get_chat_model(
     temperature: float | None = None,
     max_output_tokens: int | None = None,
     max_retries: int | None = None,
+    repeat_penalty: float | None = None,
 ) -> BaseChatModel:
     provider = active_provider()
     temp = temperature if temperature is not None else float(os.getenv("LLM_TEMPERATURE", "0.2"))
@@ -149,14 +150,17 @@ def get_chat_model(
         model = active_model_name()
         # Default Ollama num_ctx is 2048, which truncates MOE prompts mid-JSON.
         num_ctx = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
-        return ChatOllama(
-            model=model,
-            base_url=ollama_base_url(),
-            temperature=temp,
-            num_predict=max_tokens,
-            num_ctx=num_ctx,
-            format="json",
-        )
+        kwargs: dict = {
+            "model": model,
+            "base_url": ollama_base_url(),
+            "temperature": temp,
+            "num_predict": max_tokens,
+            "num_ctx": num_ctx,
+            "format": "json",
+        }
+        if repeat_penalty is not None:
+            kwargs["repeat_penalty"] = repeat_penalty
+        return ChatOllama(**kwargs)
 
     supported = ", ".join(SUPPORTED_PROVIDERS)
     raise RuntimeError(f"Unsupported LLM_PROVIDER '{provider}'. Use one of: {supported}")

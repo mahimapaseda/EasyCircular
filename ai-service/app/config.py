@@ -25,6 +25,8 @@ class Settings:
     chunk_overlap: int
     map_reduce_threshold: int
     max_upload_bytes: int
+    translate_model: str
+    translate_device: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -46,6 +48,10 @@ class Settings:
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "600")),
             map_reduce_threshold=int(os.getenv("MAP_REDUCE_THRESHOLD", "10000")),
             max_upload_bytes=max_upload_mb * 1024 * 1024,
+            translate_model=os.getenv(
+                "TRANSLATE_MODEL", "facebook/nllb-200-distilled-600M"
+            ),
+            translate_device=os.getenv("TRANSLATE_DEVICE", "auto").lower(),
         )
 
 

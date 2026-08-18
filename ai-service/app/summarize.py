@@ -12,6 +12,7 @@ from app.chunking import split_text
 from app.config import settings
 from app.guardrails import detect_topic_bleed, verify_summary_dates
 from app.llm import active_model_name, active_provider, get_chat_model, llm_is_configured
+from app.mt import mt_is_configured, translate_text
 from app.moe_text import (
     CIRCULAR_NUMBER_PATTERNS,
     LETTERHEAD_NOISE_PATTERN,
@@ -35,9 +36,13 @@ from app.summary_language import (
     FALLBACK_HEADINGS,
     OUTPUT_LANGUAGE_INSTRUCTIONS,
     SummaryLang,
+    apply_glossary,
     detect_output_language,
+    map_section_heading,
     summary_looks_degenerate,
     summary_matches_output_language,
+    text_has_target_script,
+    text_looks_degenerate,
     translation_quality_error,
 )
 
@@ -45,7 +50,7 @@ logger = logging.getLogger("easycircular.ai.summarize")
 
 FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
 # Bump when prompt/few-shot/guardrail behaviour changes so the backend cache misses.
-SUMMARIZER_VERSION = "v8-translate-gate"
+SUMMARIZER_VERSION = "v9-si-source-brief"
 
 _OVERLAP_STOPWORDS = frozenset(
     {
@@ -1041,8 +1046,8 @@ def _compact_translate_payload(summary: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(section, dict):
             continue
         content = str(section.get("content") or "").strip()
-        if len(content) > 1500:
-            content = content[:1500].rstrip() + "…"
+        if len(content) > 1200:
+            content = content[:1200].rstrip() + "…"
         sections.append(
             {
                 "heading": str(section.get("heading") or "").strip(),
@@ -1060,49 +1065,329 @@ def _compact_translate_payload(summary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def translate_summary(summary: dict[str, Any], target_lang: str) -> dict[str, Any]:
+def _message_text(response) -> str:
+    content = response.content
+    if isinstance(content, list):
+        return "".join(
+            block.get("text", "") if isinstance(block, dict) else str(block)
+            for block in content
+        )
+    return str(content or "")
+
+
+def _split_translate_chunks(text: str) -> list[str]:
+    text = (text or "").strip()
+    if not text:
+        return []
+    if len(text) <= 280:
+        return [text]
+    parts = re.split(r"(?<=[.!?])\s+", text)
+    chunks: list[str] = []
+    buf = ""
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        if buf and len(buf) + len(part) > 280:
+            chunks.append(buf)
+            buf = part
+        else:
+            buf = f"{buf} {part}".strip()
+    if buf:
+        chunks.append(buf)
+    return chunks or [text[:280]]
+
+
+def _mt_translate_field(
+    text: str | None,
+    source_lang: SummaryLang,
+    target_lang: SummaryLang,
+) -> str:
+    raw = str(text or "").strip()
+    if not raw:
+        return ""
+    if target_lang in ("si", "ta") and text_has_target_script(raw, target_lang):
+        return apply_glossary(raw, source_lang, target_lang)
+    out = translate_text(raw, source=source_lang, target=target_lang)
+    glossed = apply_glossary(out, source_lang, target_lang)
+    if text_looks_degenerate(glossed):
+        return apply_glossary(raw, source_lang, target_lang)
+    return glossed
+
+
+def _mt_translate_summary(
+    summary: dict[str, Any],
+    source_lang: SummaryLang,
+    target_lang: SummaryLang,
+) -> dict[str, Any]:
+    """NLLB field-by-field, then MOE glossary. Never asks llama3.2 to write SI/TA."""
+    payload = _compact_translate_payload(summary)
+    sections: list[dict[str, str]] = []
+    for section in payload["sections"]:
+        heading = map_section_heading(section["heading"], target_lang)
+        if not heading:
+            heading = _mt_translate_field(section["heading"], source_lang, target_lang)
+        content = _mt_translate_field(section["content"], source_lang, target_lang)
+        sections.append(
+            {
+                "heading": heading or section["heading"],
+                "content": content,
+            }
+        )
+    translated = {
+        "title": _mt_translate_field(str(payload.get("title") or ""), source_lang, target_lang),
+        "issuedBy": _mt_translate_field(str(payload.get("issuedBy") or ""), source_lang, target_lang)
+        or None,
+        "targetAudience": _mt_translate_field(
+            str(payload.get("targetAudience") or ""), source_lang, target_lang
+        )
+        or None,
+        "sections": sections,
+        "actionItems": [
+            _mt_translate_field(item, source_lang, target_lang)
+            for item in (payload.get("actionItems") or [])
+        ],
+        "circularNumber": summary.get("circularNumber"),
+        "issuedDate": summary.get("issuedDate"),
+        "effectiveDate": apply_glossary(str(summary.get("effectiveDate") or ""), source_lang, target_lang)
+        or _mt_translate_field(str(summary.get("effectiveDate") or ""), source_lang, target_lang)
+        or summary.get("effectiveDate"),
+        "mode": "mt",
+        "language": target_lang,
+        "translations": {},
+    }
+    translated = validate_llm_output(translated)
+    translated["circularNumber"] = summary.get("circularNumber")
+    translated["issuedDate"] = summary.get("issuedDate")
+    if summary.get("effectiveDate"):
+        glossed_effective = apply_glossary(str(summary.get("effectiveDate")), source_lang, target_lang)
+        translated["effectiveDate"] = glossed_effective or translated.get("effectiveDate")
+    translated["mode"] = "mt"
+    translated["language"] = target_lang
+    translated["translations"] = {}
+    quality_error = translation_quality_error(translated, payload, target_lang)
+    if quality_error:
+        logger.warning("Discarding %s NLLB translation: %s", target_lang, quality_error)
+        raise ValueError(quality_error)
+    translated["rawMarkdown"] = _build_markdown(translated)
+    return translated
+
+
+def _source_usable_for_lang(text: str | None, filename: str | None, lang: SummaryLang) -> bool:
+    blob = (text or "").strip()
+    if not blob:
+        return False
+    if detect_output_language(blob, filename) == lang:
+        return True
+    sample = blob[:8000]
+    if lang == "si":
+        return len(re.findall(r"[\u0D80-\u0DFF]", sample)) >= 80
+    if lang == "ta":
+        return len(re.findall(r"[\u0B80-\u0BFF]", sample)) >= 80
+    return False
+
+
+def _glossary_translate_summary(
+    summary: dict[str, Any],
+    source_lang: SummaryLang,
+    target_lang: SummaryLang,
+) -> dict[str, Any]:
+    """Map headings and known MOE phrases. Never asks the 3B model to invent Sinhala/Tamil."""
+    payload = _compact_translate_payload(summary)
+    sections = []
+    for section in payload["sections"]:
+        heading = map_section_heading(section["heading"], target_lang) or apply_glossary(
+            section["heading"], source_lang, target_lang
+        )
+        content = apply_glossary(section["content"], source_lang, target_lang)
+        if text_looks_degenerate(content):
+            content = section["content"]
+        sections.append({"heading": heading or section["heading"], "content": content})
+    translated = {
+        "title": apply_glossary(str(payload.get("title") or ""), source_lang, target_lang),
+        "issuedBy": apply_glossary(str(payload.get("issuedBy") or ""), source_lang, target_lang) or None,
+        "targetAudience": apply_glossary(str(payload.get("targetAudience") or ""), source_lang, target_lang)
+        or None,
+        "sections": sections,
+        "actionItems": [
+            apply_glossary(item, source_lang, target_lang)
+            for item in (payload.get("actionItems") or [])
+            if not text_looks_degenerate(item)
+        ],
+        "circularNumber": summary.get("circularNumber"),
+        "issuedDate": summary.get("issuedDate"),
+        "effectiveDate": apply_glossary(str(summary.get("effectiveDate") or ""), source_lang, target_lang)
+        or summary.get("effectiveDate"),
+        "mode": "fallback",
+        "language": target_lang,
+        "translations": {},
+    }
+    translated = validate_llm_output(translated)
+    translated["circularNumber"] = summary.get("circularNumber")
+    translated["issuedDate"] = summary.get("issuedDate")
+    translated["language"] = target_lang
+    translated["mode"] = "fallback"
+    translated["translations"] = {}
+    quality_error = translation_quality_error(translated, payload, target_lang)
+    if quality_error:
+        logger.warning("Glossary %s translation failed quality: %s", target_lang, quality_error)
+    translated["rawMarkdown"] = _build_markdown(translated)
+    return translated
+
+
+def _llm_translate_text(
+    llm,
+    text: str,
+    *,
+    source_lang: SummaryLang,
+    target_lang: SummaryLang,
+) -> str:
+    """Translate one short string. Returns empty if the model loops or uses the wrong script."""
+    source = (text or "").strip()
+    if not source:
+        return ""
+    if target_lang in ("si", "ta") and text_has_target_script(source, target_lang):
+        return source
+    if source_lang == "en" and target_lang == "en":
+        return source
+
+    lang_name = {"en": "English", "si": "Sinhala", "ta": "Tamil"}[target_lang]
+    pieces: list[str] = []
+    for chunk in _split_translate_chunks(source):
+        glossed = apply_glossary(chunk, source_lang, target_lang)
+        try:
+            response = _invoke_with_retry(
+                llm,
+                _llm_messages(
+                    "You are a careful translator for Sri Lankan education documents. "
+                    'Return ONLY JSON of the form {"text":"..."} with the translation. '
+                    "Do not add facts. Do not repeat words or phrases. "
+                    "Keep numbers and dates unchanged.",
+                    f"Translate this {source_lang} text into {lang_name}:\n{glossed}",
+                ),
+                max_attempts=1,
+            )
+            parsed = _parse_llm_json(_message_text(response))
+            out = str(parsed.get("text") or "").strip()
+        except Exception as exc:
+            logger.warning("Field translation failed: %s", exc)
+            out = ""
+        if out and not text_looks_degenerate(out) and not _field_too_long_local(out, chunk):
+            if target_lang == "en" or text_has_target_script(out, target_lang):
+                pieces.append(out)
+                continue
+        if glossed != chunk and not text_looks_degenerate(glossed):
+            pieces.append(glossed)
+        else:
+            pieces.append(chunk)
+    return " ".join(pieces).strip()
+
+
+def _field_too_long_local(translated: str, source: str) -> bool:
+    src = (source or "").strip()
+    dst = (translated or "").strip()
+    if not dst:
+        return False
+    if not src:
+        return len(dst) > 800
+    return len(dst) > max(240, len(src) * 3)
+
+
+def translate_summary(
+    summary: dict[str, Any],
+    target_lang: str,
+    *,
+    source_text: str | None = None,
+    filename: str | None = None,
+) -> dict[str, Any]:
     """Translate a structured brief into English, Sinhala, or Tamil."""
     if target_lang not in {"en", "si", "ta"}:
         raise ValueError("target language must be en, si, or ta")
     source_lang = summary.get("language") or "en"
+    if source_lang not in {"en", "si", "ta"}:
+        source_lang = "en"
     if target_lang == source_lang:
         return {**summary, "translations": {}}
 
+    src_lang = cast(SummaryLang, source_lang)
+    dst_lang = cast(SummaryLang, target_lang)
+
+    # llama3.2:3b invents mixed-script garbage for SI/TA. Prefer the source circular
+    # text (extractive brief) or NLLB. Never ask the 3B model to write Sinhala.
+    if dst_lang in ("si", "ta"):
+        if _source_usable_for_lang(source_text, filename, dst_lang):
+            brief = fallback_summarize(source_text or "", [], filename=filename)
+            brief["circularNumber"] = brief.get("circularNumber") or summary.get("circularNumber")
+            brief["issuedDate"] = brief.get("issuedDate") or summary.get("issuedDate")
+            brief["language"] = dst_lang
+            brief["translations"] = {}
+            if not translation_quality_error(brief, _compact_translate_payload(brief), dst_lang):
+                brief["rawMarkdown"] = _build_markdown(brief)
+                return brief
+        if not mt_is_configured():
+            lang_name = "Sinhala" if dst_lang == "si" else "Tamil"
+            raise RuntimeError(
+                f"{lang_name} translation needs the NLLB model. "
+                "From ai-service run: pip install -r requirements-mt.txt"
+            )
+        return _mt_translate_summary(summary, src_lang, dst_lang)
+
     if not llm_is_configured():
-        raise RuntimeError("Translation needs a configured LLM (Ollama or cloud provider).")
+        return _glossary_translate_summary(summary, src_lang, dst_lang)
 
     payload = _compact_translate_payload(summary)
-    system_prompt = (
-        "You translate Sri Lankan Ministry of Education circular briefs. "
-        "Return ONLY valid JSON with keys title, issuedBy, targetAudience, sections, actionItems. "
-        f"{OUTPUT_LANGUAGE_INSTRUCTIONS[target_lang]} "
-        "Do not add facts. Do not invent extra action items. "
-        "Keep each field about the same length as the source. "
-        "Never repeat a word, phrase, or sentence."
-    )
-    user_prompt = (
-        f"Source language: {source_lang}\nTarget language: {target_lang}\n\n"
-        f"{json.dumps(payload, ensure_ascii=False)}\n\n"
-        "Return ONLY the translated JSON object. No commentary."
-    )
-    llm = get_chat_model()
-    response = _invoke_with_retry(llm, _llm_messages(system_prompt, user_prompt), max_attempts=2)
-    content = response.content
-    if isinstance(content, list):
-        content = "".join(
-            block.get("text", "") if isinstance(block, dict) else str(block)
-            for block in content
+    llm = get_chat_model(temperature=0.0, max_output_tokens=256, repeat_penalty=1.35)
+
+    def xf(value: str | None) -> str:
+        raw = str(value or "").strip()
+        if not raw:
+            return ""
+        return _llm_translate_text(llm, raw, source_lang=src_lang, target_lang=dst_lang)
+
+    sections: list[dict[str, str]] = []
+    for section in payload["sections"]:
+        heading = map_section_heading(section["heading"], dst_lang) or xf(section["heading"])
+        content = xf(section["content"]) or apply_glossary(section["content"], src_lang, dst_lang)
+        if text_looks_degenerate(content):
+            content = apply_glossary(section["content"], src_lang, dst_lang)
+        sections.append(
+            {
+                "heading": heading or section["heading"],
+                "content": content,
+            }
         )
-    translated = validate_llm_output(_parse_llm_json(str(content)))
+
+    translated = {
+        "title": xf(payload.get("title")) or apply_glossary(str(payload.get("title") or ""), src_lang, dst_lang),
+        "issuedBy": xf(payload.get("issuedBy"))
+        or apply_glossary(str(payload.get("issuedBy") or ""), src_lang, dst_lang)
+        or None,
+        "targetAudience": xf(payload.get("targetAudience"))
+        or apply_glossary(str(payload.get("targetAudience") or ""), src_lang, dst_lang)
+        or None,
+        "sections": sections,
+        "actionItems": [
+            xf(item) or apply_glossary(item, src_lang, dst_lang)
+            for item in (payload.get("actionItems") or [])
+        ],
+        "circularNumber": summary.get("circularNumber"),
+        "issuedDate": summary.get("issuedDate"),
+        "effectiveDate": apply_glossary(str(summary.get("effectiveDate") or ""), src_lang, dst_lang)
+        or summary.get("effectiveDate"),
+        "mode": summary.get("mode") or "llm",
+        "language": dst_lang,
+        "translations": {},
+    }
+    translated = validate_llm_output(translated)
     translated["circularNumber"] = summary.get("circularNumber")
     translated["issuedDate"] = summary.get("issuedDate")
-    translated["effectiveDate"] = summary.get("effectiveDate")
+    if summary.get("effectiveDate"):
+        glossed_effective = apply_glossary(str(summary.get("effectiveDate")), src_lang, dst_lang)
+        translated["effectiveDate"] = glossed_effective or summary.get("effectiveDate")
     translated["mode"] = summary.get("mode") or "llm"
-    translated["language"] = target_lang
+    translated["language"] = dst_lang
     translated["translations"] = {}
-    quality_error = translation_quality_error(
-        translated, payload, cast(SummaryLang, target_lang)
-    )
+    quality_error = translation_quality_error(translated, payload, dst_lang)
     if quality_error:
         logger.warning("Discarding %s translation: %s", target_lang, quality_error)
         raise ValueError(quality_error)
@@ -1123,7 +1408,18 @@ def summarize_text(
         len(split_text(prepared)) if len(prepared) > settings.map_reduce_threshold else 1
     )
 
-    if llm_is_configured():
+    expected_lang = detect_output_language(text, filename)
+    # llama3.2:3b invents mixed-script garbage for Sinhala/Tamil. Extract from OCR instead.
+    if expected_lang in ("si", "ta"):
+        summary = fallback_summarize(text, entities, filename=filename)
+        meta = {
+            "model": "extractive-fallback",
+            "tokensUsed": 0,
+            "mode": "fallback",
+            "provider": active_provider() if llm_is_configured() else "none",
+            "chunkCount": 1,
+        }
+    elif llm_is_configured():
         try:
             summary, tokens, chunk_count = llm_summarize(
                 text, entities, filename=filename
@@ -1202,8 +1498,7 @@ def summarize_text(
                 "llmError": f"{reason}: discarded LLM summary",
             }
 
-    language = detect_output_language(text, filename)
-    summary["language"] = language
+    summary["language"] = expected_lang
     summary.setdefault("translations", {})
     if not summary.get("actionItems"):
         summary["actionItems"] = extract_action_items(text, entities)

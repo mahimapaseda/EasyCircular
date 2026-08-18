@@ -37,10 +37,15 @@ async function healthCheck() {
   return data;
 }
 
-async function translateSummary(summary, targetLang) {
+async function translateSummary(summary, targetLang, extras = {}) {
   const { data } = await client.post(
     "/v1/translate/summary",
-    { summary, targetLang },
+    {
+      summary,
+      targetLang,
+      sourceText: extras.sourceText || undefined,
+      filename: extras.filename || undefined,
+    },
     { timeout: PIPELINE_TIMEOUT_MS },
   );
   return data.summary;

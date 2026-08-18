@@ -8,7 +8,7 @@ const { assertUploadedPdf } = require("../utils/pdf");
 const { MAX_UPLOAD_BYTES } = require("../../../shared/api-contract");
 
 // Must match ai-service/app/summarize.py SUMMARIZER_VERSION
-const SUMMARIZER_VERSION = "v6-action-sanitize";
+const SUMMARIZER_VERSION = "v9-si-source-brief";
 
 function hashText(text) {
   return crypto.createHash("sha256").update(text).digest("hex");
@@ -525,7 +525,7 @@ function summaryPayloadForTranslate(summary) {
   };
 }
 
-function translationLooksBroken(entry) {
+function translationLooksBroken(entry, targetLang) {
   if (!entry || typeof entry !== "object") return true;
   const blob = [
     entry.title,
@@ -541,6 +541,21 @@ function translationLooksBroken(entry) {
   if (!blob.trim()) return true;
   const compact = blob.replace(/\s+/g, "");
   if (/(.{2,12})\1{6,}/s.test(compact) || /(.{13,80})\1{3,}/s.test(compact)) return true;
+  if (
+    /\\frac|\\text|[\u0E00-\u0EFF\u0F00-\u0FFF\u0590-\u05FF\u0600-\u06FF\u0900-\u0AFF\u0C00-\u0D7F\u1000-\u109F\u1780-\u17FF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF\uFFFD]/.test(
+      blob,
+    )
+  ) {
+    return true;
+  }
+  const lang = targetLang || entry.language;
+  const sinhala = (blob.match(/[\u0D80-\u0DFF]/g) || []).length;
+  const tamil = (blob.match(/[\u0B80-\u0BFF]/g) || []).length;
+  if (lang === "si" && tamil >= 24) return true;
+  if (lang === "ta" && sinhala >= 24) return true;
+  const latin = (blob.match(/[A-Za-z]/g) || []).length;
+  if (lang === "si" && latin > sinhala) return true;
+  if (lang === "ta" && latin > tamil) return true;
   const tokens = blob.trim().split(/\s+/);
   if (tokens.length >= 20) {
     const unique = new Set(tokens).size;
@@ -570,13 +585,16 @@ async function translateCircular(circular, targetLang) {
 
   const existing = circular.summary.translations || {};
   const cached = existing[targetLang];
-  if (cached?.title && !translationLooksBroken(cached)) {
+  if (cached?.title && !translationLooksBroken(cached, targetLang)) {
     return circular;
   }
 
   let translated;
   try {
-    translated = await translateSummary(summaryPayloadForTranslate(circular.summary), targetLang);
+    translated = await translateSummary(summaryPayloadForTranslate(circular.summary), targetLang, {
+      sourceText: workingText(circular),
+      filename: circular.originalFilename,
+    });
   } catch (error) {
     const message =
       error.response?.data?.detail ||
@@ -588,7 +606,7 @@ async function translateCircular(circular, targetLang) {
     throw wrapped;
   }
 
-  if (translationLooksBroken(translated)) {
+  if (translationLooksBroken(translated, targetLang)) {
     const error = new Error(
       targetLang === "si"
         ? "Sinhala translation from the local model was unreadable. Stay on English or use a stronger model."

@@ -52,6 +52,20 @@ export function translationIsUsable(entry?: CircularSummary | null): boolean {
   if (!blob.trim()) return false;
   const compact = blob.replace(/\s+/g, "");
   if (/(.{2,12})\1{6,}/s.test(compact) || /(.{13,80})\1{3,}/s.test(compact)) return false;
+  if (
+    /\\frac|\\text|[\u0E00-\u0EFF\u0F00-\u0FFF\u0590-\u05FF\u0600-\u06FF\u0900-\u0AFF\u0C00-\u0D7F\u1000-\u109F\u1780-\u17FF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF\uFFFD]/.test(
+      blob,
+    )
+  ) {
+    return false;
+  }
+  const sinhala = (blob.match(/[\u0D80-\u0DFF]/g) || []).length;
+  const tamil = (blob.match(/[\u0B80-\u0BFF]/g) || []).length;
+  if (entry.language === "si" && tamil >= 24) return false;
+  if (entry.language === "ta" && sinhala >= 24) return false;
+  const latin = (blob.match(/[A-Za-z]/g) || []).length;
+  if (entry.language === "si" && latin > sinhala) return false;
+  if (entry.language === "ta" && latin > tamil) return false;
   const tokens = blob.trim().split(/\s+/);
   if (tokens.length >= 20 && new Set(tokens).size / tokens.length < 0.15) return false;
   return true;
