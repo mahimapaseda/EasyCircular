@@ -1,7 +1,7 @@
 import pytest
 import json
 from unittest.mock import MagicMock, patch
-from app.output_schema import validate_llm_output, CircularSummaryOutput, SummarySection
+from app.output_schema import validate_llm_output, CircularSummaryOutput, SummarySection, sanitize_action_items
 from app.moe_text import (
     extract_issued_date,
     extract_target_audience,
@@ -15,6 +15,23 @@ from app.summarize import (
     _prioritise_entities,
     summarize_text,
 )
+
+def test_sanitize_action_items_dedupes_audience_clones():
+    items = [
+        "All Provincial Secretaries of Education must consider the certificate awarded by the Ministry for trainees who have successfully completed the ten-day teacher training programme as new teachers implemented by the Seethawakapura Pirivena Teacher Training Institution when their service is confirmed at the post.",
+        "All Provincial Directors of Education must consider the certificate awarded by the Ministry for trainees who have successfully completed the ten-day teacher training programme as new teachers implemented by the Seethawakapura Pirivena Teacher Training Institution when their service is confirmed at the post.",
+        "All Zonal Directors of Education must consider the certificate awarded by the Ministry for trainees who have successfully completed the ten-day teacher training programme as new teachers implemented by the Seethawakapura Pirivena Teacher Training Institution when their service is confirmed at the post.",
+        "All schools must ensure that the certificate awarded by the Ministry for trainees who have successfully completed the ten-day teacher training programme as new teachers implemented by the Seethawakapura Pirivena Teacher Training Institution is mentioned as such in the letter of appointment.",
+        "All schools must ensure that the certificate awarded by the Ministry for trainees who have successfully completed the ten-day teacher training programme as new teachers implemented by the Seethawakapura Pirivena Teacher Training Institution is verified and validated by the relevant authorities.",
+        "All schools must ensure that the certificate awarded by the Ministry for trainees who have successfully completed the ten-day teacher training programme as new teachers implemented by the Seethawakapura Pirivena Teacher Training Institution is kept up-to-date and current.",
+        "All schools must ensure that the certificate awarded by the Ministry for trainees who have successfully completed the ten-day teacher training programme as new teachers implemented by the Seethawakapura Pirivena Teacher Training Institution is made available to the relevant authorities upon request.",
+    ]
+    cleaned = sanitize_action_items(items)
+    assert 1 <= len(cleaned) <= 6
+    assert "Provincial Secretaries" in cleaned[0]
+    cores = " ".join(cleaned).lower()
+    assert cores.count("must consider the certificate") <= 1
+
 
 def test_validate_llm_output_defaults():
     # Test that missing fields are gracefully handled and defaulted

@@ -525,6 +525,30 @@ function summaryPayloadForTranslate(summary) {
   };
 }
 
+function translationLooksBroken(entry) {
+  if (!entry || typeof entry !== "object") return true;
+  const blob = [
+    entry.title,
+    entry.issuedBy,
+    entry.targetAudience,
+    ...(Array.isArray(entry.sections)
+      ? entry.sections.map((section) => `${section?.heading || ""} ${section?.content || ""}`)
+      : []),
+    ...(Array.isArray(entry.actionItems) ? entry.actionItems : []),
+  ]
+    .filter(Boolean)
+    .join(" ");
+  if (!blob.trim()) return true;
+  const compact = blob.replace(/\s+/g, "");
+  if (/(.{2,12})\1{6,}/s.test(compact) || /(.{13,80})\1{3,}/s.test(compact)) return true;
+  const tokens = blob.trim().split(/\s+/);
+  if (tokens.length >= 20) {
+    const unique = new Set(tokens).size;
+    if (unique / tokens.length < 0.15) return true;
+  }
+  return false;
+}
+
 async function translateCircular(circular, targetLang) {
   if (!circular.summary) {
     const error = new Error("Generate a summary before translating");
@@ -545,7 +569,8 @@ async function translateCircular(circular, targetLang) {
   }
 
   const existing = circular.summary.translations || {};
-  if (existing[targetLang]?.title) {
+  const cached = existing[targetLang];
+  if (cached?.title && !translationLooksBroken(cached)) {
     return circular;
   }
 
@@ -561,6 +586,18 @@ async function translateCircular(circular, targetLang) {
     const wrapped = new Error(String(message));
     wrapped.status = error.response?.status || 502;
     throw wrapped;
+  }
+
+  if (translationLooksBroken(translated)) {
+    const error = new Error(
+      targetLang === "si"
+        ? "Sinhala translation from the local model was unreadable. Stay on English or use a stronger model."
+        : targetLang === "ta"
+          ? "Tamil translation from the local model was unreadable. Stay on English or use a stronger model."
+          : "Translation from the local model was unreadable. Stay on English or use a stronger model.",
+    );
+    error.status = 422;
+    throw error;
   }
 
   circular.summary.translations = {

@@ -4,7 +4,10 @@ from unittest.mock import MagicMock, patch
 from app.summarize import fallback_summarize, summarize_text, translate_summary
 from app.summary_language import (
     detect_output_language,
+    summary_looks_degenerate,
     summary_matches_output_language,
+    text_looks_degenerate,
+    translation_quality_error,
 )
 
 SINHALA_CIRCULAR = (
@@ -132,3 +135,86 @@ def test_translate_summary_keeps_numbers_and_dates(mock_invoke, _model, _configu
     assert translated["effectiveDate"] == "ක්ෂණිකව"
     assert translated["language"] == "en"
     assert translated["title"] == "Ordinary Level Examination syllabus"
+
+
+def test_looping_sinhala_is_degenerate():
+    looping = "නොී " * 80
+    assert text_looks_degenerate(looping)
+    phrase = "සීල ප්රව්ව ප්රව්ව ද වින්යා ප්රව්ව සන්මාර නව අධ්ෂකටක්රය "
+    assert text_looks_degenerate(phrase * 20)
+
+
+def test_short_real_sinhala_brief_is_not_degenerate():
+    summary = {
+        "title": "සාමාන්‍ය පෙළ විභාග විෂය නිර්දේශය",
+        "issuedBy": "අධ්‍යාපන අමාත්‍යාංශය",
+        "targetAudience": "විදුහල්පතිවරුන්",
+        "sections": [{"heading": "අරමුණ", "content": "විෂය නිර්දේශය දැනුම් දෙයි."}],
+        "actionItems": ["ශිෂ්‍යයන් ලියාපදිංචි කරන්න."],
+    }
+    assert summary_matches_output_language(summary, "si")
+    assert not summary_looks_degenerate(summary)
+    assert translation_quality_error(summary, summary, "si") is None
+
+
+def test_translation_quality_error_rejects_looping_sinhala():
+    source = {
+        "title": "Certificate for new Pirivena teachers",
+        "issuedBy": "Ministry of Education",
+        "targetAudience": "All Provincial Directors",
+        "sections": [{"heading": "Purpose", "content": "Consider the ten-day training certificate."}],
+        "actionItems": ["Record the certificate in the letter of appointment."],
+    }
+    looping = {
+        "title": "සීල ප්රව්ව ප්රව්ව ද වින්යා",
+        "issuedBy": "සභවසය ආරක්ෂය",
+        "targetAudience": "සිංහල ප්රව්ව ආරක්ෂය මර්යා",
+        "sections": [
+            {
+                "heading": "සීල ප්රව්ව",
+                "content": "නොී " * 80,
+            }
+        ],
+        "actionItems": ["නොී " * 20],
+    }
+    error = translation_quality_error(looping, source, "si")
+    assert error is not None
+    assert "unreadable" in error.lower()
+
+
+@patch("app.summarize.llm_is_configured", return_value=True)
+@patch("app.summarize.get_chat_model")
+@patch("app.summarize._invoke_with_retry")
+def test_translate_summary_rejects_looping_output(mock_invoke, _model, _configured):
+    mock_invoke.return_value = MagicMock(
+        content=json.dumps(
+            {
+                "title": "සීල ප්රව්ව",
+                "issuedBy": "ආරක්ෂය",
+                "targetAudience": "මර්යා",
+                "sections": [{"heading": "අරමුණ", "content": "නොී " * 80}],
+                "actionItems": ["නොී " * 20],
+            }
+        )
+    )
+    try:
+        translate_summary(
+            {
+                "title": "Certificate for new teachers",
+                "circularNumber": "26/2026",
+                "issuedDate": "2026.07.06",
+                "issuedBy": "Ministry of Education",
+                "targetAudience": "All Provincial Directors",
+                "effectiveDate": "With immediate effect",
+                "sections": [
+                    {"heading": "Purpose", "content": "Consider the training certificate."}
+                ],
+                "actionItems": ["Record the certificate in the appointment letter."],
+                "language": "en",
+                "mode": "llm",
+            },
+            "si",
+        )
+        raise AssertionError("expected looping Sinhala translation to raise")
+    except ValueError as exc:
+        assert "unreadable" in str(exc).lower()

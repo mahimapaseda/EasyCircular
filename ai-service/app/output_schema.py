@@ -6,6 +6,7 @@ import ast
 import json
 import re
 
+from difflib import SequenceMatcher
 from pydantic import BaseModel, Field, field_validator
 
 _NER_DUMP_KEYS = frozenset({"text", "label", "start", "end"})
@@ -65,16 +66,47 @@ def _coerce_action_item(item) -> str | None:
     return text
 
 
+MAX_ACTION_ITEMS = 6
+_AUDIENCE_PREFIX = re.compile(
+    r"^(all\s+.+?\s+must\s+|heads?\s+of\s+.+?\s+must\s+|.+?\s+must\s+)",
+    re.IGNORECASE,
+)
+
+
+def _action_core(text: str) -> str:
+    """Strip audience prefixes so 'All X must consider …' matches 'All Y must consider …'."""
+    normalized = re.sub(r"\s+", " ", text).strip().lower()
+    return _AUDIENCE_PREFIX.sub("", normalized, count=1).strip()
+
+
+def _near_duplicate_action(left: str, right: str) -> bool:
+    if not left or not right:
+        return False
+    if left == right:
+        return True
+    if len(left) >= 40 and len(right) >= 40:
+        if left in right or right in left:
+            return True
+        return SequenceMatcher(None, left, right).ratio() >= 0.82
+    return False
+
+
 def sanitize_action_items(items) -> list[str]:
     if not isinstance(items, list):
         return []
     cleaned: list[str] = []
-    seen: set[str] = set()
+    cores: list[str] = []
     for item in items:
         text = _coerce_action_item(item)
-        if text and text not in seen:
-            seen.add(text)
-            cleaned.append(text)
+        if not text:
+            continue
+        core = _action_core(text)
+        if any(_near_duplicate_action(core, prev) for prev in cores):
+            continue
+        cores.append(core)
+        cleaned.append(text)
+        if len(cleaned) >= MAX_ACTION_ITEMS:
+            break
     return cleaned
 
 

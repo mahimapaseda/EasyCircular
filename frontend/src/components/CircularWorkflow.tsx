@@ -219,7 +219,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
     setEditingSummary(false);
   }
 
-  async function handleTranslate(targetLang: SummaryLang) {
+  async function handleTranslate(targetLang: SummaryLang): Promise<boolean> {
     try {
       const updated = await translateCircularSummary(id, targetLang);
       setCircular(updated);
@@ -232,10 +232,11 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
             : "Brief translated to English.",
         "success",
       );
+      return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Translation failed";
       showToast(message, "error");
-      throw err;
+      return false;
     }
   }
 

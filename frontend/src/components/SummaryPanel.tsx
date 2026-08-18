@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AnimateIn from "@/components/AnimateIn";
 import { exportSummaryAsPdf } from "@/lib/exportSummary";
-import type { Circular, CircularSummary, SummaryLang } from "@/lib/circulars";
+import { translationIsUsable, type Circular, type CircularSummary, type SummaryLang } from "@/lib/circulars";
 
 const ENTITY_STYLE: Record<string, { pill: string; dot: string; label: string }> = {
   DATE: {
@@ -49,7 +49,7 @@ type SummaryPanelProps = {
   onSave: () => void;
   onRegenerate?: () => void;
   onExport?: (format: "txt" | "pdf") => void;
-  onTranslate?: (targetLang: SummaryLang) => Promise<void>;
+  onTranslate?: (targetLang: SummaryLang) => Promise<boolean | void>;
 };
 
 function actionItemsToText(items: string[]): string {
@@ -158,7 +158,9 @@ export default function SummaryPanel({
       ? null
       : viewLang === sourceLang
         ? sourceSummary
-        : sourceSummary.translations?.[viewLang] || null;
+        : translationIsUsable(sourceSummary.translations?.[viewLang])
+          ? sourceSummary.translations?.[viewLang] || null
+          : null;
 
   const langOptions: { id: SummaryLang; label: string }[] =
     sourceLang === "ta"
@@ -202,12 +204,15 @@ export default function SummaryPanel({
 
   async function selectLang(next: SummaryLang) {
     if (next === viewLang || editing) return;
-    if (next !== sourceLang && !sourceSummary?.translations?.[next]?.title) {
+    if (next !== sourceLang && !translationIsUsable(sourceSummary?.translations?.[next])) {
       if (!onTranslate) return;
       setTranslating(true);
       try {
-        await onTranslate(next);
+        const ok = await onTranslate(next);
+        if (ok === false) return;
         setViewLang(next);
+      } catch {
+        // Toast is shown by the workflow; stay on the source language.
       } finally {
         setTranslating(false);
       }

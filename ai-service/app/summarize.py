@@ -6,7 +6,7 @@ import re
 import time
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from app.chunking import split_text
 from app.config import settings
@@ -34,15 +34,18 @@ from app.output_schema import sanitize_action_items, validate_llm_output
 from app.summary_language import (
     FALLBACK_HEADINGS,
     OUTPUT_LANGUAGE_INSTRUCTIONS,
+    SummaryLang,
     detect_output_language,
+    summary_looks_degenerate,
     summary_matches_output_language,
+    translation_quality_error,
 )
 
 logger = logging.getLogger("easycircular.ai.summarize")
 
 FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
 # Bump when prompt/few-shot/guardrail behaviour changes so the backend cache misses.
-SUMMARIZER_VERSION = "v7-json-repair"
+SUMMARIZER_VERSION = "v8-translate-gate"
 
 _OVERLAP_STOPWORDS = frozenset(
     {
@@ -1031,6 +1034,32 @@ def _normalize_circular_metadata(
     return summary, warnings
 
 
+def _compact_translate_payload(summary: dict[str, Any]) -> dict[str, Any]:
+    """Drop numbers/dates and cap sections/actions so a 3B model is less likely to loop."""
+    sections: list[dict[str, str]] = []
+    for section in summary.get("sections") or []:
+        if not isinstance(section, dict):
+            continue
+        content = str(section.get("content") or "").strip()
+        if len(content) > 1500:
+            content = content[:1500].rstrip() + "…"
+        sections.append(
+            {
+                "heading": str(section.get("heading") or "").strip(),
+                "content": content,
+            }
+        )
+        if len(sections) >= 6:
+            break
+    return {
+        "title": summary.get("title"),
+        "issuedBy": summary.get("issuedBy"),
+        "targetAudience": summary.get("targetAudience"),
+        "sections": sections,
+        "actionItems": sanitize_action_items(summary.get("actionItems") or []),
+    }
+
+
 def translate_summary(summary: dict[str, Any], target_lang: str) -> dict[str, Any]:
     """Translate a structured brief into English, Sinhala, or Tamil."""
     if target_lang not in {"en", "si", "ta"}:
@@ -1042,27 +1071,19 @@ def translate_summary(summary: dict[str, Any], target_lang: str) -> dict[str, An
     if not llm_is_configured():
         raise RuntimeError("Translation needs a configured LLM (Ollama or cloud provider).")
 
-    payload = {
-        "circularNumber": summary.get("circularNumber"),
-        "issuedDate": summary.get("issuedDate"),
-        "issuedBy": summary.get("issuedBy"),
-        "targetAudience": summary.get("targetAudience"),
-        "effectiveDate": summary.get("effectiveDate"),
-        "title": summary.get("title"),
-        "sections": summary.get("sections") or [],
-        "actionItems": summary.get("actionItems") or [],
-    }
+    payload = _compact_translate_payload(summary)
     system_prompt = (
         "You translate Sri Lankan Ministry of Education circular briefs. "
-        "Return ONLY valid JSON with the same keys as the input. "
+        "Return ONLY valid JSON with keys title, issuedBy, targetAudience, sections, actionItems. "
         f"{OUTPUT_LANGUAGE_INSTRUCTIONS[target_lang]} "
-        "Do not add facts. Keep circularNumber, issuedDate, and effectiveDate unchanged "
-        "when they are numbers or ISO-like dates."
+        "Do not add facts. Do not invent extra action items. "
+        "Keep each field about the same length as the source. "
+        "Never repeat a word, phrase, or sentence."
     )
     user_prompt = (
         f"Source language: {source_lang}\nTarget language: {target_lang}\n\n"
         f"{json.dumps(payload, ensure_ascii=False)}\n\n"
-        "Return ONLY the translated JSON object."
+        "Return ONLY the translated JSON object. No commentary."
     )
     llm = get_chat_model()
     response = _invoke_with_retry(llm, _llm_messages(system_prompt, user_prompt), max_attempts=2)
@@ -1079,6 +1100,12 @@ def translate_summary(summary: dict[str, Any], target_lang: str) -> dict[str, An
     translated["mode"] = summary.get("mode") or "llm"
     translated["language"] = target_lang
     translated["translations"] = {}
+    quality_error = translation_quality_error(
+        translated, payload, cast(SummaryLang, target_lang)
+    )
+    if quality_error:
+        logger.warning("Discarding %s translation: %s", target_lang, quality_error)
+        raise ValueError(quality_error)
     translated["rawMarkdown"] = _build_markdown(translated)
     return translated
 
@@ -1146,6 +1173,7 @@ def summarize_text(
         date_hardfail = verify_summary_dates(text, entities, summary)
         expected_lang = detect_output_language(text, filename)
         lang_mismatch = not summary_matches_output_language(summary, expected_lang)
+        degenerate = summary_looks_degenerate(summary)
         reject_reasons: list[str] = []
         if bleed_warnings:
             reject_reasons.append("topic-bleed")
@@ -1153,6 +1181,8 @@ def summarize_text(
             reject_reasons.append("invented-dates")
         if lang_mismatch:
             reject_reasons.append("wrong-language")
+        if degenerate:
+            reject_reasons.append("degenerate-output")
         if reject_reasons:
             reason = ", ".join(reject_reasons)
             logger.warning(

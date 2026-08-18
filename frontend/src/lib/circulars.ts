@@ -38,6 +38,25 @@ export type CircularSummary = {
   translations?: Partial<Record<SummaryLang, CircularSummary>>;
 };
 
+export function translationIsUsable(entry?: CircularSummary | null): boolean {
+  if (!entry?.title) return false;
+  const blob = [
+    entry.title,
+    entry.issuedBy,
+    entry.targetAudience,
+    ...(entry.sections || []).map((section) => `${section.heading} ${section.content}`),
+    ...(entry.actionItems || []),
+  ]
+    .filter(Boolean)
+    .join(" ");
+  if (!blob.trim()) return false;
+  const compact = blob.replace(/\s+/g, "");
+  if (/(.{2,12})\1{6,}/s.test(compact) || /(.{13,80})\1{3,}/s.test(compact)) return false;
+  const tokens = blob.trim().split(/\s+/);
+  if (tokens.length >= 20 && new Set(tokens).size / tokens.length < 0.15) return false;
+  return true;
+}
+
 export type CircularProcessingMeta = {
   ocrUsed: boolean;
   ocrLang: string | null;
@@ -332,7 +351,8 @@ export async function translateCircularSummary(
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.error || data.detail || "Translation failed");
+    const raw = data.error || data.detail || "Translation failed";
+    throw new Error(typeof raw === "string" ? raw : "Translation failed");
   }
   return data.circular;
 }

@@ -115,6 +115,90 @@ def counterpart_language(language: SummaryLang) -> SummaryLang:
     return "en" if language in ("si", "ta") else "si"
 
 
+_SHORT_LOOP = re.compile(r"(.{2,12})\1{6,}", re.DOTALL)
+_LONG_LOOP = re.compile(r"(.{13,80})\1{3,}", re.DOTALL)
+_TOKEN_SPLIT = re.compile(r"\S+")
+
+
+def text_looks_degenerate(text: str) -> bool:
+    """True when a model looped (repeated chunks) or collapsed to a few unique tokens."""
+    raw = (text or "").strip()
+    if not raw:
+        return False
+    compact = re.sub(r"\s+", "", raw)
+    if _SHORT_LOOP.search(compact) or _LONG_LOOP.search(compact):
+        return True
+    if _SHORT_LOOP.search(raw) or _LONG_LOOP.search(raw):
+        return True
+    tokens = _TOKEN_SPLIT.findall(raw)
+    if len(tokens) >= 20:
+        unique = len(set(tokens))
+        if unique / len(tokens) < 0.15:
+            return True
+    return False
+
+
+def _field_too_long(translated: str, source: str) -> bool:
+    src = (source or "").strip()
+    dst = (translated or "").strip()
+    if not dst:
+        return False
+    if not src:
+        return len(dst) > 2000
+    return len(dst) > max(400, len(src) * 4)
+
+
+def translation_quality_error(
+    translated: dict[str, Any],
+    source: dict[str, Any],
+    language: SummaryLang,
+) -> str | None:
+    """Return a user-facing error if the translation is looping, too long, or the wrong script."""
+    lang_name = LANG_LABEL.get(language, language)
+    message = (
+        f"{lang_name} translation from the local model was unreadable. "
+        "Stay on English or use a stronger model."
+    )
+    if language in ("si", "ta") and not summary_matches_output_language(translated, language):
+        return message
+    blob = _summary_text_blob(translated)
+    if text_looks_degenerate(blob):
+        return message
+
+    pairs = [
+        (str(translated.get("title") or ""), str(source.get("title") or "")),
+        (str(translated.get("issuedBy") or ""), str(source.get("issuedBy") or "")),
+        (str(translated.get("targetAudience") or ""), str(source.get("targetAudience") or "")),
+    ]
+    src_sections = [
+        section
+        for section in (source.get("sections") or [])
+        if isinstance(section, dict)
+    ]
+    dst_sections = [
+        section
+        for section in (translated.get("sections") or [])
+        if isinstance(section, dict)
+    ]
+    for index, dst_section in enumerate(dst_sections):
+        src_section = src_sections[index] if index < len(src_sections) else {}
+        pairs.append(
+            (str(dst_section.get("heading") or ""), str(src_section.get("heading") or ""))
+        )
+        pairs.append(
+            (str(dst_section.get("content") or ""), str(src_section.get("content") or ""))
+        )
+    src_actions = [str(item) for item in (source.get("actionItems") or [])]
+    for index, item in enumerate(translated.get("actionItems") or []):
+        src_item = src_actions[index] if index < len(src_actions) else ""
+        pairs.append((str(item), src_item))
+
+    for dst, src in pairs:
+        if text_looks_degenerate(dst) or _field_too_long(dst, src):
+            return message
+    return None
+
+
 def _summary_text_blob(summary: dict[str, Any]) -> str:
     parts = [
         str(summary.get("title") or ""),
@@ -128,6 +212,10 @@ def _summary_text_blob(summary: dict[str, Any]) -> str:
         " ".join(str(item) for item in (summary.get("actionItems") or [])),
     ]
     return " ".join(parts)
+
+
+def summary_looks_degenerate(summary: dict[str, Any]) -> bool:
+    return text_looks_degenerate(_summary_text_blob(summary))
 
 
 def summary_matches_output_language(summary: dict[str, Any], language: SummaryLang) -> bool:
