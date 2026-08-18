@@ -34,6 +34,33 @@
     color: #e2e8f0;
     @apply antialiased font-sans;
     font-feature-settings: "kern" 1, "liga" 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(125, 211, 252, 0.28) rgba(15, 23, 42, 0.45);
+  }
+
+  body::-webkit-scrollbar,
+  textarea::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  body::-webkit-scrollbar-track,
+  textarea::-webkit-scrollbar-track {
+    background: rgba(2, 6, 23, 0.45);
+  }
+
+  body::-webkit-scrollbar-thumb,
+  textarea::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(125, 211, 252, 0.45), rgba(100, 116, 139, 0.55));
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  body::-webkit-scrollbar-thumb:hover,
+  textarea::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(34, 211, 238, 0.7), rgba(148, 163, 184, 0.65));
+    background-clip: padding-box;
   }
 
   h1,
@@ -250,20 +277,40 @@
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.2) transparent;
+    scrollbar-color: rgba(125, 211, 252, 0.28) rgba(15, 23, 42, 0.35);
   }
 
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(2, 6, 23, 0.45);
+    border-radius: 999px;
+    margin: 4px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
+    background: linear-gradient(180deg, rgba(125, 211, 252, 0.45), rgba(100, 116, 139, 0.55));
     border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(34, 211, 238, 0.7), rgba(148, 163, 184, 0.65));
+    background-clip: padding-box;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:active {
+    background: rgba(34, 211, 238, 0.8);
+    background-clip: padding-box;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-corner {
+    background: transparent;
   }
 
   .bg-mesh {

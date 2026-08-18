@@ -347,7 +347,7 @@ export default function SummaryPanel({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-7 lg:px-9 lg:py-8">
+      <div className="flex-1 overflow-y-auto px-4 py-5 scrollbar-thin sm:px-7 sm:py-7 lg:px-9 lg:py-8">
         {displayed && !editing && !translating && (
           <p className="ws-muted mb-6 text-xs leading-relaxed">
             This brief is generated from the uploaded PDF. It is not official Ministry of

@@ -24,12 +24,18 @@ DEFAULT_OUT = TRAINING_DIR / "output" / "easycircular-3b-q4_k_m.gguf"
 
 
 def find_existing_gguf() -> Path | None:
+    candidates: list[Path] = []
     if UNSLOTH_GGUF.is_dir():
-        matches = sorted(UNSLOTH_GGUF.glob("*.gguf"))
-        if matches:
-            return matches[-1]
-    matches = sorted((TRAINING_DIR / "output").glob("*.gguf"))
-    return matches[-1] if matches else None
+        candidates.extend(UNSLOTH_GGUF.glob("*.gguf"))
+    candidates.extend((TRAINING_DIR / "output").glob("*.gguf"))
+    quantized = [
+        path
+        for path in candidates
+        if "f16" not in path.name.lower() and "fp16" not in path.name.lower()
+    ]
+    if quantized:
+        return sorted(quantized)[-1]
+    return None
 
 
 def find_convert_script() -> Path | None:
@@ -37,6 +43,7 @@ def find_convert_script() -> Path | None:
     if env and Path(env).exists():
         return Path(env)
     candidates = [
+        Path("G:/AI/llama.cpp/src/convert_hf_to_gguf.py"),
         Path("G:/AI/llama.cpp/convert_hf_to_gguf.py"),
         Path("G:/AI/llama.cpp/convert-hf-to-gguf.py"),
         TRAINING_DIR / "llama.cpp" / "convert_hf_to_gguf.py",

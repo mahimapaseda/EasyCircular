@@ -237,7 +237,7 @@ export default function SourceTextPanel({
                 value={draftText}
                 onChange={(e) => onDraftChange(e.target.value)}
                 disabled={!hasText && circular.status === "failed"}
-                className="min-h-[min(55vh,560px)] w-full resize-y rounded-xl border border-white/15 bg-black/30 px-3 py-3 font-mono text-[13px] leading-relaxed text-slate-100 outline-none placeholder:text-slate-400 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 sm:px-4"
+                className="max-h-[min(70vh,720px)] min-h-[min(55vh,560px)] w-full resize-y overflow-y-auto rounded-xl border border-white/15 bg-black/30 px-3 py-3 font-mono text-[13px] leading-relaxed text-slate-100 outline-none placeholder:text-slate-400 scrollbar-thin focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20 sm:px-4"
               />
             )}
 

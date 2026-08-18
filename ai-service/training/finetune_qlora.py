@@ -210,14 +210,12 @@ def train_peft(args: argparse.Namespace, train_texts: list[str], eval_texts: lis
     model.gradient_checkpointing_enable()
 
     def tokenize(batch: dict) -> dict:
-        encoded = tokenizer(
+        return tokenizer(
             batch["text"],
             truncation=True,
             max_length=args.seq_len,
             padding=False,
         )
-        encoded["labels"] = [ids[:] for ids in encoded["input_ids"]]
-        return encoded
 
     train_ds = Dataset.from_dict({"text": train_texts}).map(tokenize, batched=True, remove_columns=["text"])
     eval_ds = None
@@ -231,10 +229,10 @@ def train_peft(args: argparse.Namespace, train_texts: list[str], eval_texts: lis
         gradient_accumulation_steps=args.grad_accum,
         num_train_epochs=args.epochs,
         learning_rate=2e-4,
-        logging_steps=1,
-        warmup_ratio=0.05,
-        lr_scheduler_type="cosine",
-        optim="paged_adamw_8bit",
+            logging_steps=1,
+            warmup_steps=1,
+            lr_scheduler_type="cosine",
+            optim="paged_adamw_8bit",
         fp16=True,
         bf16=False,
         seed=0,
@@ -242,7 +240,7 @@ def train_peft(args: argparse.Namespace, train_texts: list[str], eval_texts: lis
         save_strategy="epoch",
         gradient_checkpointing=True,
         dataloader_pin_memory=False,
-        eval_strategy="epoch" if eval_ds is not None else "no",
+        eval_strategy="no",
     )
     trainer = Trainer(
         model=model,
@@ -285,7 +283,7 @@ def export_merged_cpu(base_model: str, lora_dir: Path, merged_dir: Path) -> None
 def main() -> int:
     parser = argparse.ArgumentParser(description="QLoRA fine-tune Llama-3.2-3B for MOE summaries")
     parser.add_argument("--model", default="unsloth/Llama-3.2-3B-Instruct-bnb-4bit")
-    parser.add_argument("--fallback-model", default="meta-llama/Llama-3.2-3B-Instruct")
+    parser.add_argument("--fallback-model", default="unsloth/Llama-3.2-3B-Instruct")
     parser.add_argument("--seq-len", type=int, default=1024)
     parser.add_argument("--lora-r", type=int, default=8)
     parser.add_argument("--lora-alpha", type=int, default=16)

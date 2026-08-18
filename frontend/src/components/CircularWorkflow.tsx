@@ -454,7 +454,7 @@ export default function CircularWorkflow({ id }: CircularWorkflowProps) {
           </div>
 
           {sourceExpanded && (
-            <div className="order-2 lg:sticky lg:top-36 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto">
+            <div className="order-2 lg:sticky lg:top-36 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto scrollbar-thin">
               {sourcePanel}
             </div>
           )}
