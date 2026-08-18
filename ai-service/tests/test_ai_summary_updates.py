@@ -8,7 +8,13 @@ from app.moe_text import (
     extract_effective_date,
 )
 from app.chunking import split_text
-from app.summarize import _format_entities_for_prompt, _invoke_with_retry, _prioritise_entities, summarize_text
+from app.summarize import (
+    _format_entities_for_prompt,
+    _invoke_with_retry,
+    _parse_llm_json,
+    _prioritise_entities,
+    summarize_text,
+)
 
 def test_validate_llm_output_defaults():
     # Test that missing fields are gracefully handled and defaulted
@@ -100,6 +106,35 @@ def test_validate_llm_output_drops_json_string_entity_dumps():
     )
     validated = validate_llm_output({"title": "Syllabus", "actionItems": [dump]})
     assert validated["actionItems"] == []
+
+
+def test_parse_llm_json_strips_commentary_and_trailing_commas():
+    parsed = _parse_llm_json(
+        'Here you go:\n{"title": "T", "circularNumber": "10/2026",}\nThanks'
+    )
+    assert parsed["title"] == "T"
+    assert parsed["circularNumber"] == "10/2026"
+
+    fenced = _parse_llm_json('```json\n{"title": "T", "sections": [],}\n```')
+    assert fenced["title"] == "T"
+    assert fenced["sections"] == []
+
+
+def test_parse_llm_json_closes_truncated_object():
+    truncated = (
+        '{"title": "Circular 32/2025", "sections": [{"heading": "Purpose", '
+        '"content": "This circular directs schools'
+    )
+    parsed = _parse_llm_json(truncated)
+    assert parsed["title"] == "Circular 32/2025"
+    assert parsed["sections"][0]["heading"] == "Purpose"
+    assert "directs schools" in parsed["sections"][0]["content"]
+
+
+def test_parse_llm_json_escapes_raw_newlines_in_strings():
+    raw = '{"title": "Line one\nstill title", "sections": [], "actionItems": []}'
+    parsed = _parse_llm_json(raw)
+    assert parsed["title"] == "Line one\nstill title"
 
 
 def test_format_entities_for_prompt_is_text_only():

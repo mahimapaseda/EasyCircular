@@ -91,6 +91,27 @@ def test_ollama_is_reachable_false_on_error(monkeypatch):
     assert ollama_is_reachable() is False
 
 
+def test_get_chat_model_ollama_uses_json_format_and_wider_context(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OLLAMA_NUM_CTX", "8192")
+    monkeypatch.setattr("app.llm.ollama_is_reachable", lambda: True)
+
+    captured: dict = {}
+
+    class FakeChatOllama:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    import langchain_ollama
+
+    monkeypatch.setattr(langchain_ollama, "ChatOllama", FakeChatOllama)
+    from app.llm import get_chat_model
+
+    get_chat_model()
+    assert captured["format"] == "json"
+    assert captured["num_ctx"] == 8192
+
+
 def test_supported_providers():
     assert "gemini" in SUPPORTED_PROVIDERS
     assert "groq" in SUPPORTED_PROVIDERS

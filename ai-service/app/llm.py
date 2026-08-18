@@ -147,11 +147,15 @@ def get_chat_model(
             )
 
         model = active_model_name()
+        # Default Ollama num_ctx is 2048, which truncates MOE prompts mid-JSON.
+        num_ctx = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
         return ChatOllama(
             model=model,
             base_url=ollama_base_url(),
             temperature=temp,
             num_predict=max_tokens,
+            num_ctx=num_ctx,
+            format="json",
         )
 
     supported = ", ".join(SUPPORTED_PROVIDERS)

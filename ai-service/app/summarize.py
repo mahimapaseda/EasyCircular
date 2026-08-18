@@ -42,7 +42,7 @@ logger = logging.getLogger("easycircular.ai.summarize")
 
 FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
 # Bump when prompt/few-shot/guardrail behaviour changes so the backend cache misses.
-SUMMARIZER_VERSION = "v6-action-sanitize"
+SUMMARIZER_VERSION = "v7-json-repair"
 
 _OVERLAP_STOPWORDS = frozenset(
     {
@@ -478,35 +478,116 @@ def _token_usage(response) -> int:
     return int(usage.get("total_tokens") or usage.get("totalTokens") or 0)
 
 
-def _parse_llm_json(content: str) -> dict[str, Any]:
-    """Parse LLM JSON with fence stripping and brace extraction for fragile 3B models."""
+def _strip_json_fences(content: str) -> str:
     content = (content or "").strip()
-    if not content:
-        raise json.JSONDecodeError("Empty LLM response", content, 0)
-
     if content.startswith("```"):
         content = re.sub(r"^```(?:json)?\s*", "", content, flags=re.IGNORECASE)
         content = re.sub(r"\s*```\s*$", "", content)
+    return content.replace("```json", "").replace("```", "").strip()
 
-    # Prefer the outermost JSON object if the model added commentary.
+
+def _extract_json_object(content: str) -> str:
+    """Take the first `{` through the last `}`, or through EOF if truncated."""
     start = content.find("{")
+    if start < 0:
+        raise json.JSONDecodeError("No JSON object found", content, 0)
     end = content.rfind("}")
-    if start >= 0 and end > start:
-        content = content[start : end + 1]
+    if end > start:
+        return content[start : end + 1]
+    return content[start:]
 
-    # Common 3B glitches: trailing commas, smart quotes
-    repaired = content.replace("\u201c", '"').replace("\u201d", '"').replace("\u2019", "'")
+
+def _escape_control_chars_in_strings(text: str) -> str:
+    """Turn raw newlines/tabs inside JSON strings into escaped sequences."""
+    out: list[str] = []
+    in_string = False
+    escape = False
+    for ch in text:
+        if in_string:
+            if escape:
+                out.append(ch)
+                escape = False
+            elif ch == "\\":
+                out.append(ch)
+                escape = True
+            elif ch == '"':
+                out.append(ch)
+                in_string = False
+            elif ch == "\n":
+                out.append("\\n")
+            elif ch == "\r":
+                continue
+            elif ch == "\t":
+                out.append("\\t")
+            else:
+                out.append(ch)
+        else:
+            if ch == '"':
+                in_string = True
+            out.append(ch)
+    return "".join(out)
+
+
+def _close_truncated_json(text: str) -> str:
+    """Close unclosed strings/brackets so a cut-off 3B response can still parse."""
+    in_string = False
+    escape = False
+    stack: list[str] = []
+    for ch in text:
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch == "{":
+            stack.append("}")
+        elif ch == "[":
+            stack.append("]")
+        elif ch in "}]" and stack and stack[-1] == ch:
+            stack.pop()
+
+    if in_string:
+        text += '"'
+    stripped = text.rstrip()
+    if stripped.endswith(","):
+        text = stripped[:-1]
+    elif stripped.endswith(":"):
+        text = stripped + " null"
+    while stack:
+        text += stack.pop()
+    return text
+
+
+def _parse_llm_json(content: str) -> dict[str, Any]:
+    """Parse LLM JSON with fence stripping, truncation repair, and 3B glitch fixes."""
+    content = _strip_json_fences(content)
+    if not content:
+        raise json.JSONDecodeError("Empty LLM response", content, 0)
+
+    extracted = _extract_json_object(content)
+    repaired = extracted.replace("\u201c", '"').replace("\u201d", '"').replace("\u2019", "'")
+    repaired = _escape_control_chars_in_strings(repaired)
     repaired = re.sub(r",\s*([}\]])", r"\1", repaired)
 
-    try:
-        parsed = json.loads(repaired)
-    except json.JSONDecodeError:
-        # Last resort: truncate after last complete top-level value
-        parsed = json.loads(content)
+    candidates = [repaired, _close_truncated_json(repaired), extracted]
+    last_error: json.JSONDecodeError | None = None
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError as exc:
+            last_error = exc
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+        last_error = json.JSONDecodeError("LLM JSON root must be an object", candidate, 0)
 
-    if not isinstance(parsed, dict):
-        raise json.JSONDecodeError("LLM JSON root must be an object", content, 0)
-    return parsed
+    assert last_error is not None
+    raise last_error
 
 
 def _describe_llm_error(exc: Exception) -> str:
@@ -642,6 +723,11 @@ No markdown fences, no commentary."""
     try:
         raw_parsed = _parse_llm_json(str(content))
     except json.JSONDecodeError:
+        logger.warning(
+            "LLM JSON parse failed (%s chars): %s",
+            len(str(content)),
+            str(content).replace("\n", " ")[:400],
+        )
         # One repair pass: ask the model to convert its previous output to JSON only
         repair_prompt = (
             "Convert the following into ONE valid JSON object with keys "
@@ -662,7 +748,15 @@ No markdown fences, no commentary."""
                 block.get("text", "") if isinstance(block, dict) else str(block)
                 for block in repair_content
             )
-        raw_parsed = _parse_llm_json(str(repair_content))
+        try:
+            raw_parsed = _parse_llm_json(str(repair_content))
+        except json.JSONDecodeError:
+            logger.warning(
+                "LLM JSON repair pass failed (%s chars): %s",
+                len(str(repair_content)),
+                str(repair_content).replace("\n", " ")[:400],
+            )
+            raise
         response = repair_resp
 
     # Validate and normalise through Pydantic schema
