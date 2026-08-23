@@ -26,13 +26,16 @@
   }
 
   html {
+    /* Base 18px so rem-based Tailwind text scales across the whole UI
+       (supervisor feedback: increase font size of the full system). */
+    font-size: 112.5%; /* 18px when browser default is 16px */
     scroll-behavior: smooth;
   }
 
   body {
     background-color: rgb(var(--bg));
     color: rgb(var(--text));
-    @apply antialiased font-sans;
+    @apply antialiased font-sans text-base leading-relaxed;
     font-feature-settings: "kern" 1, "liga" 1;
     scrollbar-width: thin;
     scrollbar-color: rgba(100, 116, 139, 0.45) rgba(226, 232, 240, 0.8);

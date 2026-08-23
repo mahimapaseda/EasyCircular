@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import ConfidenceGauge from "@/components/ui/ConfidenceGauge";
 import StatusBadge from "@/components/ui/StatusBadge";
 import WorkflowSlider from "@/components/workflow/WorkflowSlider";
 import { WORKFLOW_STEPS } from "@/lib/contracts";
@@ -13,6 +14,12 @@ type WorkflowLayoutProps = {
   currentStep: number;
   children: ReactNode;
   actions?: ReactNode;
+  /** Slim source expand control for the header middle. */
+  center?: ReactNode;
+  /** OCR / extraction confidence — compact ring beside COMPLETED. */
+  confidence?: number | null;
+  /** When true, omit entities from the meta strip (shown in Source control instead). */
+  hideEntityStat?: boolean;
 };
 
 export default function WorkflowLayout({
@@ -20,6 +27,9 @@ export default function WorkflowLayout({
   currentStep,
   children,
   actions,
+  center,
+  confidence = null,
+  hideEntityStat = false,
 }: WorkflowLayoutProps) {
   const words = wordCount(circular);
   const completed = circular.status === "completed";
@@ -31,7 +41,9 @@ export default function WorkflowLayout({
   const stats = [
     circular.processingMeta.pageCount > 0 && `${circular.processingMeta.pageCount} pg`,
     words > 0 && `${words.toLocaleString()} words`,
-    circular.entities.length > 0 && `${circular.entities.length} entities`,
+    !hideEntityStat &&
+      circular.entities.length > 0 &&
+      `${circular.entities.length} entities`,
     circular.processingMeta.ocrUsed &&
       circular.processingMeta.ocrLang &&
       `OCR ${circular.processingMeta.ocrLang}`,
@@ -40,27 +52,40 @@ export default function WorkflowLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-12 z-20 border-b border-slate-200 bg-white/90 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 md:top-0">
-        <div className="mx-auto w-full max-w-[1400px] px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0 flex-1">
+        <div className="mx-auto w-full max-w-[1400px] px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+            <div className="min-w-0 flex-1 lg:max-w-sm">
               <nav className="flex items-center gap-1.5 text-[11px] font-medium">
-                <Link href="/circulars" className="text-ink-600 transition hover:text-cyan-700 dark:text-slate-400 dark:hover:text-cyan-300">
+                <Link
+                  href="/circulars"
+                  className="text-ink-600 transition hover:text-cyan-700 dark:text-slate-400 dark:hover:text-cyan-300"
+                >
                   Library
                 </Link>
                 <span className="text-ink-300 dark:text-slate-600" aria-hidden>
                   /
                 </span>
-                <span className="truncate text-ink-600 dark:text-slate-300">{circular.originalFilename}</span>
+                <span className="truncate text-ink-600 dark:text-slate-300">
+                  {circular.originalFilename}
+                </span>
               </nav>
 
-              <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2.5">
-                <h1 className="min-w-0 truncate font-display text-lg font-bold tracking-tight text-ink-900 sm:text-xl dark:text-white">
+              <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
+                <h1 className="min-w-0 truncate font-display text-base font-bold tracking-tight text-ink-900 sm:text-lg dark:text-white">
                   {circular.originalFilename}
                 </h1>
                 <StatusBadge status={circular.status} className="shrink-0" />
+                {confidence !== null && (
+                  <ConfidenceGauge
+                    value={confidence}
+                    compact
+                    size={40}
+                    className="shrink-0"
+                  />
+                )}
               </div>
 
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-700 dark:text-slate-400">
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-700 dark:text-slate-400">
                 <span>{formatRelativeTime(circular.updatedAt)}</span>
                 {stats.map((item) => (
                   <span key={item} className="flex items-center gap-2">
@@ -71,24 +96,40 @@ export default function WorkflowLayout({
               </div>
             </div>
 
-            <div className="flex w-full shrink-0 flex-col gap-3 lg:max-w-md lg:items-end">
-              <div className="hidden w-full lg:block">
-                <WorkflowSlider currentStep={allStepsDone ? WORKFLOW_STEPS.length + 1 : clamped} />
+            {center && (
+              <div className="hidden min-w-0 shrink-0 justify-center lg:flex">
+                {center}
               </div>
-              {actions && <div className="hidden w-full justify-end lg:flex">{actions}</div>}
+            )}
+
+            <div className="flex w-full shrink-0 flex-col gap-2 lg:max-w-xs lg:items-end">
+              <div className="hidden w-full lg:block">
+                <WorkflowSlider
+                  currentStep={allStepsDone ? WORKFLOW_STEPS.length + 1 : clamped}
+                  compact
+                />
+              </div>
+              {actions && (
+                <div className="hidden w-full justify-end lg:flex">{actions}</div>
+              )}
             </div>
           </div>
 
-          <div className="mt-4 lg:hidden">
-            <WorkflowSlider currentStep={allStepsDone ? WORKFLOW_STEPS.length + 1 : clamped} />
-            <p className="mt-2 text-center text-[11px] font-medium text-ink-700 dark:text-slate-400">
+          {center && <div className="mt-2.5 lg:hidden">{center}</div>}
+
+          <div className="mt-3 lg:hidden">
+            <WorkflowSlider
+              currentStep={allStepsDone ? WORKFLOW_STEPS.length + 1 : clamped}
+              compact
+            />
+            <p className="mt-1.5 text-center text-[11px] font-medium text-ink-700 dark:text-slate-400">
               {allStepsDone ? "Brief ready" : activeStep.description}
             </p>
           </div>
         </div>
 
         {actions && (
-          <div className="border-t border-slate-200 px-4 py-2.5 dark:border-white/10 lg:hidden">
+          <div className="border-t border-slate-200 px-4 py-2 dark:border-white/10 lg:hidden">
             <div className="mx-auto flex w-full max-w-[1400px] [&_button]:min-h-11 [&_button]:w-full">
               {actions}
             </div>

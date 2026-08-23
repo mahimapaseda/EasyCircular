@@ -1,6 +1,7 @@
 "use client";
 
 import EntityHighlight from "@/components/EntityHighlight";
+import ConfidenceGauge from "@/components/ui/ConfidenceGauge";
 import type { Circular } from "@/lib/circulars";
 
 type TextView = "highlights" | "editor";
@@ -18,6 +19,8 @@ type SourceTextPanelProps = {
   expanded: boolean;
   compact?: boolean;
   collapsible?: boolean;
+  /** When true, chrome lives in the page header — hide panel bar; null when collapsed. */
+  controlsInHeader?: boolean;
   onToggle: () => void;
   onTextViewChange: (view: TextView) => void;
   onDraftChange: (text: string) => void;
@@ -26,8 +29,70 @@ type SourceTextPanelProps = {
   onReset: () => void;
 };
 
-const panelClass =
-  "ws-panel overflow-hidden";
+export type SourceTextToolbarProps = {
+  circular: Circular;
+  confidence: number | null;
+  hasEntities: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  onExtract: () => void;
+  className?: string;
+};
+
+const panelClass = "ws-panel overflow-hidden";
+
+export function SourceTextToolbar({
+  circular,
+  confidence,
+  hasEntities,
+  expanded,
+  onToggle,
+  onExtract,
+  className = "",
+}: SourceTextToolbarProps) {
+  const metaParts = [
+    hasEntities && `${circular.entities.length} entities`,
+    !hasEntities && confidence === null && "Extracted content",
+    !expanded && "Expand to review",
+    expanded && "Collapse",
+  ].filter(Boolean) as string[];
+
+  return (
+    <div className={`flex min-w-0 items-center gap-1.5 ${className}`}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-100 dark:hover:bg-white/10"
+      >
+        <span className="ws-label shrink-0 tracking-[0.14em]">Source text</span>
+        {metaParts.length > 0 && (
+          <span className="ws-muted hidden min-w-0 truncate text-[11px] sm:inline">
+            {metaParts.join(" · ")}
+          </span>
+        )}
+        <svg
+          className={`h-3.5 w-3.5 shrink-0 text-ink-400 transition-transform duration-300 dark:text-slate-400 ${
+            expanded ? "rotate-180" : ""
+          }`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+          aria-hidden
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={onExtract}
+        className="rounded-md px-2 py-1 text-[10px] font-semibold text-ink-500 transition hover:bg-slate-100 hover:text-ink-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
+      >
+        Re-extract
+      </button>
+    </div>
+  );
+}
 
 export default function SourceTextPanel({
   circular,
@@ -42,6 +107,7 @@ export default function SourceTextPanel({
   expanded,
   compact = false,
   collapsible = true,
+  controlsInHeader = false,
   onToggle,
   onTextViewChange,
   onDraftChange,
@@ -105,96 +171,80 @@ export default function SourceTextPanel({
 
   if (!hasText && circular.status !== "uploaded") return null;
 
-  const confidenceColor =
-    confidence === null
-      ? "text-ink-400 dark:text-slate-400"
-      : confidence >= 90
-        ? "text-emerald-700 dark:text-emerald-300"
-        : confidence >= 70
-          ? "text-cyan-700 dark:text-cyan-300"
-          : "text-amber-700 dark:text-amber-300";
-
   const showBody = expanded || !collapsible;
 
-  const headerCopy = (
-    <div className="min-w-0">
-      <p className="ws-label tracking-[0.16em]">Source text</p>
-      {!(compact && !showBody) && (
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
-          {hasEntities && (
-            <span className="font-medium text-ink-700 dark:text-slate-300">{circular.entities.length} entities</span>
-          )}
-          {confidence !== null && (
-            <>
-              {hasEntities && <span className="text-slate-400">·</span>}
-              <span className={`font-medium ${confidenceColor}`}>{confidence}% confidence</span>
-            </>
-          )}
-          {!hasEntities && confidence === null && (
-            <span className="text-ink-600 dark:text-slate-300">Extracted content</span>
-          )}
-        </div>
-      )}
-      {compact && !showBody && (
-        <p className="ws-muted mt-0.5 truncate text-[11px]">
-          {[
-            hasEntities && `${circular.entities.length} entities`,
-            confidence !== null && `${confidence}% confidence`,
-            !hasEntities && confidence === null && "Extracted content",
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-          {" · Expand to review"}
-        </p>
-      )}
-    </div>
-  );
+  // Controls live in the page header — nothing to show when collapsed.
+  if (controlsInHeader && !showBody) return null;
+
+  const metaParts = [
+    hasEntities && `${circular.entities.length} entities`,
+    !hasEntities && confidence === null && "Extracted content",
+    compact && !showBody && "Expand to review",
+  ].filter(Boolean) as string[];
 
   return (
     <div className={`${panelClass} ${compact && !showBody ? "xl:max-w-none" : ""}`}>
-      <div className={`flex items-center gap-2 ${compact && !showBody ? "px-3 py-2" : "px-4 py-3"}`}>
-        {collapsible ? (
-          <button
-            type="button"
-            onClick={onToggle}
-            className="flex min-w-0 flex-1 items-center gap-2 text-left transition hover:opacity-80"
-          >
-            {headerCopy}
-          </button>
-        ) : (
-          <div className="min-w-0 flex-1">{headerCopy}</div>
-        )}
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={onExtract}
-            className="hidden rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-ink-600 transition hover:bg-slate-50 hover:text-ink-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white sm:inline-flex"
-          >
-            Re-extract
-          </button>
-          {collapsible && (
+      {!controlsInHeader && (
+        <div className={`flex items-center gap-2.5 ${compact && !showBody ? "px-3 py-2" : "px-4 py-3"}`}>
+          {confidence !== null && (
+            <ConfidenceGauge
+              value={confidence}
+              compact
+              size={44}
+              className="shrink-0"
+            />
+          )}
+          {collapsible ? (
             <button
               type="button"
               onClick={onToggle}
-              aria-label={expanded ? "Collapse source text" : "Expand source text"}
-              className="flex min-h-10 min-w-10 items-center justify-center rounded-md border border-slate-200 text-ink-500 transition hover:bg-slate-50 hover:text-ink-900 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+              className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left transition hover:opacity-80"
             >
-              <svg
-                className={`h-3.5 w-3.5 transition-transform duration-300 ${showBody ? "rotate-180" : ""}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+              <p className="ws-label shrink-0 tracking-[0.16em]">Source text</p>
+              {metaParts.length > 0 && (
+                <p className="ws-muted min-w-0 truncate text-[11px]">{metaParts.join(" · ")}</p>
+              )}
             </button>
+          ) : (
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+              <p className="ws-label shrink-0 tracking-[0.16em]">Source text</p>
+              {metaParts.length > 0 && (
+                <p className="ws-muted min-w-0 truncate text-[11px]">{metaParts.join(" · ")}</p>
+              )}
+            </div>
           )}
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={onExtract}
+              className="hidden rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-ink-600 transition hover:bg-slate-50 hover:text-ink-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white sm:inline-flex"
+            >
+              Re-extract
+            </button>
+            {collapsible && (
+              <button
+                type="button"
+                onClick={onToggle}
+                aria-label={expanded ? "Collapse source text" : "Expand source text"}
+                className="flex min-h-10 min-w-10 items-center justify-center rounded-md border border-slate-200 text-ink-500 transition hover:bg-slate-50 hover:text-ink-900 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+              >
+                <svg
+                  className={`h-3.5 w-3.5 transition-transform duration-300 ${showBody ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {showBody && (
-        <div className="border-t border-slate-200 dark:border-white/10">
+        <div className={controlsInHeader ? "" : "border-t border-slate-200 dark:border-white/10"}>
           {hasEntities && (
             <div className="flex items-center justify-between gap-3 px-5 py-3">
               <div className="ws-segment">

@@ -1,0 +1,112 @@
+title: 3. නිපැයුම් නිර්මාණය (Artefact Design)
+sections:
+- title: 3.1 නිර්මාණ ක්‍රමවේදය හැඳින්වීම
+  id: intro
+  level: 2
+  paragraphs:
+  - මෙම පරිච්ඡේදය EasyCircular පද්ධතියේ නිර්මාණය සහ ක්‍රියාත්මක කිරීමේ ක්‍රමවේදය සවිස්තරව විස්තර කරයි. ක්‍රමවේදය
+    Agile පදනම්, සමීක්ෂණ-තොරතුරු මත ගොඩනැගුණු සහ තක්සේරු-නැඹුරු ප්‍රවේශයක් අනුගමනය කරයි. අවශ්‍යතා මූලික පර්යේෂණයෙන්
+    (n=41) ව්‍යුත්පන්න කර, ගෘහනිර්මාණය ලෙස ත්‍රිස්ථර microservices රටාව යොදාගෙන, AI pipeline එකට human-in-the-loop
+    සහ guardrails ඒකාබද්ධ කර ඇත.
+  - 'නිර්මාණ තීරණ stakeholder අවශ්‍යතා දක්වා පසුබැසිය හැක: 97.6% සාරාංශ අවශ්‍ය බව, 78% highlighting අවශ්‍ය බව, 68.3%
+    AI භාවිතයට කැමති නොවීම සහ රහස්‍යතා පිළිබඳ අදහස් 17ක්. මෙම පරිච්ඡේදයට architecture රූපසටහන, class සහ ER ආකෘති,
+    UI සහ wireframes, algorithm flowchart, අවශ්‍යතා, තාක්ෂණ තොගය, ආරක්ෂාව, API අන්ත ලක්ෂ්‍ය සහ AI සහායක සංවර්ධනය
+    පිළිබඳ ප්‍රකාශනය ඇතුළත් වේ.'
+  bullets: []
+  numbered: []
+  figures: []
+- title: 3.2 සමීක්ෂණ-පාදක අවශ්‍යතා
+  id: req
+  level: 2
+  paragraphs:
+  - FR1 PDF upload; FR2 OCR extraction; FR3 human text edit; FR4 summary; FR5 entity highlighting; FR6 action items;
+    FR7 circular list; FR8 MOE import.
+  - NFR1 performance (~114ms cache); NFR2 JWT security; NFR3 health checks; NFR4 mobile UI; NFR5 privacy (local
+    Ollama); NFR6 Docker maintainability.
+  bullets: []
+  numbered: []
+  figures: []
+- title: 3.3 ත්‍රිස්ථර ගෘහනිර්මාණය (Architecture)
+  id: arch
+  level: 2
+  paragraphs:
+  - 'EasyCircular ත්‍රිස්ථර බෙදාහැරුණු ගෘහනිර්මාණයක් අනුගමනය කරයි: Presentation tier (Frontend), Application tier
+    (Backend API), සහ AI/Data tier (AI microservice + MongoDB).'
+  - 'Presentation tier: Next.js 14, TypeScript, Tailwind CSS (port 3002). Application tier: Express.js REST API
+    (port 4000) with JWT, upload, cache සහ rate limiting. AI tier: FastAPI (port 5000) with OCR/NER/summarization.
+    Data tier: MongoDB (port 27017).'
+  - 'Request flow: Upload PDF, extract (+OCR), human edit, process (NER+summary), display. පහත රූපයේ architecture
+    පෙන්වා ඇත.'
+  bullets: []
+  numbered: []
+  figures:
+  - architecture
+- title: 3.4 Class diagram සහ ER / Data model
+  id: class_er
+  level: 2
+  paragraphs:
+  - 'ප්‍රධාන domain entities: User, Circular, Summary සහ Entity. User එකකට circulars බහුවක් තිබිය හැකි අතර Circular
+    එකක entities සහ summary එබ්බවී ගබඩා වේ.'
+  - Class diagram සහ MongoDB ER-style document model පහත රූපවලින් පෙන්වයි.
+  bullets: []
+  numbered: []
+  figures:
+  - class_diagram
+  - er_diagram
+- title: 3.5 අතුරුමුහුණත් නිර්මාණය / Wireframes (UI design)
+  id: ui_design
+  level: 2
+  paragraphs:
+  - 'UI design primary research අවශ්‍යතා මත පදනම් විය: සාරාංශය, entity highlighting සහ සරල upload workflow. ප්‍රධාන
+    තිර: Sign-in, Dashboard, PDF Upload සහ Library (workspace) වේ.'
+  - Human-in-the-loop text edit step අනිවාර්ය UI flow එකකි. පහත රූප මගින් නිර්මාණය කළ අතුරුමුහුණත් ඉදිරිපත් කර ඇත;
+    ක්‍රියාත්මක කළ සාරාංශ සහ entity highlight තිර පරිච්ඡේදය 4 කොටස 4.2 හි ඉදිරිපත් වේ.
+  bullets: []
+  numbered: []
+  figures:
+  - ui_signin
+  - ui_dashboard
+  - ui_upload
+  - ui_documents
+- title: 3.6 තාක්ෂණ තොගය
+  id: stack
+  level: 2
+  paragraphs:
+  - Table 3.1 technology stack සහ තෝරා ගැනීමේ හේතු සාරාංශ කරයි.
+  bullets: []
+  numbered: []
+  figures: []
+  table:
+    caption: 'Table 3.1: EasyCircular technology stack'
+    headers:
+    - Component
+    - Technology
+    - Version / Note
+    rows:
+    - - Frontend
+      - Next.js, TypeScript, Tailwind CSS
+      - 14.x App Router, port 3002
+    - - Backend
+      - Node.js, Express, Mongoose
+      - 20.x, port 4000
+    - - AI Service
+      - Python, FastAPI, Uvicorn
+      - 3.11, port 5000
+    - - Database
+      - MongoDB
+      - 7.x, port 27017
+    - - PDF Processing
+      - pdfplumber, PyMuPDF
+      - Dual-library extraction
+    - - OCR
+      - Tesseract, pytesseract
+      - sin + eng + tam
+    - - NLP / LLM
+      - SpaCy, LangChain, Ollama
+      - en_core_web_sm; llama3.2:3b
+    - - Auth / Security
+      - JWT, bcrypt, rate-limit
+      - AI_SERVICE_TOKEN
+    - - DevOps
+      - Docker Compose, GitHub Actions
+      - verify:phase scripts

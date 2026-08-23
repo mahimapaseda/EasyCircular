@@ -1,0 +1,18 @@
+project_title_si: "EasyCircular  ශ්‍රී ලංකා අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ සාරාංශක AI වෙබ් පද්ධතිය"
+project_title_en: "EasyCircular"
+degree: "BSc (Hons) in Computer Science"
+student_name: "G G M P Kusumsiri"
+student_id: "2540881"
+supervisor_name: "Mr. Anuruddha Abeysinghe"
+module_lecturer: "Dr. Gayana Fernando"
+submission_date: "August 2026"
+document_type: "Undergraduate Thesis Report"
+university: "The University of Bedfordshire"
+department: "Department of Computer Science and Technology"
+font_primary: "Iskoola Pota"
+font_latin: "Times New Roman"
+font_fallback: "Noto Sans Sinhala"
+font_size_body: 12
+line_spacing: 1.5
+min_pages: 80
+words_per_page: 350

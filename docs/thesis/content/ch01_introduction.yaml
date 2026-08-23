@@ -1,0 +1,161 @@
+title: 1. හැඳින්වීම (Introduction)
+sections:
+- title: 1.1 අරමුණු සහ ඉලක්ක (Aims and Objectives)
+  id: aim
+  level: 2
+  paragraphs:
+  - EasyCircular ව්‍යාපෘතියේ ප්‍රධාන අරමුණ (aim) වන්නේ ශ්‍රී ලංකා අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ PDF ලේඛන සඳහා AI-සහය
+    සහිත, human-in-the-loop, web-based summarization and entity extraction පද්ධතියක් නිර්මාණය කිරීම සහ evaluate
+    කිරීමයි. පද්ධතිය ගුරුවරුන්, විදුහල්පතිවරු සහ education administrators වල circular comprehension workload අඩු
+    කිරීමට සහ compliance errors අවම කිරීමට designed විය.
+  bullets: []
+  numbered:
+  - MOE circular PDF files upload කිරීම, text extraction (native PDF + OCR fallback) සහ user-editable text review
+    interface සැපයීම.
+  - Named Entity Recognition (NER) මගින් dates, organizations, legal references සහ action items automatically identify
+    කිරීම.
+  - Extractive-abstractive hybrid summarization pipeline implement කිරීම guardrails සමඟ hallucination risk minimize
+    කිරීම.
+  - Three-tier microservices architecture (Next.js frontend, Express backend, FastAPI AI service, MongoDB) Docker
+    Compose environment එකක deploy කිරීම.
+  - ROUGE metrics, automated test suite (91 pytest + 13 backend tests) සහ phase verification scripts මගින් system
+    quality evaluate කිරීම.
+  figures: []
+- title: 1.2 පසුබිම සහ සන්දර්භය (Background and Context)
+  id: bg
+  level: 2
+  paragraphs:
+  - ශ්‍රී ලංකාවේ ප්‍රාථමික සහ ද්විතීයික අධ්‍යාපන ක්‍ෂේත්‍රය, දිනපතාම අධ්‍යාපන අමාත්‍යාංශය (Ministry of Education  MOE)
+    විසින් නිකුත් කරනු ලබන විවිධ චක්‍රලේඛ (circulars) මගින් පාලනය වේ. මෙම චක්‍රලේඛ අතර පාසල් කළමනාකරණය, විභාග කටයුතු,
+    ගුරු පුහුණුව, ශිෂ්‍ය සුබසාධන, පාසල් යටිතල පහසුකම්, පාසල් කාලසටහන් සහ COVID-19 පසු අධ්‍යාපන ප්‍රතිසංවර්ධනය පිළිබඳ
+    නීතිමය සහ පරිපාලන උපදෙස් අඩංගු වේ. චක්‍රලේඛ බොහෝ විට PDF ආකෘතියෙන් moe.gov.lk වෙබ් අඩවිය හරහා ප්‍රකාශයට පත්
+    කරන අතර, ප්‍රාදේශීය සහ පළාත් මට්ටමේ අධ්‍යාපන කාර්යālයකාරීන්, විදුහල්පතිවරු, ගුරුවරු සහ පරිපාලන නිලධාරීන් විසින්
+    කියවා, අවබෝධ කර ගෙන, පාසල් මට්ටමේ ක්‍රියාත්මක කිරීමට සිදු කරයි.
+  - MOE චක්‍රලේඛවල ප්‍රධාන ගැටලුව වන්නේ ඒවායේ දිග, භාෂා සංකීර්ණතාව සහ නීතිමය/පරිපාලන භාෂාවේ භාවිතයයි. සාමාන්‍ය circular
+    එකක් පිටු 5-20 අතර දිගු වන අතර, එහි අන්තර්ගතය ගුරුවරුන්ට සෘජුවම අදාළ වන කොටස්, කාලසීමා, අනුගත විය යුතු නීති
+    සහ ක්‍රියාත්මක කළ යුතු පියවර වෙන් කර හඳුනා ගැනීමට අමතර ශ්‍රමයක් අවශ්‍ය වේ. 2024-2026 කාලය තුළ නිකුත් වූ circulars
+    අතර විශේෂ අධ්‍යාපන වැඩසටහන්, විභාග කටයුතු, ගුරුවරුන්ගේ වැටුප් සහ ප්‍රතිලාභ, පාසල් ආරක්ෂාව සහ ශිෂ්‍ය සංඛ්‍යා
+    කළමනාකරණය පිළිබඳ දිගු ලේඛන බොහොමක් දක්නට ලැබේ.
+  - ශ්‍රී ලංකාවේ අධ්‍යාපන පරිපාලන ව්‍යුහය ජිල්ල, පළාත් සහ ජාතික මට්ටම් වලින් සමන්විත වන අතර, circular එකක් නිකුත්
+    වූ පසු එය පහළ මට්ටම් වෙත පැතිරීම WhatsApp groups, email forwards සහ physical copies මගින් සිදු වේ. මෙම පැතිරීමේ
+    ක්‍රමවලදී මුල් ලේඛනයේ සම්පූර්ණ අර්ථය අහිමි වීම, වැරදි සාරාංශ (misinterpretations) සහ කාලසීමා මග හැරීම වැනි අවදානම්
+    ඉහළ යයි. විදුහල්පතිවරුන්ට දිනකට කිහිපයක් circulars කියවීමට, ඒවා ගුරු staff එක් එක් කරමින් පැහැදිලි කිරීමට සහ
+    compliance සනාථ කිරීමට කාලය වැය වේ.
+  - PDF ආකෘතියේ circulars බොහෝ විට scanned images ලෙස upload කර ඇති අවස්ථා දක්නට ලැබේ  විශේෂයෙන් සිංහල හෝ දෙමළ භාෂාවෙන්
+    ලියන ලද පැරණි circulars. මෙවැනි ලේඛන copy-paste කිරීමට හෝ සරල text search කිරීමට නොහැකි වන අතර, OCR (Optical
+    Character Recognition) තාක්ෂණය නොමැතිව manual typing අවශ්‍ය වේ. එසේම digital-born PDFs වලදී tables, headers,
+    footers සහ multi-column layouts නිසා plain text extraction අපහසු විය හැක.
+  - EasyCircular ව්‍යාපෘතිය මෙම ප්‍රactical ගැටලුව විසඳීමට නිර්මාණය කරන ලද AI-සහය සහිත වෙබ් පද්ධතියකි. පද්ධතිය MOE
+    circular PDF upload කිරීම, පෙළ නිස්සාරණ (text extraction), named entity recognition (NER), සාරාංශ generation
+    සහ action items හඳුනා ගැනීම එකම workflow එකකින් සපයයි. මෙමගින් ගුරුවරුන්ට සහ පරිපාලන නිලධාරීන්ට දිගු circulars
+    කෙටි සාරාංශ, highlighted dates, organizations, laws සහ ක්‍රියාත්මක කළ යුතු පියවර ලෙස ලබා ගැනීමට හැක.
+  - මෙම research project එකේ primary motivation වන්නේ 2025-2026 කාලයේ සිදු කළ Google Forms primary research survey
+    (n=41) හි ප්‍රතිඵලයි. සමීක්ෂණයෙන් 97.6% respondents circulars සඳහා සාරාංශයක් (summary) අවශ්‍ය බව ද, 78% entity
+    highlighting (dates, names, rules) ප්‍රයෝජනවත් බව ද, 78% EasyCircular වැනි පද්ධතියක් work efficiency වැඩි කරන
+    බව ද පෙන්වා දුන්නේය. එහෙත් 68.3% AI පද්ධතියක් භාවිත කිරීමට සෘජුව willing නොවන බවත්, privacy concerns (17 respondents)
+    සහ documents too long (21 respondents) ප්‍රධාන barriers ලෙස හඳුනා ගත්තේය.
+  - ශ්‍රී ලංකා අධ්‍යාපන ක්ෂේත්‍රයේ ඩිජිටල් පරිවර්තන ප්‍රයත්නයන් අතර e-Thaksalawa, Google Classroom භාවිතය සහ පාසල්
+    කළමනාකරණ පද්ධති දක්නට ලැබුණ ද, MOE චක්‍රලේඛ අවබෝධ කර ගැනීම සඳහා විශේෂිත AI මෙවලමක් නොමැත. සාමාන්‍ය අරමුණු chatbot
+    මෙවලම් (ChatGPT, Gemini) වෙත චක්‍රලේඛ upload කළ හැකි වුවද, hallucination අවදානම, දත්ත රහස්‍යතා ගැටලු, ව්‍යුහගත
+    output නොමැති බව සහ සිංහල හා දෙමළ OCR සහාය සීමිත බව නිසා ආයතනික මට්ටමේ පිළිගැනීම අඩුය. EasyCircular මෙම පරතරය
+    පිරවීම සඳහා guardrails, human-in-the-loop පෙළ සමාලෝචනය, ව්‍යුහගත JSON output සහ දේශීය LLM (Ollama) සහාය සමඟ
+    purpose-built විසඳුමක් ලෙස නිර්මාණය කරන ලදී.
+  - මෙම thesis report EasyCircular පද්ධතියේ design, implementation, evaluation සහ limitations comprehensively document
+    කරයි. Contextual report (Chapters 1-4) හි ඉදිරිපත් කළ requirements, Agile methodology, three-tier architecture
+    සහ risk analysis මෙම full thesis report හි extend කර results, automated testing, ROUGE evaluation සහ future
+    work ඇතුළත් කර ඇත. Report එක academic rigor maintain කරමින් practical artefact (working software) demonstrate
+    කිරීම අරමුණු කරයි.
+  bullets: []
+  numbered: []
+  figures: []
+- title: 1.3 ගැටලුවට හැඳින්වීම (Introduction to Problem)
+  id: problem
+  level: 2
+  paragraphs:
+  - පර්යේෂණ ගැටලුව වන්නේ ශ්‍රී ලංකා අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ PDF ලේඛන දිගු, සංකීර්ණ සහ බහුභාෂික වීම නිසා පාසල්
+    පරිපාලකයන්ට කෙටි කාලයකින් නිවැරදිව අවබෝධ කර ගැනීම අපහසු වීමයි. සාමාන්‍ය LLM chatbot මෙවලම් භාවිත කළ හැකි වුවද,
+    hallucination අවදානම, දත්ත රහස්‍යතා ගැටලු සහ ව්‍යුහගත output නොමැති බව නිසා ආයතනික මට්ටමේ විශ්වාසයෙන් භාවිත
+    කිරීම අපහසුය.
+  - මෙම පර්යේෂණය පහත ප්‍රශ්නවලට පිළිතුරු සපයයි.
+  bullets: []
+  numbered:
+  - 'RQ1: අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ සඳහා PDF නිස්සාරණය, OCR, NER සහ සාරාංශකරණය ඒකාබද්ධ කරන purpose-built වෙබ්
+    පද්ධතියක් කෙසේ නිර්මාණය කළ හැකිද?'
+  - 'RQ2: Human-in-the-loop පෙළ සමාලෝචනය සහ date guardrails මගින් hallucination අවදානම කෙතරම් අවම කළ හැකිද?'
+  - 'RQ3: පාසල් stakeholders (n=41) අවශ්‍යතා සහ ROUGE/ස්වයංක්‍රීය පරීක්ෂණ මගින් පද්ධතියේ ප්‍රයෝජනවත් බව සහ ගුණාත්මකභාවය
+    කෙසේ තක්සේරු කළ හැකිද?'
+  figures: []
+- title: 1.4 ව්‍යාපෘතියට හැඳින්වීම (Introduction to Project)
+  id: scope
+  level: 2
+  paragraphs:
+  - EasyCircular ව්‍යාපෘතියේ විෂය පථය (scope) නිබන්ධන කාලරේඛාව (සති 10ක්, Phase 1 සිට Phase 5 දක්වා) සහ පවතින සම්පත්
+    අනුව නිර්වචනය කර ඇත. විෂය පථය තුළ ඇතුළත් කරුණු (in-scope) ක්‍රියාකාරී මෘදුකාංග නිපැයුමක් (deliverable software
+    artefact) සහ තක්සේරු සාක්ෂි ලෙස නිබන්ධන වාර්තාවේ ලේඛනගත කර ඇත. විෂය පථයෙන් බැහැර කරුණු (out-of-scope) Phase
+    6 අනාගත වැඩිදියුණු කිරීම් ලෙස අවංකව හඳුනා ගෙන සටහන් කර ඇත.
+  bullets:
+  - 'විෂය පථය තුළ: අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ PDF ගොනු උඩුගත කිරීම, ද්විත්ව පුස්තකාල පෙළ නිස්සාරණය (pdfplumber
+    සහ PyMuPDF භාවිතයෙන්), Tesseract OCR (සිංහල, ඉංග්‍රීසි සහ දෙමළ භාෂා ඇසුරුම් සමඟ), පරිශීලක විසින් පෙළ සංස්කරණය
+    කළ හැකි human-in-the-loop අතුරුමුහුණත, SpaCy NER මගින් නාමිත සංචිත හඳුනා ගැනීම, LangChain/Ollama සාරාංශකරණ pipeline,
+    JWT authentication, MongoDB දත්ත ගබඩාව, ප්‍රතිචාරශීලී (responsive) වෙබ් අතුරුමුහුණත, ROUGE තක්සේරුව, ස්වයංක්‍රීය
+    පරීක්ෂණ සහ phase verification scripts.'
+  - 'විෂය පථය තුළ: moe.gov.lk නිල වෙබ් අඩවියෙන් සජීවී චක්‍රලේඛ ලැයිස්තුව ආයාත කිරීමේ endpoint, content-hash පදනම්
+    LLM ප්‍රතිචාර cache කිරීම (එකම circular එක නැවත process කරන විට LLM call එකක් නොකර cache එකෙන් ප්‍රතිඵල ලබා
+    දීම), rate limiting, AI service token authentication සහ සියලු ස්ථර සඳහා health check endpoints.'
+  - 'විෂය පථය තුළ: ප්‍රාථමික පර්යේෂණ සමීක්ෂණය (Google Forms, n=41) විශ්ලේෂණය සහ අවශ්‍යතා නිර්ණය කිරීමට ඒකාබද්ධ කිරීම;
+    නියමු චක්‍රලේඛ 6ක් ඇතුළත් sample evaluation dataset.'
+  - 'විෂය පථයෙන් බැහැර: සම්පූර්ණ සිංහල/දෙමළ NER ආකෘති (Phase 5 හි ඉංග්‍රීසි SpaCy en_core_web_sm ආකෘතිය පමණක් භාවිත
+    වන අතර, සිංහල/දෙමළ ලේඛන සඳහා extractive fallback ක්‍රමය භාවිත වේ). සිංහල NLP under-resourced ස්වභාවය නිසා Unicode
+    Sinhala script (U+0D80 සිට U+0DFF) tokenization සඳහා විශේෂිත මෙවලම් අවශ්‍ය වන අතර, ඒවා ඉංග්‍රීසි-කේන්ද්‍රීය
+    NLP pipelines වල ඇතුළත් නොවේ.'
+  - 'විෂය පථයෙන් බැහැර: නිෂ්පාදන මට්ටමේ cloud deployment, පාසල් කාර්ය මණ්ඩලය 5 දෙනෙකු හෝ ඊට වැඩි ප්‍රමාණයක් සමඟ
+    විධිමත් පරිශීලක පිළිගැනීමේ පරීක්ෂණ (UAT) සැසි (නිබන්ධනය ඉදිරිපත් කරන අවස්ථාවේදී සැලසුම් කර ඇති නමුත් තවමත් සම්පූර්ණ
+    නොවී ඇත).'
+  - 'විෂය පථයෙන් බැහැර: ද්විභාෂික/ත්‍රිභාෂික UI (සිංහල/දෙමළ/ඉංග්‍රීසි interface labels), භූමිකා-පාදක පරිපාලක උපකරණ
+    පුවරුව (role-based admin dashboard), පිටු 20ට වැඩි circulars සඳහා async job queue, MOE නිල API ඒකාබද්ධතාව (පොදු
+    PDF URLs වලින් ඔබ්බට).'
+  - 'විෂය පථයෙන් බැහැර: AI සාරාංශ වල නීතිමය වලංගුතා සහතිකකරණය. මෙම පද්ධතිය සහාය පමණක් සපයන අතර, නිල අර්ථකථනය (official
+    interpretation) මිනිස් වගකීමක් ලෙස පවතී. සාරාංශ නිර්දේශ ලෙස සැලකිය යුතු අතර, නිල චක්‍රලේඛ පෙළ ප්‍රතිස්ථාපනය
+    කිරීමට අදහස් නොකරයි.'
+  numbered: []
+  figures: []
+- title: 1.5 නිපැයුමට හැඳින්වීම (Introduction to Artefact)
+  id: contribution
+  level: 2
+  paragraphs:
+  - මෙම ව්‍යාපෘතියේ ප්‍රධාන දායකත්වය වන්නේ ශ්‍රී ලංකා අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ වසම සඳහා purpose-built, self-hostable
+    AI සාරාංශක වෙබ් පද්ධතියක් නිර්මාණය කිරීමයි. සාමාන්‍ය ChatGPT වැනි මෙවලම්වලට වඩා EasyCircular ව්‍යුහගත entity
+    output, date guardrails, content-hash caching සහ human-in-the-loop පෙළ සමාලෝචනය සපයයි.
+  - තාක්ෂණික දායකත්වය ලෙස ත්‍රිස්ථර monorepo ගෘහනිර්මාණය (Next.js, Express, FastAPI, MongoDB, Ollama), ත්‍රිභාෂික
+    OCR (sin+eng+tam) සහ ROUGE පදනම් තක්සේරු සාක්ෂි ඉදිරිපත් කෙරේ. ප්‍රායෝගික දායකත්වය ලෙස පාසල් පරිපාලකයන්ට චක්‍රලේඛ
+    අවබෝධය වේගවත් කිරීමේ ක්‍රියාකාරී මෘදුකාංග නිපැයුමක් ලබා දෙයි.
+  - අධ්‍යයන දායකත්වය ලෙස primary research survey (n=41) findings, පර්යේෂණ පරතරය සහ අනාගත සිංහල NLP කාර්යයන් සඳහා
+    පැහැදිලි පදනමක් ලේඛනගත කෙරේ.
+  bullets: []
+  numbered: []
+  figures: []
+- title: 1.6 වාර්තාවේ ව්‍යුහය (Structure of the Report)
+  id: structure
+  level: 2
+  paragraphs:
+  - මෙම නිබන්ධන වාර්තාව අධ්‍යයන ප්‍රශ්නයෙන් ආරම්භ වී නිගමනය දක්වා තාර්කික ගලායාමක් (logical flow) අනුගමනය කරන අතර,
+    ප්‍රධාන පරිච්ඡේද හයක් (6) සහ පරිශිෂ්ට (appendices) වලින් සමන්විත වේ. සෑම පරිච්ඡේදයක්ම පෙර පරිච්ඡේදයේ
+    සොයාගැනීම් මත ගොඩනඟමින් EasyCircular නිපැයුම සවිස්තරව ඉදිරිපත් කරයි.
+  - පරිච්ඡේදය 1 (හැඳින්වීම) අරමුණු සහ ඉලක්ක, අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ ගැටලුවේ පසුබිම සහ සන්දර්භය, පර්යේෂණ
+    ප්‍රශ්න, ව්‍යාපෘතියේ විෂය පථය, නිපැයුමේ ස්වභාවය සහ වාර්තාවේ ව්‍යුහය හඳුන්වා දෙයි.
+  - පරිච්ඡේදය 2 (වෙළඳපොළ පර්යේෂණ සහ සාහිත්‍ය සමාලෝචනය) NLP, Transformer ආකෘති, සාරාංශකරණය, NER, ROUGE, පවතින
+    මෙවලම් සංසන්දනාත්මක විශ්ලේෂණය සහ n=41 වෙළඳපොළ පර්යේෂණ සමීක්ෂණය ආවරණය කර පර්යේෂණ පරතරය සාධාරණීකරණය කරයි.
+  - පරිච්ඡේදය 3 (නිපැයුම් නිර්මාණය) අවශ්‍යතා විශ්ලේෂණය, ත්‍රිස්ථර ගෘහනිර්මාණය, Class සහ ER ආකෘති, අතුරුමුහුණත්
+    නිර්මාණය (UI wireframes) සහ තාක්ෂණ තොගය තෝරා ගැනීමේ තර්කනය ඉදිරිපත් කරයි.
+  - පරිච්ඡේදය 4 (සංවර්ධනය සහ පරීක්ෂණය) PDF processing pipeline සහ ඇල්ගොරිතම flowchart, NER සහ සාරාංශකරණය
+    ක්‍රියාත්මක කිරීම, ආරක්ෂාව, API අන්ත ලක්ෂ්‍ය, AI සහායක කේත ප්‍රකාශනය සහ ස්වයංක්‍රීය පරීක්ෂණ, අදියර සත්‍යාපනය
+    සහ පරීක්ෂණ අවස්ථා (Expected/Actual) විස්තර කරයි.
+  - පරිච්ඡේදය 5 (තක්සේරුව) මෙහෙයුම් ප්‍රමිතික, ROUGE තක්සේරු ප්‍රතිඵල, නියමු චක්‍රලේඛ තක්සේරුව, LLM සහ fallback
+    මාදිලි සාකච්ඡාව, UAT තත්ත්වය සහ AI සහායක සංවර්ධනයේ ආචාර ධාර්මික තක්සේරුව ඉදිරිපත් කරයි.
+  - පරිච්ඡේදය 6 (නිගමන සහ අනාගත කාර්යයන්) ඉලක්ක සාක්ෂාත්කරණය, සීමාවන්, නිර්දේශ සහ අනාගත කාර්යයන් සාරාංශ කරයි.
+  - පරිශිෂ්ට වශයෙන් Appendix A හි ව්‍යාපෘති සැලසුම (Agile ක්‍රමවේදය, පස්-අදියර සැලැස්ම, Gantt, WBS, අවදානම් සහ
+    phase exit gates), Appendix B හි සමීක්ෂණ ප්‍රශ්න, Appendix C හි පුළුල් API වගුව, Appendix D හි poster සටහන
+    සහ Appendix E හි AI සහායක කේත කොටස් පිළිබඳ සම්පූර්ණ ප්‍රකාශනය ඇතුළත් වේ.
+  bullets: []
+  numbered: []
+  figures: []

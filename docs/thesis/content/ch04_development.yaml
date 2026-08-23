@@ -1,0 +1,279 @@
+title: 4. සංවර්ධනය සහ පරීක්ෂණය (Development and Testing)
+sections:
+- title: 4.1 PDF processing pipeline සහ Algorithm flowchart
+  id: pipeline
+  level: 2
+  paragraphs:
+  - 'PDF pipeline: pdfplumber primary, PyMuPDF fallback, Tesseract OCR (sin+eng+tam), post-processing, human review,
+    SHA-256 content hash.'
+  - පහත algorithm flowchart එක upload සිට summary display දක්වා පූර්ණ ක්‍රියාවලිය පෙන්වයි.
+  bullets: []
+  numbered: []
+  figures:
+  - algorithm_flowchart
+- title: 4.2 NER සහ summarization ක්‍රියාත්මක කිරීම
+  id: ai
+  level: 2
+  paragraphs:
+  - 'AI service හි /v1/pipeline අන්ත ලක්ෂ්‍යය පියවර කිහිපයක් ඒකාබද්ධව ක්‍රියාත්මක කරයි: SpaCy මගින් NER (DATE, ORG,
+    LAW වර්ග), ක්‍රියාකාරී අයිතම හඳුනා ගැනීම, LangChain map-reduce සාරාංශකරණය සහ date guardrails මගින් සත්‍යාපනය.'
+  - Guardrail පරීක්ෂාව අසාර්ථක වූ විට හෝ LLM එකට ප්‍රවේශ විය නොහැකි විට පද්ධතිය extractive TextRank ආකාරයේ fallback
+    මාදිලියට මාරු වේ. මෙය පද්ධතිය සෑම විටම ප්‍රයෝජනවත් output එකක් ලබා දෙන බව සහතික කරන අතර hallucination අවදානම
+    අවම කරයි.
+  - පහත රූප මගින් ක්‍රියාත්මක කළ pipeline එකේ ප්‍රතිදානය පෙන්වා ඇත. පළමු රූපයේ LLM විසින් ජනනය කළ ව්‍යුහගත සාරාංශය
+    (circular අංකය, නිකුත් කළ ආයතනය, ඉලක්ක පිරිස, sections සහ action items) ඉදිරිපත් වන අතර, දෙවන රූපයේ මූලාශ්‍ර
+    පෙළ මත SpaCy NER මගින් හඳුනා ගත් entities වර්ණ ලේබල සමඟ ඉස්මතු කර ඇත.
+  bullets: []
+  numbered: []
+  figures:
+  - ui_summary
+  - ui_summary_detail
+- title: 4.3 සත්‍යාපනය සහ ආරක්ෂාව ක්‍රියාත්මක කිරීම
+  id: security
+  level: 2
+  paragraphs:
+  - JWT auth, AI service token, rate limiting, CORS whitelist සහ PDF magic-byte validation. Local Ollama මගින් privacy
+    concerns ආමන්ත්‍රණය කෙරේ.
+  bullets: []
+  numbered: []
+  figures: []
+- title: 4.4 සංවර්ධන අවදානම් අවම කිරීම
+  id: risk_table
+  level: 2
+  paragraphs:
+  - Table 4.1 අවදානම් සහ mitigations.
+  bullets: []
+  numbered: []
+  figures: []
+  table:
+    caption: 'Table 4.1: සංවර්ධන අවදානම් සහ mitigation strategies'
+    headers:
+    - Risk
+    - Impact
+    - Mitigation (Implemented)
+    rows:
+    - - Poor PDF extraction
+      - High
+      - pdfplumber + PyMuPDF + Tesseract + human edit
+    - - LLM hallucination
+      - Critical
+      - Date guardrails + extractive fallback
+    - - API / LLM cost
+      - Medium
+      - Content-hash cache + local Ollama
+    - - Sinhala NLP gap
+      - High
+      - OCR + extractive SI/TA; NER Phase 6
+    - - UAT rejection of AI
+      - Medium
+      - Human-in-the-loop + self-hosted stack
+- title: 4.5 API අන්ත ලක්ෂ්‍ය
+  id: api
+  level: 2
+  paragraphs:
+  - Table 4.2 ප්‍රධාන REST API endpoints. Extended list appendix එකේ.
+  bullets: []
+  numbered: []
+  figures: []
+  table_ref: api
+  table_caption: 'Table 4.2: EasyCircular ප්‍රධාන API endpoints'
+- title: 4.6 AI-generated content සහ code referencing
+  id: ai_generated
+  level: 2
+  paragraphs:
+  - අධ්‍යයන විනිවිදභාවය (academic transparency) සහ ආචාර ධර්ම අවශ්‍යතා අනුව, EasyCircular නිපැයුම සංවර්ධනය කිරීමේදී
+    generative AI මෙවලම් භාවිත කළ ආකාරය මෙම කොටසේ ලේඛනගත කෙරේ. භාවිත කළ මෙවලම වූයේ OpenAI ChatGPT (OpenAI, 2024)
+    වේ.
+  - AI මෙවලම් භාවිත කිරීමේ පොදු තාර්කිකත්වය (rationale) වූයේ boilerplate configuration, නැවත නැවත ලියන utility functions
+    සහ test scaffolding වැනි අඩු නිර්මාණාත්මක අගයක් ඇති කාර්යයන් සඳහා ගතවන කාලය අවම කර, ව්‍යාපෘතියේ මූලික අභියෝග
+    වන Sinhala OCR නිරවද්‍යතාව, hallucination පාලනය සහ pipeline architecture design සඳහා වැඩි කාලයක් යෙදවීමයි. Agile
+    sprint කාලසීමා සීමිත වූ බැවින් මෙය ප්‍රායෝගික තීරණයක් විය.
+  - වැදගත් වන්නේ AI විසින් යෝජනා කළ කිසිදු කේත කොටසක් සත්‍යාපනයකින් තොරව පද්ධතියට ඇතුළත් නොකළ බවයි. සෑම යෝජනාවක්ම
+    (i) කියවා තේරුම් ගැනීම, (ii) ව්‍යාපෘතියේ coding conventions සහ architecture layer boundaries එකට ගැලපෙන පරිදි
+    නැවත ලිවීම, (iii) pytest / manual test මගින් සත්‍යාපනය කිරීම යන පියවර තුනට යටත් කරන ලදී. එබැවින් final artefact
+    එකේ author එක ලෙස ශිෂ්‍යයා දැයි වගකීම දරයි.
+  - Table 4.3 මගින් AI සහාය ලබා ගත් ප්‍රධාන code artefacts, ඒවා භාවිත කිරීමට හේතුව (reason), ඒවා ඉටු කරන ක්‍රියාකාරිත්වය
+    (function) සහ ඒවා system design එකට ගැලපෙන ආකාරය (fit into system design) පෙන්වා ඇත. සම්පූර්ණ code listings
+    සහ prompt විස්තර Appendix E හි ඉදිරිපත් කර ඇත.
+  - 'AI සහාය ලබා නොගත් ක්ෂේත්‍ර ලෙස පහත සඳහන් කරමි: ත්‍රිස්ථර architecture තීරණය, Ollama local LLM තෝරා ගැනීමේ තීරණය,
+    date guardrail විසඳුමේ මූලික සංකල්පය, primary research survey නිර්මාණය සහ විශ්ලේෂණය, ROUGE evaluation ක්‍රමවේදය
+    සහ නිබන්ධන තර්කය. මේවා සියල්ල ශිෂ්‍යයාගේ මුල් අධ්‍යයන කාර්යයයි.'
+  - 'සීමාවන් සහ අවදානම් ලෙස AI-generated code වල හඳුනාගත් ගැටලු: යල් පැන ගිය library API භාවිත කිරීම (LangChain
+    පැරණි chain syntax), error handling අඩුව, සහ security validation නොමැති බව. මෙම ගැටලු code review අවස්ථාවේදී
+    හඳුනාගෙන නිවැරදි කරන ලදී - උදාහරණයක් ලෙස upload handler එකට PDF magic-byte validation එක අතින් එකතු කරන ලදී
+    (Table 4.4, TC #1 බලන්න).'
+  bullets: []
+  numbered: []
+  figures: []
+  table:
+    caption: 'Table 4.3: AI-assisted code artefacts - reason, function සහ system design fit'
+    headers:
+    - '#'
+    - Code Artefact
+    - AI Tool
+    - Reason for Use
+    - Function of Code
+    - Fit into System Design
+    - Human Verification
+    rows:
+    - - '1'
+      - docker-compose.yml service definitions
+      - ChatGPT
+      - Boilerplate orchestration config; low design value
+      - Frontend, backend, ai-service, MongoDB සහ Ollama containers define කර network සහ volume mapping සපයයි
+      - Deployment layer - ත්‍රිස්ථර architecture එක එකම command එකකින් run කිරීමට ඉඩ දෙයි
+      - Manual run + health-check endpoints පරීක්ෂා කරන ලදී
+    - - '2'
+      - PDF text extraction fallback wrapper
+      - ChatGPT
+      - try/except cascade pattern boilerplate
+      - pdfplumber අසාර්ථක වූ විට PyMuPDF, ඉන්පසු Tesseract OCR වෙත මාරු වේ
+      - AI tier - extraction stage 1; robustness ensure කරයි
+      - Scanned සහ digital PDF නියැදි මගින් පරීක්ෂා; pytest coverage එකතු කරන ලදී
+    - - '3'
+      - Sinhala/English date regex patterns
+      - ChatGPT
+      - Regex syntax නිවැරදිව ලිවීම කාලය ගතවන කාර්යයකි
+      - පෙළ තුළ dd/mm/yyyy, yyyy-mm-dd සහ සිංහල මාස නාම හඳුනා ගනී
+      - AI tier - date guardrail module; hallucinated දින ප්‍රතික්ෂේප කිරීමට යොදා ගනී
+      - Unit tests 12ක් ලියා edge cases සත්‍යාපනය කරන ලදී
+    - - '4'
+      - LangChain map-reduce summarization chain
+      - ChatGPT
+      - LangChain API syntax reference එකක් ලෙස
+      - දිගු චක්‍රලේඛ chunk කර එක් එක් chunk සාරාංශ කර ඒකාබද්ධ සාරාංශයක් ලබා දේ
+      - AI tier - summarization stage; Ollama LLM එකට prompt pipeline සපයයි
+      - යල් පැන ගිය chain API නිවැරදි කර නැවත ලියන ලදී; ROUGE මගින් තක්සේරු කරන ලදී
+    - - '5'
+      - SHA-256 content-hash cache middleware
+      - ChatGPT
+      - Repetitive middleware boilerplate
+      - Upload කරන ලද පෙළෙහි hash එක ගණනය කර දැනටමත් process කළ ලේඛන නැවත process කිරීම වළක්වයි
+      - Application tier - Express middleware; LLM පිරිවැය සහ latency අවම කරයි
+      - Duplicate upload test මගින් cache hit තහවුරු කරන ලදී
+    - - '6'
+      - JWT authentication middleware skeleton
+      - ChatGPT
+      - Standard security pattern; නැවත නිර්මාණය අවශ්‍ය නොවේ
+      - Bearer token verify කර protected routes වලට පමණක් ප්‍රවේශය ලබා දේ
+      - Application tier - සියලු /api/circulars routes ආරක්ෂා කරයි
+      - Invalid/expired token tests; error handling අතින් වැඩිදියුණු කරන ලදී
+    - - '7'
+      - Entity highlighting React component
+      - ChatGPT
+      - Text offset rendering logic boilerplate
+      - NER offsets අනුව පෙළ තුළ entities වර්ණ-කේතගත span ලෙස render කරයි
+      - Presentation tier - summary detail view; primary research අවශ්‍යතාවක් (78%) ඉටු කරයි
+      - Overlapping entity bug එකක් හඳුනාගෙන අතින් නිවැරදි කරන ලදී
+    - - '8'
+      - Pytest fixtures සහ test scaffolding
+      - ChatGPT
+      - Test boilerplate ලිවීමේ කාලය අවම කිරීම
+      - FastAPI TestClient fixtures, sample PDF fixtures සහ mock LLM responses සපයයි
+      - Testing layer - AI service pytest 91 සඳහා පදනම
+      - සියලු assertions අතින් ලියා ඇත; test logic ශිෂ්‍යයාගේ කාර්යයයි
+    - - '9'
+      - python-docx thesis generator helpers
+      - ChatGPT
+      - python-docx XML-level API එක සංකීර්ණයි
+      - Iskoola Pota font, 1.5 line spacing, TOC field codes සහ caption numbering සපයයි
+      - Documentation tooling - artefact එකෙන් පිටත; report generation pipeline
+      - Generated .docx එක Word තුළ පරීක්ෂා කරන ලදී
+    - - '10'
+      - Rate limiting configuration
+      - ChatGPT
+      - express-rate-limit config boilerplate
+      - IP එකකට කාල පරාසයක් තුළ ඉල්ලීම් සංඛ්‍යාව සීමා කරයි
+      - Application tier - abuse සහ LLM resource exhaustion වළක්වයි
+      - Load test script මගින් limit ක්‍රියාත්මක වන බව තහවුරු කරන ලදී
+- title: 4.7 ස්වයංක්‍රීය පරීක්ෂණ
+  id: auto
+  level: 2
+  paragraphs:
+  - 'EasyCircular පද්ධතියේ ගුණාත්මකභාවය සහතික කිරීම සඳහා ස්වයංක්‍රීය පරීක්ෂණ කට්ටල භාවිත කරන ලදී: AI service සඳහා
+    pytest පරීක්ෂණ 91ක්, backend සඳහා පරීක්ෂණ 13ක් සහ ඒවාට අමතරව අදියර සත්‍යාපන scripts.'
+  - පරීක්ෂණ ආවරණයට PDF විග්‍රහ කිරීම, OCR fallback ක්‍රියාත්මක වීම, NER නිස්සාරණය, සාරාංශකරණ guardrails (ජනනය කළ
+    ව්‍යාජ දින ප්‍රතික්ෂේප කිරීම), JWT authentication, upload validation සහ cache හැසිරීම ඇතුළත් වේ.
+  - විවේචනාත්මක මාර්ගය (critical path) ලෙස upload කිරීමේ සිට නිස්සාරණය, පරිශීලක සංස්කරණය, සැකසීම සහ අවසාන ප්‍රදර්ශනය
+    දක්වා සම්පූර්ණ ප්‍රවාහය පරීක්ෂා කරන ලදී.
+  - 'AI-assisted code සත්‍යාපනය: පරිච්ඡේදය 4 කොටස 4.6 හි ලේඛනගත කළ AI සහාය ලබා ගත් සෑම කේත කොටසක්ම මෙම පරීක්ෂණ
+    කට්ටලය මගින් ආවරණය කර ඇත. උදාහරණයක් ලෙස date regex patterns සඳහා unit tests 12ක්, extraction fallback wrapper
+    සඳහා scanned සහ digital PDF නියැදි පරීක්ෂණ, සහ cache middleware සඳහා duplicate upload පරීක්ෂණයක් ලියන ලදී. එබැවින්
+    AI-generated යෝජනා පද්ධතියට ඇතුළත් වූයේ පරීක්ෂණ මගින් තහවුරු වූ පසුව පමණි.'
+  bullets: []
+  numbered: []
+  figures: []
+- title: 4.8 අදියර සත්‍යාපන scripts
+  id: phase
+  level: 2
+  paragraphs:
+  - verify-phase1.mjs script එක AI service, backend, frontend සහ MongoDB යන සියලු සේවාවන්ගේ health checks සිදු කරයි.
+    සියලු සේවා ක්‍රියාත්මක වන විට පමණක් අදියර 1 සමත් වේ.
+  - verify-phase4.mjs script එක authenticated upload සිට නිස්සාරණය සහ සැකසීම දක්වා end-to-end MVP ප්‍රවාහය පරීක්ෂා
+    කරයි. එසේම authentication නොමැතිව process ඉල්ලීමක් යැවූ විට HTTP 401 ප්‍රතිචාරය ලැබෙන බව තහවුරු කරයි.
+  - මෙම scripts මගින් ලබා දෙන ප්‍රතිඵල නැවත ලබා ගත හැකි (reproducible) බැවින්, තෙවන පාර්ශවයකට ද පද්ධතියේ ක්‍රියාකාරිත්වය
+    ස්වාධීනව සත්‍යාපනය කළ හැක.
+  bullets: []
+  numbered: []
+  figures: []
+- title: 4.9 නියෝජිත පරීක්ෂණ අවස්ථා
+  id: test_cases
+  level: 2
+  paragraphs:
+  - පහත Table 4.4 මගින් Session Three guideline ආකෘතියට අනුව Expected Result සහ Actual Result තීරු ඇතුළත් කර නියෝජිත
+    පරීක්ෂණ අවස්ථා ඉදිරිපත් කර ඇත.
+  - 'TC #1 විශේෂයෙන් වැදගත් වේ. AI මෙවලමක් විසින් මුලින් යෝජනා කළ upload handler එකේ file type validation නොතිබූ
+    බැවින්, එය අතින් එකතු කර මෙම පරීක්ෂණය මගින් සත්‍යාපනය කරන ලදී - AI-generated code සමාලෝචනය කිරීමේ අවශ්‍යතාව
+    මෙය පැහැදිලිව පෙන්වයි.'
+  bullets: []
+  numbered: []
+  figures: []
+  table:
+    caption: 'Table 4.4: System test cases (Expected vs Actual)'
+    headers:
+    - 'TC #'
+    - Test Description
+    - Input Value
+    - Expected Result
+    - Actual Result
+    rows:
+    - - '1'
+      - PDF magic bytes validation
+      - Non-PDF renamed .pdf
+      - Upload rejected
+      - Pass
+    - - '2'
+      - Invented date guardrail
+      - LLM date 2099-01-01 not in source
+      - Fallback summary returned
+      - Pass
+    - - '3'
+      - OCR fallback trigger
+      - Image-only PDF page
+      - Tesseract invoked; text non-empty
+      - Pass
+    - - '4'
+      - Auth 401 on process
+      - POST /process without JWT
+      - HTTP 401 Unauthorized
+      - Pass
+    - - '5'
+      - Content hash cache
+      - Identical text re-process
+      - Cached ~114ms; no LLM call
+      - Pass
+    - - '6'
+      - Empty text process
+      - Blank edited text
+      - HTTP 400 error
+      - Pass
+    - - '7'
+      - Phase1 health verifier
+      - All services running
+      - AI/Backend/Frontend healthy
+      - Pass
+    - - '8'
+      - Phase4 MVP flow
+      - test-digital.pdf authenticated
+      - Summary + entities present
+      - Pass

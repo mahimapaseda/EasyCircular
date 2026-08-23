@@ -1,0 +1,97 @@
+title: 6. නිගමන සහ අනාගත කාර්යයන් (Conclusions and Further Work)
+sections:
+- title: 6.1 සාරාංශය
+  id: summary
+  level: 2
+  paragraphs:
+  - EasyCircular ව්‍යාපෘතිය අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ අවබෝධ කර ගැනීම සඳහා AI සහායක පද්ධතියක් ලෙස සාර්ථකව නිර්මාණය
+    කර, ක්‍රියාත්මක කර, තාක්ෂණිකව තක්සේරු කරන ලදී. ත්‍රිස්ථර ගෘහනිර්මාණය (Next.js 3002, Express 4000, FastAPI 5000,
+    MongoDB 27017) Docker Compose පරිසරයක් තුළ ක්‍රියාත්මක වන deliverable නිපැයුමක් ලෙස ලබා දේ.
+  - 'මූලික පර්යේෂණය (n=41) මගින් ප්‍රධාන අවශ්‍යතා තහවුරු විය: සාරාංශ අවශ්‍ය බව (97.6%), entity highlighting වටිනා
+    බව (78%) සහ ඵලදායිතාව අපේක්ෂා කිරීම (78%). එහෙත් AI පිළිගැනීමේ බාධක (68.3% කැමති නොවීම සහ රහස්‍යතා පිළිබඳ අදහස්
+    17ක්) දේශීය LLM සහ human-in-the-loop නිර්මාණ තීරණවලට මඟ පෙන්වූයේය.'
+  - PDF pipeline එක library දෙකකින් නිස්සාරණය, Tesseract ත්‍රිභාෂික OCR සහ පරිශීලක පෙළ සමාලෝචනය මගින් නිස්සාරණ අවදානම
+    විසඳයි. AI pipeline එක SpaCy NER, LangChain map-reduce සාරාංශකරණය සහ date guardrails මගින් hallucination අවදානම
+    විසඳයි. Content-hash caching මගින් cached ප්‍රතිචාර ආසන්න වශයෙන් 114ms තුළ ලබා දේ.
+  - 'තක්සේරුව: ROUGE macro F1 අගයන් (0.414 / 0.215 / 0.292), pytest 91ක් සහ backend පරීක්ෂණ 13ක් සමත් වීම, සහ phase1
+    සහ phase4 සත්‍යාපක සමත් වීම. UI මගින් dashboard, upload, summary detail සහ mobile views ප්‍රදර්ශනය කරයි.'
+  - සංවර්ධන ක්‍රියාවලියේ generative AI මෙවලම් සහායක ලෙස භාවිත කළ අතර එය පූර්ණ විනිවිදභාවයෙන් ප්‍රකාශ කර ඇත. AI-assisted
+    code artefacts 10ක් ඒවායේ ක්‍රියාකාරිත්වය, භාවිත කිරීමට හේතුව සහ system design fit සමඟ කොටස 4.6 සහ Appendix
+    E හි ලේඛනගත කර, References ලැයිස්තුවේ උපුටා දක්වා ඇත.
+  bullets: []
+  numbered: []
+  figures: []
+- title: 6.2 ඉලක්ක සාක්ෂාත්කරණය
+  id: objectives
+  level: 2
+  paragraphs:
+  - Table 6.1 මගින් පරිච්ඡේදය 1 හි නිර්ණය කළ ඉලක්ක සහ ඒවායේ සාක්ෂාත්කරණ තත්ත්වය සම්බන්ධ කර ඇත.
+  bullets: []
+  numbered: []
+  figures: []
+  table:
+    caption: 'Table 6.1: Objectives achievement matrix'
+    headers:
+    - Objective
+    - Status
+    - Evidence
+    rows:
+    - - PDF upload + extraction + text review
+      - Achieved
+      - Phase 2 deliverables; verify:phase4 extract step
+    - - NER for dates, orgs, laws, actions
+      - Achieved (English)
+      - sample-evaluation.json entity counts; pytest NER tests
+    - - Hybrid summarization with guardrails
+      - Achieved
+      - Pipeline code; guardrail pytest; ROUGE eval
+    - - Three-tier Docker deployment
+      - Achieved
+      - docker-compose.yml; verify:phase1
+    - - Quality evaluation
+      - Partial
+      - ROUGE + 104 automated tests; UAT pending
+    - - Transparent AI-assisted development disclosure
+      - Achieved
+      - Section 4.6; Appendix E; AI declaration page
+- title: 6.3 සීමාවන්
+  id: limits
+  level: 2
+  paragraphs:
+  - 'සීමාව 1 - සිංහල සහ දෙමළ NLP: පූර්ණ NER සහ abstractive සාරාංශකරණය ඉංග්‍රීසි භාෂාවට පමණක් සීමා වේ. සිංහල සහ දෙමළ
+    කොටස් සඳහා OCR සහ extractive fallback පමණක් ලබා දේ. එබැවින් MOE ත්‍රිභාෂික චක්‍රලේඛ අර්ධ වශයෙන් පමණක් සේවය කරයි.
+    අදියර 6 මගින් බහුභාෂික ආකෘති ආමන්ත්‍රණය කරයි.'
+  - 'සීමාව 2 - UAT අසම්පූර්ණ: නිබන්ධන ඉදිරිපත් කිරීමේ අවස්ථාවේ පාසල් කාර්ය මණ්ඩලය සමඟ practical user acceptance
+    testing සිදු කර නොමැත. සමීක්ෂණය වක්‍ර සාක්ෂි පමණක් ලබා දෙයි. එබැවින් production readiness ප්‍රකාශ නොකරයි.'
+  - 'සීමාව 3 - ROUGE නීතිමය සාක්ෂියක් නොවේ: ස්වයංක්‍රීය මිනුම් මගින් මනිනු ලබන්නේ n-gram අතිච්ඡාදනය පමණක් වන අතර
+    නීතිමය නිරවද්‍යතාව නොවේ. සාරාංශ අවබෝධයට සහාය වන අතර නිල අනුකූලතා අර්ථකථනය මිනිස් වගකීමක් ලෙස පවතී. Hallucination
+    guardrails මගින් අවදානම අවම කරන නමුත් LLM මාදිලියේදී එය සම්පූර්ණයෙන් ඉවත් නොකරයි.'
+  - 'සීමාව 4 - තනි සංවර්ධක විෂය පථය: production cloud deployment, ඉතා දිගු ලේඛන සඳහා async queue සහ bilingual UI
+    ක්‍රියාත්මක කර නොමැත. කාර්ය සාධනය පරීක්ෂා කළේ සංවර්ධන hardware මත පමණි.'
+  - 'සීමාව 5 - LLM ගුණාත්මක විචලනය: Ollama llama3.2:3b දේශීය ආකෘතියේ ගුණාත්මකභාවය වාණිජ API ආකෘතිවලට වඩා අඩුය; guardrail
+    ප්‍රතික්ෂේපයක් සිදු වූ විට fallback මාදිලියට මාරු වීම සාරාංශයේ fluency අඩු කරයි.'
+  - 'සීමාව 6 - AI සහායක සංවර්ධනයේ සීමා: generative AI මෙවලම් boilerplate කාර්යයන් සඳහා ප්‍රයෝජනවත් වූ නමුත් වසම-විශේෂිත
+    තර්කය (සිංහල චක්‍රලේඛ ආකෘති, MOE පරිපාලන භාෂාව) සඳහා විශ්වාසදායක යෝජනා ලබා දුන්නේ නැත. එසේම යල් පැන ගිය library
+    APIs සහ ආරක්ෂක validation නොමැති කේත යෝජනා කිරීම නිසා සෑම යෝජනාවක්ම අතින් සමාලෝචනය කිරීමට අමතර කාලයක් වැය විය.'
+  bullets: []
+  numbered: []
+  figures: []
+- title: 6.4 අනාගත කාර්යයන් (Phase 6)
+  id: future
+  level: 2
+  paragraphs:
+  - IMPLEMENTATION_PLAN.md හි කොටස 11 මගින් නිර්ණය කර ඇති නිබන්ධනයෙන් පසු වැඩිදියුණු කිරීම් පහත පරිදි වේ.
+  - 'භාෂාව: පූර්ණ සිංහල සහ දෙමළ NER; ද්විභාෂික UI (සිංහල, දෙමළ සහ ඉංග්‍රීසි); MOE corpus මත බහුභාෂික LLM fine-tuning.'
+  - 'අනන්‍යතාව: භූමිකා පදනම් අවසර (admin සහ teacher වශයෙන් වෙන් කිරීම); වර්තමාන jobRole field එකට අමතරව දිස්ත්‍රික්
+    මට්ටමේ ප්‍රවේශ පාලන.'
+  - 'බුද්ධිය: සාරාංශය තුළ මූලාශ්‍ර වාක්‍ය සම්බන්ධ කිරීම (highlight එකක් click කළ විට අදාළ ඡේදයට යාම); පිටු 20කට
+    වැඩි චක්‍රලේඛ සඳහා progress UI සමඟ async job queue එකක්.'
+  - 'මෙහෙයුම්: admin dashboard, batch upload, භාවිත විශ්ලේෂණ සහ API පිරිවැය වාර්තාකරණය.'
+  - 'ඒකාබද්ධ කිරීම: ලබා ගත හැකි නම් විධිමත් MOE portal API එකක් සමඟ ඒකාබද්ධ වීම; නව චක්‍රලේඛ සඳහා දැනුම්දීම් පද්ධතියක්.'
+  - 'තක්සේරුව: සහභාගිවන්නන් 5ක් හෝ වැඩි ගණනක් සමඟ UAT සම්පූර්ණ කිරීම; ROUGE reference කට්ටලය පුළුල් කිරීම; නීතිමය
+    නිරවද්‍යතාව සඳහා මානව තක්සේරු rubric එකක් සකස් කිරීම.'
+  - 'සංවර්ධන ක්‍රියාවලිය: AI සහායක සංවර්ධනය සඳහා ව්‍යාපෘති මට්ටමේ ලිඛිත ප්‍රතිපත්තියක් සකස් කිරීම - කුමන කාර්යයන්
+    සඳහා AI සහාය පිළිගත හැකිද, කුමන පරීක්ෂණ අනිවාර්යද සහ ප්‍රකාශන ලේඛනය කෙසේ පවත්වා ගත යුතුද යන්න නිර්ණය කිරීම.'
+  bullets: []
+  numbered: []
+  figures: []

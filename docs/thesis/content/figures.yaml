@@ -1,0 +1,126 @@
+figures:
+  survey_role:
+    file: survey-role.png
+    caption_si: 'Figure: සමීක්ෂණයට සහභාගී වූවන්ගේ වෘත්තීය role බෙදාහැරීම (n=41)'
+    chapter: 2
+    width_cm: 12
+  survey_frequency:
+    file: survey-frequency.png
+    caption_si: 'Figure: චක්‍රලේඛ කියවන frequency (Very often / Sometimes / Rarely / Never)'
+    chapter: 2
+    width_cm: 12
+  survey_difficulty:
+    file: survey-difficulty.png
+    caption_si: 'Figure: චක්‍රලේඛ අවබෝධ කිරීමේ දුෂ්කරතාව (Yes / No / Sometimes)'
+    chapter: 2
+    width_cm: 12
+  survey_difficulties_bar:
+    file: survey-difficulties-bar.png
+    caption_si: 'Figure: චක්‍රලේඛ කියවීමේ ප්‍රධාන දුෂ්කරතා (Too long, Lack of time, etc.)'
+    chapter: 2
+    width_cm: 14
+  survey_time:
+    file: survey-time.png
+    caption_si: 'Figure: circular එකක් කියවීමට ගත වන සාමාන්‍ය කාලය'
+    chapter: 2
+    width_cm: 12
+  survey_want_summary:
+    file: survey-want-summary.png
+    caption_si: 'Figure: සාරාංශයක් අවශ්‍ය ද? (97.6% Yes)'
+    chapter: 2
+    width_cm: 12
+  survey_ai_willingness:
+    file: survey-ai-willingness.png
+    caption_si: 'Figure: AI පද්ධතියක් භාවිත කිරීමට willingness (68.3% No)'
+    chapter: 2
+    width_cm: 12
+  survey_misunderstood:
+    file: survey-misunderstood.png
+    caption_si: 'Figure: circular misunderstood වී තිබේද?'
+    chapter: 2
+    width_cm: 12
+  survey_highlight:
+    file: survey-highlight-entities.png
+    caption_si: 'Figure: entity highlighting (dates, names, rules) ප්‍රයෝජනවත් ද? (78% Yes)'
+    chapter: 2
+    width_cm: 12
+  survey_concerns:
+    file: survey-ai-concerns.png
+    caption_si: 'Figure: AI systems පිළිබඳ ප්‍රධාන concerns'
+    chapter: 2
+    width_cm: 14
+  survey_efficiency:
+    file: survey-efficiency.png
+    caption_si: 'Figure: EasyCircular work efficiency වැඩි කරයිද? (78% Yes)'
+    chapter: 2
+    width_cm: 12
+  gantt:
+    file: gantt.png
+    caption_si: 'Figure: EasyCircular project Gantt chart'
+    chapter: A
+    width_cm: 14
+  wbs:
+    file: wbs.png
+    caption_si: 'Figure: Work Breakdown Structure (WBS)'
+    chapter: A
+    width_cm: 14
+  architecture:
+    file: architecture.png
+    caption_si: 'Figure: EasyCircular three-tier software architecture'
+    chapter: 3
+    width_cm: 14
+  class_diagram:
+    file: class-diagram.png
+    caption_si: 'Figure: EasyCircular class / domain model'
+    chapter: 3
+    width_cm: 14
+  er_diagram:
+    file: er-diagram.png
+    caption_si: 'Figure: EasyCircular MongoDB ER-style data model'
+    chapter: 3
+    width_cm: 14
+  algorithm_flowchart:
+    file: algorithm-flowchart.png
+    caption_si: 'Figure: Circular processing algorithm flowchart'
+    chapter: 4
+    width_cm: 12
+  ui_dashboard:
+    file: ui-01-dashboard.png
+    caption_si: 'Figure: EasyCircular Dashboard  ප්‍රධාන අතුරුමුහුණත'
+    chapter: 3
+    width_cm: 14
+  ui_upload:
+    file: ui-02-upload.png
+    caption_si: 'Figure: PDF උඩුගත කිරීමේ interface'
+    chapter: 3
+    width_cm: 14
+  ui_signin:
+    file: ui-03-signin.png
+    caption_si: 'Figure: Sign-in තිරය (email/password + Google)'
+    chapter: 3
+    width_cm: 14
+  ui_documents:
+    file: ui-05-documents.png
+    caption_si: 'Figure: Documents list / workspace dashboard'
+    chapter: 3
+    width_cm: 14
+  ui_summary:
+    file: ui-06-summary.png
+    caption_si: 'Figure: AI සාරාංශ අතුරුමුහුණත  circular metadata, sections සහ action items'
+    chapter: 4
+    width_cm: 14
+  ui_summary_detail:
+    file: ui-07-summary-detail.png
+    caption_si: 'Figure: මූලාශ්‍ර පෙළ මත entity highlights (NER)  DATE, ORG, LAW ලේබල'
+    chapter: 4
+    width_cm: 14
+  ui_mobile:
+    file: ui-08-mobile-dashboard.png
+    caption_si: 'Figure: Mobile-responsive dashboard'
+    chapter: 5
+    width_cm: 7
+  ui_mobile_summary:
+    file: ui-09-mobile-summary.png
+    caption_si: 'Figure: Mobile summary interface'
+    chapter: 5
+    width_cm: 7

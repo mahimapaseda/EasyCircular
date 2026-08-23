@@ -1,0 +1,226 @@
+title: 2. වෙළඳපොළ පර්යේෂණ සහ සාහිත්‍ය සමාලෝචනය (Market Research and Literature Review)
+sections:
+- title: 2.1 ස්වභාවික භාෂා සැකසුම (NLP) සහ Transformer ආකෘති
+  id: nlp
+  level: 2
+  paragraphs:
+  - ස්වභාවික භාෂා සැකසුම (Natural Language Processing, NLP) යනු මිනිස් භාෂාව පරිගණකයට තේරුම් ගත හැකි ආකෘතියකට පරිවර්තනය
+    කර, විශ්ලේෂණය කර, අවබෝධ කර ගෙන ජනනය කිරීමේ විද්‍යාවයි. පරිපාලන ලේඛන වන නීතිමය චක්‍රලේඛ, ප්‍රතිපත්ති සටහන් සහ
+    නියාමන දැනුම්දීම් සඳහා NLP යෙදීමේදී පෙළ නිස්සාරණය (text extraction), සංචිත හඳුනා ගැනීම (entity recognition),
+    සාරාංශකරණය (summarization), වර්ගීකරණය (classification) සහ ප්‍රශ්නෝත්තර (question answering) වැනි කාර්යයන් අදාළ
+    වේ. අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ ඉංග්‍රීසි, සිංහල සහ දෙමළ මිශ්‍ර බහුභාෂික පරිපාලන ලේඛන වන බැවින් NLP pipeline
+    නිර්මාණය කිරීමට අභියෝගයක් ඉදිරිපත් කරයි.
+  - සාම්ප්‍රදායික NLP ප්‍රවේශයන් නීති-පාදක පද්ධති (rule-based systems), සංඛ්‍යානමය ආකෘති (n-grams, TF-IDF) සහ යන්ත්‍ර
+    ඉගෙනුම් වර්ගීකාරක (SVM, CRF) මත යැපුණු අතර, නාමිත සංචිත හඳුනා ගැනීම සහ සාරාංශකරණය සඳහා අතින් නිර්මාණය කළ විශේෂාංග
+    (hand-crafted features) අවශ්‍ය විය. මෙම ප්‍රවේශයන් විශාල-පරිමාණ ලේඛන එකතු කිරීම් වල පරිමාණනය (scalability) සීමා
+    කළ අතර, වසම්-විශේෂිත වචන මාලාව (අධ්‍යාපන ප්‍රතිපත්ති පදාවලි) හැසිරවීම දුෂ්කර විය.
+  - 2017 වසරේ Vaswani et al. විසින් හඳුන්වා දුන් Transformer ගෘහනිර්මාණ ශිල්පය self-attention mechanism එක මගින්
+    අනුක්‍රමික දත්ත (sequential data) සමාන්තරව සැකසීමට හැකි වීම නිසා NLP ක්ෂේත්‍රය විප්ලවකාරී ලෙස වෙනස් කළේය. Transformer
+    ආකෘති දිගු-පරාසයේ යැපීම් (long-range dependencies) ග්‍රහණය කිරීමට RNN/LSTM ආකෘතිවලට වඩා effective වන අතර, BERT
+    (Bidirectional Encoder Representations from Transformers), GPT (Generative Pre-trained Transformer) සහ T5 (Text-to-Text
+    Transfer Transformer) වැනි පූර්ව-පුහුණු ආකෘති downstream කාර්යයන් සඳහා fine-tune කිරීමට හැකි විය.
+  - BERT-ආකෘතියේ ආකෘති ද්විදිශා සන්දර්භය (bidirectional context) භාවිත කර පෙළ වර්ගීකරණය, NER සහ ප්‍රශ්නෝත්තර කාර්යයන්
+    සඳහා fine-tune කළ හැක. GPT-ආකෘතියේ autoregressive ආකෘති abstractive summarization සහ සංවාද වැනි පෙළ ජනනය කාර්යයන්
+    සඳහා සුදුසු වේ. EasyCircular ව්‍යාපෘතියේ සාරාංශකරණ pipeline එක LangChain framework එක හරහා map-reduce strategy
+    එකක් භාවිත කර LLM (Ollama local llama3.2:3b) call කරයි. NER කාර්යය සඳහා SpaCy en_core_web_sm ආකෘතිය ඉංග්‍රීසි
+    entity labels (DATE, ORG, LAW) හඳුනා ගනියි.
+  - 'විශාල භාෂා ආකෘති (Large Language Models, LLMs) billions of parameters සහ web-scale corpora මත පූර්ව-පුහුණු
+    වන අතර, few-shot prompting මගින් වසම්-විශේෂිත කාර්යයන් ඉටු කිරීමට හැකි වේ. එහෙත් LLMs hallucination අවදානමක්
+    ඉදිරිපත් කරයි, එනම් මූලාශ්‍ර ලේඛනයේ නොමැති කරුණු ජනනය කිරීමයි. නීතිමය/පරිපාලන ලේඛනවල වැරදි දින හෝ ව්‍යාජ අනුකූලතා
+    අවශ්‍යතා විනාශකාරී ප්‍රතිවිපාක ගෙන ඒමට හැකිය. EasyCircular මෙම අවදානම අවම කිරීමට ආරක්ෂක පියවර (guardrails) ක්‍රියාත්මක
+    කරයි: සාරාංශ output එකේ දින මුල් පෙළෙහි සත්‍යාපනය කර, සත්‍යාපනය නොකළ දින ඉවත් කර නිස්සාරණ fallback භාවිත කරයි.'
+  - සිංහල NLP පර්යේෂණ සංසන්දනාත්මක ලෙස සම්පත්-හිඟ (under-resourced) තත්ත්වයේ පවතී. සිංහල tokenizers, POS taggers
+    සහ NER ආකෘති ඉංග්‍රීසි ප්‍රතිරූපයන්ට සාපේක්ෂව සීමිත ප්‍රවේශ්‍යතාවයක් (limited availability) ඇත. ශ්‍රී ලංකා රජයේ
+    ලේඛන ත්‍රිභාෂික (සිංහල, දෙමළ, ඉංග්‍රීසි) ස්වභාවය OCR භාෂා ඇසුරුම් (Tesseract sin, eng, tam) අවශ්‍ය කරයි. Phase
+    5 ක්‍රියාත්මක කිරීමේදී ඉංග්‍රීසි NER සහ සිංහල/දෙමළ නිස්සාරණ සාරාංශකරණය (sentence selection) සංයුක්ත ප්‍රවේශයක්
+    (hybrid approach) අනුගමනය කර, සම්පූර්ණ බහුභාෂික NLP Phase 6 අනාගත කාර්යයක් ලෙස කල් දමා ඇත.
+  bullets: []
+  numbered: []
+  figures: []
+- title: 2.2 සාරාංශකරණය (Summarization)
+  id: sum
+  level: 2
+  paragraphs:
+  - 'පෙළ සාරාංශකරණය යනු මුල් ලේඛනයේ ප්‍රධාන තොරතුරු සම්පීඩනය (compress) කර කෙටි ආකෘතියකින් ඉදිරිපත් කිරීමයි. සාරාංශකරණ
+    ශිල්පක්‍රම ප්‍රධාන වශයෙන් දෙකකි: නිස්සාරණ සාරාංශකරණය (extractive summarization) එනම් මූලාශ්‍ර වාක්‍ය සෘජුවම
+    තෝරා ගැනීම සහ සාරාංශ සාරාංශකරණය (abstractive summarization) එනම් නව වාක්‍ය ජනනය කිරීමයි. අධ්‍යාපන අමාත්‍යාංශ
+    චක්‍රලේඛ නීතිමය/පරිපාලන ස්වභාවය නිසා නිස්සාරණ ක්‍රම කරුණු-පිළිබඳ විශ්වාසනීයත්වය (factual fidelity) ආරක්ෂා කරන
+    අතර, abstractive ක්‍රම කියවීමේ හැකියාව (readability) වැඩි දියුණු කරන නමුත් hallucination අවදානම වැඩි කරයි.'
+  - නිස්සාරණ සාරාංශකරණයේදී ප්‍රස්ථාර-පාදක ක්‍රම (TextRank), integer linear programming සහ ස්නායුක වාක්‍ය වර්ගීකරණ
+    ක්‍රම භාවිත කරයි. TextRank ඇල්ගොරිතමය PageRank ඇල්ගොරිතමය යොදා වාක්‍ය වැදගත්කම ලකුණු කරයි. TF-IDF බර තැබීම ප්‍රධාන
+    පදාවලි හඳුනා ගනියි. EasyCircular fallback සාරාංශකරණ මාදිලිය (LLM නොමැති විට හෝ guardrail අසාර්ථක විට) TextRank-ආකෘතියේ
+    නිස්සාරණ pipeline එකක් භාවිත කරයි. විශේෂයෙන් ඉංග්‍රීසි SpaCy NER අකාර්යක්ෂම වන සිංහල/දෙමළ කොටස් වලට මෙය විශේෂයෙන්
+    අදාළ වේ.
+  - 'සාරාංශ සාරාංශකරණයේදී sequence-to-sequence ආකෘති (BART, T5, Pegasus) සහ LLM prompting භාවිත කරයි. Map-reduce
+    සාරාංශකරණය දිගු ලේඛන හැසිරවීමට භාවිත වේ: ලේඛනය කොටස් (chunks) වලට බෙදා, සෑම කොටසකටම අර්ධ සාරාංශයක් (partial
+    summary) ජනනය කර, අර්ධ සාරාංශ එක්කොට අවසාන සාරාංශය නිපදවයි. EasyCircular AI service එකේ /v1/pipeline endpoint
+    එක LangChain map-reduce chain එකක් ක්‍රියාත්මක කරයි. chunk size සහ overlap environment variables මගින් වින්‍යාස
+    කළ හැකිය.'
+  - 'සංයුක්ත සාරාංශකරණය (hybrid summarization) නිස්සාරණ පූර්ව-සැකසුම (ප්‍රධාන වාක්‍ය තේරීම, entity anchoring) සහ
+    abstractive පිරිපහදුව එකට සංයුක්ත කරයි. EasyCircular ප්‍රවේශය: (1) SpaCy NER මගින් entities නිස්සාරණය කර, (2)
+    LLM prompt එකේ entities anchor කර, (3) LLM abstractive සාරාංශයක් ජනනය කර, (4) පසු-සැකසුම් guardrails දින සත්‍යාපනය
+    කර, (5) අසාර්ථක අවස්ථාවල නිස්සාරණ fallback ප්‍රතිඵල ලබා දෙයි. මෙම pipeline එකේ ROUGE තක්සේරු macro F1 ලකුණු
+    (ROUGE-1: 0.414, ROUGE-2: 0.215, ROUGE-L: 0.292) fallback මාදිලියේ මනිනු ලැබ ඇත.'
+  - සාරාංශකරණ ගුණාත්මකභාවය තක්සේරු කිරීමේදී ස්වයංක්‍රීය මිනුම් (ROUGE, BLEU, METEOR) සහ මානව තක්සේරුව (කියවීමේ හැකියාව,
+    නිවැරදිබව, සම්පූර්ණත්වය) සංයුක්ත කිරීම හොඳම පරිචය (best practice) ලෙස පිළිගැනේ. ROUGE n-gram overlap මනින අතර,
+    නීතිමය ලේඛන වල නිවැරදි phrase matching තීරණාත්මක වන බැවින් ROUGE-2 (bigram overlap) විශේෂයෙන් අදාළ වේ. මානව
+    තක්සේරුව UAT සැසිවලදී පාසල් කාර්ය මණ්ඩලය කරුණු නිවැරදිබව ශ්‍රේණිගත කරන අතර, නිබන්ධනය ඉදිරිපත් කරන විට UAT pending
+    තත්ත්වය අවංකව වාර්තා කරයි.
+  bullets: []
+  numbered: []
+  figures: []
+- title: 2.3 නාමිත සංචිත හඳුනා ගැනීම (NER) සහ SpaCy
+  id: ner
+  level: 2
+  paragraphs:
+  - නාමිත සංචිත හඳුනා ගැනීම (Named Entity Recognition, NER) යනු ව්‍යුහගත නොවූ පෙළ තුළ පූර්ව-නිර්වචිත කාණ්ඩ වන පුද්ගලයන්,
+    සංවිධාන, දින, ස්ථාන සහ නීතිමය සම්බන්ධතා වලට අයත් token spans හඳුනා ගැනීම සහ label කිරීමයි. පරිපාලන ලේඛනවල NER
+    මගින් තීරණාත්මක දින (කාලසීමා, ක්‍රියාත්මක වන දින), නිකුත් කරන සංවිධාන (අධ්‍යාපන අමාත්‍යාංශය, ජාතික අධ්‍යාපන
+    ආයතනය), නීතිමය සම්බන්ධතා (අධ්‍යාපන ආඥාපනත වගන්ති) සහ ක්‍රියාකාරී ක්‍රියාපද (shall, must, required) නිස්සාරණය
+    කිරීමට හැකි වේ.
+  - 'SpaCy යනු Python NLP පුස්තකාලයක් වන අතර නිෂ්පාදන-සුදානම් (production-ready) pipelines සපයයි. en_core_web_sm
+    ඉංග්‍රීසි ආකෘතිය PERSON, ORG, GPE, DATE, MONEY සහ LAW (custom patterns) entity වර්ග හඳුනා ගනියි. EasyCircular
+    AI service එක SpaCy pipeline එක දිගු කර LAW entity වර්ගය regex patterns (උදා: ''Section \d+'', ''Chapter \d+'')
+    සහ DATE normalization යොදයි. නිස්සාරණය කළ entities MongoDB circular ලේඛනයේ ව්‍යුහගත JSON field එකක ගබඩා කර frontend
+    එකේ highlight ලෙස දර්ශනය කරයි.'
+  - නීති-පාදක entity patterns පරිපාලන ලේඛනවල වසම්-විශේෂිත පදාවලි හැසිරවීමට SpaCy සංඛ්‍යානමය NER එකට අනුපූරක (supplement)
+    වේ. අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛවල 'Circular No. XX/YYYY', 'Ministry of Education', 'National Institute of Education'
+    වැනි නැවත නැවත ඇති patterns custom EntityRuler component එකක් හරහා ගැලපේ. ක්‍රියාකාරී අයිතම (action items) අවශ්‍ය
+    වාක්‍ය ('සියලුම විදුහල්පතිවරුන්ට උපදෙස් දෙනු ලැබේ...', 'පාසල් සහතික කළ යුතුය...') වාක්‍ය-මට්ටමේ heuristics මගින්
+    හඳුනා ගෙන වෙනම ලැයිස්තුවක ඉදිරිපත් කරයි.
+  - 'NER නිවැරදිබව ඉංග්‍රීසි අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛවල පිළිගත හැකි ප්‍රතිඵල ලබා දෙන අතර, සිංහල/දෙමළ කොටස් SpaCy
+    ඉංග්‍රීසි ආකෘතිය මගින් හැසිරවීමට නොහැකිය. Phase 5 විසඳුම ලෙස: සිංහල/දෙමළ පෙළ OCR මගින් නිස්සාරණය කර නිස්සාරණ
+    සාරාංශය සපයන අතර, ඉංග්‍රීසි කොටස් සඳහා සම්පූර්ණ NER සහ abstractive pipeline යොදයි. Phase 6 අනාගත කාර්යයක් ලෙස
+    සිංහල NER ආකෘති (උදා: fine-tuned multilingual BERT) ඒකාබද්ධ කිරීම සැලසුම් කර ඇත.'
+  bullets: []
+  numbered: []
+  figures: []
+- title: 2.4 ROUGE මගින් තක්සේරුව
+  id: rouge
+  level: 2
+  paragraphs:
+  - ROUGE (Recall-Oriented Understudy for Gisting Evaluation) සාරාංශකරණ ගුණාත්මකභාවය ස්වයංක්‍රීයව තක්සේරු කිරීමට
+    පුළුල් ලෙස භාවිත වන මිනුම් පවුලකි. ROUGE-N මගින් ජනනය කළ සාරාංශය සහ මිනිසා විසින් ලියන ලද යොමු සාරාංශය අතර n-gram
+    overlap (unigram ROUGE-1, bigram ROUGE-2) මනියි. ROUGE-L මගින් දිගම පොදු උප-අනුක්‍රමය (longest common subsequence,
+    LCS) පදනම් F1 ලකුණ ගණනය කරන අතර, වචන අනුපිළිවෙල සංරක්ෂණය (word order preservation) ග්‍රහණය කරයි.
+  - 'EasyCircular තක්සේරු දත්ත කට්ටලය අධ්‍යාපන අමාත්‍යාංශ නියමු චක්‍රලේඛ 6ක් (IDs: 10-2026, 12-2026, ආදිය) මිනිසා
+    විසින් රචනා කළ යොමු සාරාංශ සමඟ ඇතුළත් වේ. scripts/evaluate-rouge.mjs script එක ජනනය කළ සාරාංශ යොමු සාරාංශ සමඟ
+    සංසන්දනය කර rouge-report.json නිපදවයි. සාමාන්‍යගත ප්‍රතිඵල (macro-averaged): ROUGE-1 F1 අගය 0.414, ROUGE-2 F1
+    අගය 0.215, ROUGE-L F1 අගය 0.292 (fallback/extractive මාදිලිය). LLM මාදිලියේ ප්‍රතිඵල Ollama ලබා ගත හැකි බව අනුව
+    වෙනස් වේ. නැවත නිපදවිය හැකි බව (reproducibility) සඳහා තක්සේරුව ප්‍රධාන වශයෙන් fallback මාදිලියේ සිදු කරන ලදී.'
+  - 'ROUGE සීමාවන්: n-gram overlap අර්ථමය සමානතාවය (semantic equivalence) ග්‍රහණය නොකරයි. නිවැරදි ලෙස paraphrase
+    කළ සාරාංශ අඩු ලකුණු ලබා ගත හැක. නීතිමය ලේඛනවල ROUGE ඉහළ ලකුණු කරුණු නිවැරදිබව (factual accuracy) සහතික නොකරයි.
+    මානව සමාලෝචනය අත්‍යවශ්‍ය වේ. නිබන්ධන වාර්තාව ROUGE ප්‍රතිඵල ස්වයංක්‍රීය baseline ලෙස ඉදිරිපත් කරන අතර, නීතිමය
+    වලංගුතා සාධනය ලෙස ප්‍රකාශ නොකරයි (පරිච්ඡේදය 6 සීමාවන්).'
+  bullets: []
+  numbered: []
+  figures: []
+- title: 2.5 EasyCircular, ChatGPT සහ නීතිමය ලේඛන AI මෙවලම් සංසන්ධනය
+  id: compare
+  level: 2
+  paragraphs:
+  - අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ සැකසීම සඳහා පවතින විසඳුම් අර්ධ පිළිතුරු සපයන නමුත්, purpose-built ඒකාබද්ධ workflow
+    එකක් කිසිවක් ඉදිරිපත් නොකරයි. වගුව 2.1 මගින් EasyCircular, සාමාන්‍ය-කාර්ය ChatGPT සහ නීතිමය ලේඛන AI මෙවලම් (Kira,
+    Luminance-ආකෘතියේ පද්ධති) ප්‍රධාන මානයන් අනුව සංසන්දනය කරයි. EasyCircular පද්ධතිය අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ
+    සඳහා විශේෂයෙන් නිර්මාණය කර ඇති අතර, local Ollama LLM deployment, content-hash caching, human-in-the-loop text
+    review සහ hallucination guardrails වැනි විශේෂාංග ChatGPT හෝ enterprise නීතිමය AI මෙවලම් වල දක්නට නොලැබේ.
+  - ChatGPT සහ Gemini වැනි සාමාන්‍ය-කාර්ය chatbots චක්‍රලේඛ upload කිරීමට හැකි වුවද, hallucination අවදානම, දත්ත
+    රහස්‍යතා ගැටලු (data privacy concerns), ව්‍යුහගත output නොමැති බව සහ ශ්‍රී ලංකාවේ අධ්‍යාපන framework එකට fine-tune
+    නොවීම නිසා ආයතනික (institutional) adoption අඩු වේ. සමීක්ෂණ ප්‍රතිඵලවලින් 68.3% (28/41) AI පද්ධතියක් භාවිත කිරීමට
+    willing නොවූ අතර, රහස්‍යතා ගැටලු (respondents 17ක්) ප්‍රධාන බාධකයක් ලෙස හඳුනා ගන්නා ලදී. EasyCircular local
+    deployment path එක මෙම ගැටලුවට සෘජුවම ප්‍රතිචාර දක්වයි.
+  - Enterprise නීතිමය AI මෙවලම් (Kira, Luminance) ගිවිසුම් විශ්ලේෂණය සඳහා නිර්මාණය කර ඇති අතර, ශ්‍රී ලංකාවේ පාසල්වලට
+    මිල-ගණන් දරා ගත නොහැකි (cost-prohibitive) enterprise licenses අවශ්‍ය වේ. මෙම මෙවලම් අධ්‍යාපන චක්‍රලේඛ සඳහා tune
+    කර නොමැති අතර, සිංහල/දෙමළ OCR සහාය සීමිතය. EasyCircular මෙම පරතරය පිරවීමට open-source stack එකකින් (Next.js,
+    Express.js, FastAPI, MongoDB, Ollama) self-hostable විසඳුමක් ලෙස නිර්මාණය කර ඇත.
+  bullets: []
+  numbered: []
+  figures: []
+  table:
+    caption: 'වගුව 2.1: EasyCircular vs ChatGPT vs නීතිමය ලේඛන AI මෙවලම් සංසන්ධන වගුව'
+    headers:
+    - Feature
+    - EasyCircular
+    - ChatGPT / Gemini
+    - Legal Document AI
+    rows:
+    - - MOE PDF upload + OCR
+      - Yes (pdfplumber, Tesseract sin+eng+tam)
+      - Partial (file upload limits)
+      - Enterprise scan pipelines
+    - - Structured entity output
+      - Yes (DATE, ORG, LAW, actions)
+      - Unstructured text
+      - Contract clause extraction
+    - - Hallucination guardrails
+      - Date verification + fallback
+      - Limited / user responsibility
+      - Domain-trained, audited
+    - - Data privacy
+      - Local Ollama option; self-hosted
+      - Cloud API; data sent externally
+      - On-premise enterprise
+    - - Human-in-the-loop text edit
+      - Built-in review step
+      - Chat re-prompt only
+      - Annotation workflows
+    - - Sinhala/Tamil support
+      - OCR yes; NER partial (Phase 6)
+      - General multilingual
+      - Usually English-centric
+    - - Cost model
+      - Open-source stack; local LLM
+      - Per-token API pricing
+      - Enterprise license
+    - - Purpose
+      - MOE circular comprehension
+      - General assistant
+      - Legal contract review
+- title: 2.6 ප්‍රාථමික වෙළඳපොළ පර්යේෂණ සමීක්ෂණය (n=41)
+  id: survey
+  level: 2
+  paragraphs:
+  - 'EasyCircular අවශ්‍යතා තහවුරු කිරීමට Google Forms මාර්ගගත සමීක්ෂණයක් 2026 පෙබරවාරි සිට මාර්තු දක්වා බෙදා හැර
+    වලංගු ප්‍රතිචාර 41ක් එකතු කරන ලදී. සහභාගීවන්නන්: ගුරුවරු 30 (73.2%), විදුහල්පතිවරු 8 (19.5%), අධ්‍යාපන නිලධාරීන්
+    3 (7.3%). සමීක්ෂණය සිංහල/ඉංග්‍රීසි මිශ්‍ර ප්‍රශ්න මගින් චක්‍රලේඛ කියවීමේ වාරගණන (frequency), අවබෝධ දුෂ්කරතාව,
+    අපේක්ෂිත විශේෂාංග, AI කැමැත්ත සහ රහස්‍යතා ගැටලු ආවරණය කරන ලදී.'
+  - 'ප්‍රධාන සොයාගැනීම 1: respondents 97.6% (41 දෙනාගෙන් 40) අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ සඳහා සාරාංශ විශේෂාංගයක්
+    (summary feature) අවශ්‍ය බව පෙන්වා දුන්නේය. එක් respondent පමණක් සාරාංශය අනවශ්‍ය ලෙස සලකුණු කළේය. මෙය ප්‍රධාන
+    value proposition එක තහවුරු කරයි.'
+  - 'ප්‍රධාන සොයාගැනීම 2: respondents 68.3% (41 දෙනාගෙන් 28) AI-බලගැන්වූ පද්ධතියක් භාවිත කිරීමට කැමති නොවීය (No).
+    කැමති respondents 13 (31.7%). රහස්‍යතාව, නිවැරදිබව පිළිබඳ අවිශ්වාසය සහ AI සමඟ නුහුරුකම ප්‍රධාන හේතු විය. EasyCircular
+    local Ollama deployment සහ human-in-the-loop design මෙම ගැටලු විසඳීමට අරමුණු කරයි.'
+  - 'ප්‍රධාන සොයාගැනීම 3: respondents 78% (41 දෙනාගෙන් 32) entity highlighting (දින, නම්, නීති) ඉතා ප්‍රයෝජනවත්
+    (very useful) ලෙස ශ්‍රේණිගත කළහ. NER විශේෂාංගය ඉහළ ප්‍රමුඛතා අවශ්‍යතාවයක් ලෙස තහවුරු විය.'
+  - 'ප්‍රධාන සොයාගැනීම 4: කියවීමේ දුෂ්කරතා අතර ''ඉතා දිගු'' (Too long) respondents 21 දෙනෙකු, ''කාලය මදි'' (Lack
+    of time) ද්විතීයික, ''සංකීර්ණ භාෂාව'' (Complex language) තෘතීයික ලෙස හඳුනා ගන්නා ලදී. රහස්‍යතා ගැටලුව respondents
+    17 දෙනෙකු AI adoption බාධකයක් ලෙස උපුටා දැක්වීය.'
+  - 'ප්‍රධාන සොයාගැනීම 5: respondents 78% EasyCircular වැනි පද්ධතියක් වැඩ කාර්යක්ෂමතාව (work efficiency) වැඩි කරන
+    බව විශ්වාස කළහ. භූමිකා බෙදීම (ගුරුවරු ප්‍රමුඛ) පෙන්වන්නේ ප්‍රාථමික පරිශීලකයන් පන්තිකාමර-මට්ටමේ අධ්‍යාපකයන් බවයි.'
+  - පහත ප්‍රස්ථාර (රූප 2.1 සිට 2.10 දක්වා) සමීක්ෂණ ප්‍රතිචාර දෘශ්‍යමාන කරයි. දත්ත CSV exports docs/survey/ නාමාවලියේ
+    ගබඩා කර ඇති අතර, ප්‍රස්ථාර ජනනය scripts නැවත නිපදවිය හැකිය.
+  bullets: []
+  numbered: []
+  figures:
+  - survey_role
+  - survey_difficulties_bar
+  - survey_want_summary
+  - survey_ai_willingness
+  - survey_highlight
+  - survey_efficiency
+- title: 2.7 පර්යේෂණ පරතරය (Research Gap)
+  id: gap
+  level: 2
+  paragraphs:
+  - 'සාහිත්‍ය සමාලෝචනය සහ ප්‍රාථමික සමීක්ෂණය සංශ්ලේෂණය කිරීමෙන් පසු පහත පර්යේෂණ පරතරය හඳුනා ගන්නා ලදී: ශ්‍රී ලංකා
+    අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ වසම සඳහා ඒකාබද්ධ PDF ආයාත කිරීම, OCR (ත්‍රිභාෂික), මිනිසා-සමාලෝචිත පෙළ නිස්සාරණය,
+    NER, ආරක්ෂිත සාරාංශකරණය සහ ව්‍යුහගත වෙබ් UI ලබා දෙන open-source, self-hostable පද්ධතියක් නොමැත.'
+  - 'සාමාන්‍ය LLM chatbots නම්‍යශීලී (flexible) වුවද ආයතනික adoption බාධක නිර්මාණය කරයි: රහස්‍යතාව (68.3% willing
+    නොවීම), ව්‍යුහගත නොවූ output, MOE-විශේෂිත guardrails නොමැති බව. Enterprise නීතිමය AI මෙවලම් ශ්‍රී ලංකාවේ පාසල්
+    සඳහා මිල-ගණන් දරා ගත නොහැකි අතර අධ්‍යාපන චක්‍රලේඛ සඳහා tune කර නොමැත.'
+  - EasyCircular මෙම පරතරය විසඳීමට Agile-developed, ත්‍රිස්ථර, Docker-deployable නිපැයුමක් ලෙස ඉදිරිපත් කර, තක්සේරුව
+    (ROUGE, ස්වයංක්‍රීය පරීක්ෂණ, pending UAT) විනිවිදභාවය (transparency) සමඟ වාර්තා කරයි. සිංහල/දෙමළ සම්පූර්ණ NLP
+    පිළිගත් සීමාවක් ලෙස පවතින අතර Phase 6 අනාගත කාර්යයන් මෙහෙයවයි.
+  bullets: []
+  numbered: []
+  figures: []

@@ -7,7 +7,8 @@
 param(
     [string]$AiRoot = "G:\AI",
     [string]$Model = "llama3.2:3b",
-    [switch]$PullModel
+    [switch]$PullModel,
+    [switch]$SkipOllama
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,12 +17,19 @@ $root = Split-Path -Parent $PSScriptRoot
 Write-Host "== EasyCircular local start ==" -ForegroundColor Cyan
 Write-Host "Repo: $root"
 
-# 1) Ollama
-$ollamaScript = Join-Path $PSScriptRoot "start-ollama.ps1"
-if ($PullModel) {
-    & $ollamaScript -AiRoot $AiRoot -Model $Model -PullModel
-} else {
-    & $ollamaScript -AiRoot $AiRoot -Model $Model
+# 1) Ollama (optional - AI falls back to extractive summaries if unavailable)
+if (-not $SkipOllama) {
+    $ollamaScript = Join-Path $PSScriptRoot "start-ollama.ps1"
+    try {
+        if ($PullModel) {
+            & $ollamaScript -AiRoot $AiRoot -Model $Model -PullModel
+        } else {
+            & $ollamaScript -AiRoot $AiRoot -Model $Model
+        }
+    } catch {
+        Write-Host "Ollama start skipped: $($_.Exception.Message)" -ForegroundColor Yellow
+        Write-Host "AI will use extractive summaries until Ollama is available." -ForegroundColor Yellow
+    }
 }
 
 # 2) MongoDB Windows service (if present)
@@ -29,32 +37,58 @@ $mongo = Get-Service -Name "MongoDB" -ErrorAction SilentlyContinue
 if ($mongo) {
     if ($mongo.Status -ne "Running") {
         Write-Host "Starting MongoDB service..."
-        Start-Service MongoDB
-        Start-Sleep -Seconds 2
+        try {
+            Start-Service MongoDB
+            Start-Sleep -Seconds 2
+        } catch {
+            Write-Host "Could not start MongoDB service: $($_.Exception.Message)" -ForegroundColor Yellow
+            Write-Host "Ensure MongoDB is reachable at localhost:27017" -ForegroundColor Yellow
+        }
     } else {
         Write-Host "MongoDB service already running."
     }
 } else {
-    Write-Host "MongoDB Windows service not found — ensure MongoDB is reachable at localhost:27017"
+    Write-Host "MongoDB Windows service not found - ensure MongoDB is reachable at localhost:27017"
 }
 
 function Start-DevWindow {
     param(
-        [string]$Title,
-        [string]$WorkingDirectory,
-        [string]$Command
+        [Parameter(Mandatory = $true)][string]$Title,
+        [Parameter(Mandatory = $true)][string]$WorkingDirectory,
+        [Parameter(Mandatory = $true)][string]$Command
     )
-    $psCommand = "Set-Location -LiteralPath '$WorkingDirectory'; Write-Host '[$Title]' -ForegroundColor Green; $Command"
-    Start-Process powershell -ArgumentList @("-NoExit", "-Command", $psCommand) | Out-Null
+
+    if (-not (Test-Path -LiteralPath $WorkingDirectory)) {
+        throw "Working directory not found: $WorkingDirectory"
+    }
+
+    # Build a script and pass it as Base64 to avoid nested-quote parse bugs
+    $safeTitle = $Title.Replace("'", "''")
+    $safeDir = $WorkingDirectory.Replace("'", "''")
+    $script = @"
+`$ErrorActionPreference = 'Continue'
+try { `$Host.UI.RawUI.WindowTitle = '$safeTitle' } catch {}
+Set-Location -LiteralPath '$safeDir'
+Write-Host '[$safeTitle]' -ForegroundColor Green
+$Command
+"@
+    $encoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($script))
+    Start-Process -FilePath "powershell.exe" -ArgumentList @(
+        "-NoExit",
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-EncodedCommand", $encoded
+    ) | Out-Null
 }
 
 # 3) AI service
 $aiDir = Join-Path $root "ai-service"
 $uvicorn = Join-Path $aiDir ".venv\Scripts\uvicorn.exe"
-if (-not (Test-Path $uvicorn)) {
-    throw "AI venv missing at $uvicorn — create it and pip install -r requirements.txt first"
+if (-not (Test-Path -LiteralPath $uvicorn)) {
+    throw "AI venv missing at $uvicorn - create it and pip install -r requirements.txt first"
 }
-Start-DevWindow -Title "AI :5000" -WorkingDirectory $aiDir -Command "& `"$uvicorn`" app.main:app --reload --host 127.0.0.1 --port 5000"
+$uvicornCmd = '& "{0}" app.main:app --reload --host 127.0.0.1 --port 5000' -f $uvicorn
+Start-DevWindow -Title "AI :5000" -WorkingDirectory $aiDir -Command $uvicornCmd
 
 # 4) Backend
 $backendDir = Join-Path $root "backend"
