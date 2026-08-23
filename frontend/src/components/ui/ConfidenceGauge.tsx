@@ -5,12 +5,11 @@ type ConfidenceGaugeProps = {
   size?: number;
   label?: string;
   subtitle?: string;
-  /** Ring + number only — for sticky header chrome (~40px). */
+  /** Ring + number only for sticky header (~40px). */
   compact?: boolean;
   className?: string;
 };
 
-/** Pick a ring gradient that shifts with score, similar to the reference cards. */
 function gradientFor(value: number): { id: string; stops: [string, string, string?] } {
   if (value >= 85) {
     return { id: "conf-hi", stops: ["#7c3aed", "#ec4899", "#f97316"] };
@@ -31,11 +30,6 @@ function badgeTone(value: number): string {
   return "bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-300";
 }
 
-/**
- * Circular score gauge inspired by the reference cards:
- * thick gradient arc from 12 o'clock, white-rimmed end knob, centered label + value.
- * Compact mode: ring + bold number only for header chrome.
- */
 export default function ConfidenceGauge({
   value,
   size,

@@ -173,7 +173,6 @@ export default function SourceTextPanel({
 
   const showBody = expanded || !collapsible;
 
-  // Controls live in the page header — nothing to show when collapsed.
   if (controlsInHeader && !showBody) return null;
 
   const metaParts = [

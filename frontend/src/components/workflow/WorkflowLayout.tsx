@@ -14,11 +14,9 @@ type WorkflowLayoutProps = {
   currentStep: number;
   children: ReactNode;
   actions?: ReactNode;
-  /** Slim source expand control for the header middle. */
   center?: ReactNode;
-  /** OCR / extraction confidence — compact ring beside COMPLETED. */
   confidence?: number | null;
-  /** When true, omit entities from the meta strip (shown in Source control instead). */
+  /** Omit entities from meta when Source control already shows the count. */
   hideEntityStat?: boolean;
 };
 

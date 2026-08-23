@@ -5,7 +5,6 @@ import { WORKFLOW_STEPS } from "@/lib/contracts";
 type WorkflowSliderProps = {
   currentStep: number;
   orientation?: "vertical" | "horizontal";
-  /** Smaller markers/labels for sticky page headers. */
   compact?: boolean;
 };
 

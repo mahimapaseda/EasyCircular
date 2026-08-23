@@ -45,7 +45,6 @@ export default function WorkflowStepper({
                     : "opacity-60 grayscale-[50%]"
                 }`}
               >
-                {/* Step Icon */}
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-black transition-all duration-500 ${
                     done
@@ -64,7 +63,6 @@ export default function WorkflowStepper({
                   )}
                 </div>
 
-                {/* Text Content */}
                 <div className="min-w-0 flex-1">
                   <p
                     className={`text-sm font-black leading-tight tracking-tight ${
@@ -83,14 +81,12 @@ export default function WorkflowStepper({
                 </div>
               </div>
 
-              {/* Active animated glow underneath */}
               {active && (
                 <div className="absolute inset-0 -z-10 blur-xl transition-all duration-500 opacity-40">
                   <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${colors.active}`} />
                 </div>
               )}
-              
-              {/* Connector Lines (only if vertical) */}
+
               {isVertical && index < WORKFLOW_STEPS.length - 1 && (
                 <div className="absolute left-[35px] top-[60px] h-[calc(100%-20px)] w-0.5 rounded-full bg-ink-200/50 dark:bg-ink-800/50">
                    {done && (

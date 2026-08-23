@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -26,9 +26,8 @@
   }
 
   html {
-    /* Base 18px so rem-based Tailwind text scales across the whole UI
-       (supervisor feedback: increase font size of the full system). */
-    font-size: 112.5%; /* 18px when browser default is 16px */
+    /* Root rem bump: scales all Tailwind rem text (supervisor: larger UI type). */
+    font-size: 112.5%;
     scroll-behavior: smooth;
   }
 
@@ -77,10 +76,8 @@
   }
 }
 
-/* ── Design tokens ─────────────────────────────────────────────── */
 @layer components {
 
-  /* ── BUTTONS ─────────────────────────────────────────────────── */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl
       bg-white/90 backdrop-blur-md
@@ -146,7 +143,6 @@
     box-shadow: 0 4px 12px rgba(225,29,72,0.3);
   }
 
-  /* ── GLASS CARDS & PANELS ──────────────────────────────────────── */
   .card {
     @apply rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl;
     box-shadow: 0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.2);
@@ -200,7 +196,6 @@
     box-shadow: 0 8px 40px rgba(96,165,250,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
   }
 
-  /* ── INPUTS ──────────────────────────────────────────────────── */
   .input-field {
     @apply w-full rounded-xl border border-white/30 bg-white/50 backdrop-blur-md
       px-4 py-3 text-sm text-ink-800 outline-none
@@ -219,12 +214,10 @@
       focus:border-white/30 focus:bg-white/10;
   }
 
-  /* ── BADGES ──────────────────────────────────────────────────── */
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold tracking-wide;
   }
 
-  /* ── AUTH GROUP ──────────────────────────────────────────────── */
   .auth-group {
     @apply inline-flex overflow-hidden rounded-xl border border-white/25 bg-white/10 backdrop-blur-md;
   }
@@ -252,7 +245,6 @@
     @apply bg-white/20 hover:bg-white/30;
   }
 
-  /* ── SECTION HEADERS ─────────────────────────────────────────── */
   .section-label {
     @apply text-xs font-bold uppercase tracking-[0.2em] text-ink-700;
   }
@@ -261,7 +253,6 @@
     @apply text-white/40;
   }
 
-  /* ── GRADIENT TEXT ───────────────────────────────────────────── */
   .text-gradient {
     @apply bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent;
   }
@@ -274,7 +265,6 @@
     @apply bg-gradient-to-r from-amber-300 to-rose-300 bg-clip-text text-transparent;
   }
 
-  /* ── DIVIDERS ────────────────────────────────────────────────── */
   .divider {
     @apply border-t border-white/15;
   }
@@ -284,7 +274,6 @@
   }
 }
 
-/* ── Custom utilities ──────────────────────────────────────────── */
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
