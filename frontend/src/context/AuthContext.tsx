@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await claimSessionCirculars();
     } catch {
-      // Non-fatal: user is signed in even if claim fails
+
     }
   }, []);
 

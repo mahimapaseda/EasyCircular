@@ -218,7 +218,7 @@ export default function SummaryPanel({
         if (ok === false) return;
         setViewLang(next);
       } catch {
-        // Toast is shown by the workflow; stay on the source language.
+
       } finally {
         setTranslating(false);
       }
@@ -249,7 +249,6 @@ export default function SummaryPanel({
   const modeLabel = (() => {
     if (editing || sourceSummary?.mode === "edited") return "Edited";
     if (sourceSummary?.mode === "fallback") return "Extractive";
-    if (sourceSummary?.mode === "llm") return "AI";
     return null;
   })();
 

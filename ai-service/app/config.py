@@ -3,9 +3,7 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
-# Ensure ai-service/.env is available for CLI scripts and uvicorn imports.
 load_dotenv()
-
 
 @dataclass(frozen=True)
 class Settings:
@@ -54,5 +52,5 @@ class Settings:
             translate_device=os.getenv("TRANSLATE_DEVICE", "auto").lower(),
         )
 
-
 settings = Settings.from_env()
+

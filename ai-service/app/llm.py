@@ -8,14 +8,11 @@ from app.config import settings
 
 SUPPORTED_PROVIDERS = ("openai", "gemini", "groq", "ollama")
 
-
 def active_provider() -> str:
     return os.getenv("LLM_PROVIDER", "openai").lower().strip()
 
-
 def ollama_base_url() -> str:
     return os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
-
 
 def ollama_is_reachable(timeout_sec: float = 1.5) -> bool:
     """Return True when the local Ollama HTTP API responds to /api/tags."""
@@ -26,7 +23,6 @@ def ollama_is_reachable(timeout_sec: float = 1.5) -> bool:
             return 200 <= getattr(response, "status", 200) < 300
     except (URLError, TimeoutError, OSError, ValueError):
         return False
-
 
 def ollama_has_model(timeout_sec: float = 1.5) -> bool:
     """Return True when the configured Ollama model is present locally."""
@@ -49,10 +45,8 @@ def ollama_has_model(timeout_sec: float = 1.5) -> bool:
 
     if model in names:
         return True
-    # Allow tag-less match: "llama3.2:3b" vs "llama3.2:3b" / "llama3.2"
     base = model.split(":", 1)[0]
     return any(name == model or name.startswith(f"{base}:") or name == base for name in names)
-
 
 def llm_is_configured() -> bool:
     provider = active_provider()
@@ -63,10 +57,8 @@ def llm_is_configured() -> bool:
     if provider == "openai":
         return bool(os.getenv("OPENAI_API_KEY", "").strip())
     if provider == "ollama":
-        # Local Ollama needs no cloud key, but the daemon must be up.
         return ollama_is_reachable()
     return False
-
 
 def active_model_name() -> str:
     provider = active_provider()
@@ -77,7 +69,6 @@ def active_model_name() -> str:
     if provider == "ollama":
         return os.getenv("OLLAMA_MODEL", os.getenv("LLM_MODEL", "llama3.2:3b"))
     return os.getenv("LLM_MODEL", "gpt-4o-mini")
-
 
 def get_chat_model(
     temperature: float | None = None,
@@ -148,7 +139,6 @@ def get_chat_model(
             )
 
         model = active_model_name()
-        # Default Ollama num_ctx is 2048, which truncates MOE prompts mid-JSON.
         num_ctx = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
         kwargs: dict = {
             "model": model,
@@ -164,3 +154,4 @@ def get_chat_model(
 
     supported = ", ".join(SUPPORTED_PROVIDERS)
     raise RuntimeError(f"Unsupported LLM_PROVIDER '{provider}'. Use one of: {supported}")
+

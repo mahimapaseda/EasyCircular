@@ -5,7 +5,7 @@ type ConfidenceGaugeProps = {
   size?: number;
   label?: string;
   subtitle?: string;
-  /** Ring + number only for sticky header (~40px). */
+  
   compact?: boolean;
   className?: string;
 };

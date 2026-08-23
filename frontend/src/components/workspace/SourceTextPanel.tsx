@@ -19,7 +19,7 @@ type SourceTextPanelProps = {
   expanded: boolean;
   compact?: boolean;
   collapsible?: boolean;
-  /** When true, chrome lives in the page header — hide panel bar; null when collapsed. */
+  
   controlsInHeader?: boolean;
   onToggle: () => void;
   onTextViewChange: (view: TextView) => void;

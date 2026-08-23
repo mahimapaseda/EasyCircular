@@ -1,4 +1,4 @@
-/** Sri Lanka's 25 administrative districts (English names). */
+
 export const SRI_LANKA_DISTRICTS = [
   "Ampara",
   "Anuradhapura",

@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 
-# Load .env before importing app modules that read Settings.from_env().
 load_dotenv()
 
 from fastapi import FastAPI, Request
@@ -44,7 +43,6 @@ app.add_middleware(
 
 app.middleware("http")(require_ai_token)
 
-
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     start = time.perf_counter()
@@ -55,7 +53,6 @@ async def add_process_time_header(request: Request, call_next):
         logger.info("%s %s -> %s (%.1fms)", request.method, request.url.path, response.status_code, elapsed_ms)
     return response
 
-
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     logger.exception("Unhandled error on %s %s", request.method, request.url.path)
@@ -64,9 +61,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         content={"detail": "Internal AI service error", "path": request.url.path},
     )
 
-
 app.include_router(v1_router)
-
 
 @app.get("/health")
 def health():
@@ -86,7 +81,6 @@ def health():
         "ollama_model_ready": model_ready,
     }
 
-
 @app.get("/")
 def root():
     return {
@@ -96,3 +90,4 @@ def root():
         "health": "/health",
         "endpoints": "/v1/parse/pdf, /v1/extract/entities, /v1/summarize, /v1/pipeline",
     }
+

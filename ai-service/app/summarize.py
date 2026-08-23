@@ -27,6 +27,9 @@ from app.moe_text import (
     extract_subject,
     extract_target_audience,
     is_letterhead_line,
+    is_moe_header_date,
+    is_plausible_effective_date,
+    is_valid_date_text,
     looks_like_staff_register,
     normalize_moe_text,
     top_org_entities,
@@ -50,7 +53,7 @@ logger = logging.getLogger("easycircular.ai.summarize")
 
 FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
 # Bump when prompt/few-shot/guardrail behaviour changes so the backend cache misses.
-SUMMARIZER_VERSION = "v10-si-extractive-facts"
+SUMMARIZER_VERSION = "v13-silent-date-cleanup"
 
 _OVERLAP_STOPWORDS = frozenset(
     {
@@ -93,7 +96,6 @@ _OVERLAP_STOPWORDS = frozenset(
     }
 )
 
-
 def _is_curated_fewshot(payload: dict) -> bool:
     """Accept gold few-shot files; skip smoke/debug dumps."""
     gold = payload.get("gold")
@@ -102,7 +104,6 @@ def _is_curated_fewshot(payload: dict) -> bool:
     if not payload.get("id") or not payload.get("source_excerpt"):
         return False
     return bool(gold.get("title") or gold.get("circularNumber"))
-
 
 @lru_cache(maxsize=1)
 def _load_fewshot_examples() -> list[dict]:
@@ -120,10 +121,8 @@ def _load_fewshot_examples() -> list[dict]:
             examples.append(payload)
     return examples
 
-
 def _compact_circular_token(value: str) -> str:
     return re.sub(r"\s+", "", (value or "").lower())
-
 
 def _example_identity_keys(example: dict) -> set[str]:
     """Filename / circular-number tokens that identify a few-shot example."""
@@ -152,7 +151,6 @@ def _example_identity_keys(example: dict) -> set[str]:
         keys.add(base)
         keys.add(base.replace("/", "-"))
     return {key for key in keys if key and len(key) >= 3}
-
 
 def _source_circular_keys(text: str, filename: str | None = None) -> set[str]:
     """Circular numbers / filename stems present in this document."""
@@ -188,14 +186,12 @@ def _source_circular_keys(text: str, filename: str | None = None) -> set[str]:
             keys.add(compact.replace("/", "-"))
     return {key for key in keys if key and len(key) >= 3}
 
-
 def _fewshot_overlap_tokens(text: str) -> set[str]:
     return {
         token
         for token in re.findall(r"[a-z0-9]{3,}", (text or "").lower())
         if token not in _OVERLAP_STOPWORDS
     }
-
 
 def _fewshot_overlap_score(example: dict, source_blob: str) -> float:
     excerpt = str(example.get("source_excerpt") or "")
@@ -206,7 +202,6 @@ def _fewshot_overlap_score(example: dict, source_blob: str) -> float:
     if not example_tokens or not source_tokens:
         return 0.0
     return len(example_tokens & source_tokens) / len(example_tokens)
-
 
 def _select_fewshot_examples(
     examples: list[dict],
@@ -226,8 +221,6 @@ def _select_fewshot_examples(
     for example in examples:
         identity = _example_identity_keys(example)
         matched = bool(source_keys & identity)
-        # Never inject an example whose circular number is absent from the source
-        # when the document already identifies a different circular.
         if source_keys and not matched:
             continue
         overlap = _fewshot_overlap_score(example, source_blob)
@@ -245,7 +238,6 @@ def _select_fewshot_examples(
         return [top_example][:limit]
     return [example for _score, example in scored[:limit]]
 
-
 def _format_fewshot_block(
     source_text: str = "",
     filename: str | None = None,
@@ -262,7 +254,6 @@ def _format_fewshot_block(
     for ex in examples:
         excerpt = str(ex.get("source_excerpt") or "")[:380]
         gold = ex.get("gold") or {}
-        # Compact gold to save context for llama3.2:3b
         compact = {
             "circularNumber": gold.get("circularNumber"),
             "issuedDate": gold.get("issuedDate"),
@@ -280,7 +271,6 @@ def _format_fewshot_block(
         )
     return "\n".join(parts)
 
-
 def _build_system_prompt_summarize(
     source_text: str = "",
     filename: str | None = None,
@@ -296,11 +286,6 @@ def _build_system_prompt_summarize(
         if fewshot:
             prompt += "\n\n" + fewshot
     return prompt
-
-
-# ──────────────────────────────────────────────────────────────────────
-# Enhanced LLM Prompts
-# ──────────────────────────────────────────────────────────────────────
 
 SYSTEM_PROMPT_SUMMARIZE_BASE = """\
 You are a specialist summarizer for Sri Lankan Ministry of Education (MOE) circulars.
@@ -356,16 +341,10 @@ object with this exact schema:
   into a different circular. If the source is an Annexure/form, say so in the title.
 """
 
-# Backward-compatible name used in tests / imports
 SYSTEM_PROMPT_SUMMARIZE = SYSTEM_PROMPT_SUMMARIZE_BASE
 
-# ──────────────────────────────────────────────────────────────────────
-# Label priority for entity injection into LLM prompts.
-# Higher-priority labels are sent first so they are never truncated.
-# ──────────────────────────────────────────────────────────────────────
 ENTITY_PRIORITY = {"LAW": 4, "DATE": 3, "ORG": 2, "PERSON": 1, "OTHER": 0}
 MAX_ENTITIES_IN_PROMPT = 24
-
 
 def _prioritise_entities(entities: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return a deduplicated, priority-sorted subset of entities for the LLM prompt."""
@@ -380,7 +359,6 @@ def _prioritise_entities(entities: list[dict[str, Any]]) -> list[dict[str, Any]]
     unique.sort(key=lambda e: -ENTITY_PRIORITY.get(e.get("label", "OTHER"), 0))
     return unique[:MAX_ENTITIES_IN_PROMPT]
 
-
 def _format_entities_for_prompt(entities: list[dict[str, Any]]) -> str:
     """Compact LABEL: text lines so the LLM cannot copy NER offsets into actionItems."""
     lines: list[str] = []
@@ -390,11 +368,6 @@ def _format_entities_for_prompt(entities: list[dict[str, Any]]) -> str:
         if text:
             lines.append(f"- {label}: {text}")
     return "\n".join(lines) if lines else "(none)"
-
-
-# ──────────────────────────────────────────────────────────────────────
-# Helpers
-# ──────────────────────────────────────────────────────────────────────
 
 def _entity_lines(entities: list[dict[str, Any]], label: str) -> list[str]:
     seen: set[str] = set()
@@ -408,18 +381,15 @@ def _entity_lines(entities: list[dict[str, Any]], label: str) -> list[str]:
             lines.append(text)
     return lines
 
-
 def _first_paragraph(text: str, limit: int = 600) -> str:
     chunks = [chunk.strip() for chunk in re.split(r"\n\s*\n", text) if chunk.strip()]
     if not chunks:
         return text[:limit].strip()
     return chunks[0][:limit].strip()
 
-
 def _build_markdown(summary: dict[str, Any]) -> str:
     lines = [f"# {summary.get('title', 'Circular summary')}", ""]
 
-    # Metadata block
     meta_fields = [
         ("Circular Number", summary.get("circularNumber")),
         ("Issued Date", summary.get("issuedDate")),
@@ -442,11 +412,6 @@ def _build_markdown(summary: dict[str, Any]) -> str:
         for item in actions:
             lines.append(f"- {item}")
     return "\n".join(lines).strip()
-
-
-# ──────────────────────────────────────────────────────────────────────
-# Enhanced LLM Prompts (base prompt + few-shot loader are defined above)
-# ──────────────────────────────────────────────────────────────────────
 
 SYSTEM_PROMPT_REDUCE = """\
 You merge partial summaries of one Sri Lankan MOE circular into a single comprehensive JSON summary.
@@ -473,18 +438,15 @@ Rules:
 - Do not invent dates or requirements not present in the partials.
 """
 
-
 def _llm_messages(system_prompt: str, user_prompt: str):
     from langchain_core.messages import HumanMessage, SystemMessage
 
     return [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
 
-
 def _token_usage(response) -> int:
     metadata = getattr(response, "response_metadata", {}) or {}
     usage = metadata.get("token_usage") or metadata.get("usage") or {}
     return int(usage.get("total_tokens") or usage.get("totalTokens") or 0)
-
 
 def _strip_json_fences(content: str) -> str:
     content = (content or "").strip()
@@ -492,7 +454,6 @@ def _strip_json_fences(content: str) -> str:
         content = re.sub(r"^```(?:json)?\s*", "", content, flags=re.IGNORECASE)
         content = re.sub(r"\s*```\s*$", "", content)
     return content.replace("```json", "").replace("```", "").strip()
-
 
 def _extract_json_object(content: str) -> str:
     """Take the first `{` through the last `}`, or through EOF if truncated."""
@@ -503,7 +464,6 @@ def _extract_json_object(content: str) -> str:
     if end > start:
         return content[start : end + 1]
     return content[start:]
-
 
 def _escape_control_chars_in_strings(text: str) -> str:
     """Turn raw newlines/tabs inside JSON strings into escaped sequences."""
@@ -534,7 +494,6 @@ def _escape_control_chars_in_strings(text: str) -> str:
                 in_string = True
             out.append(ch)
     return "".join(out)
-
 
 def _close_truncated_json(text: str) -> str:
     """Close unclosed strings/brackets so a cut-off 3B response can still parse."""
@@ -570,7 +529,6 @@ def _close_truncated_json(text: str) -> str:
         text += stack.pop()
     return text
 
-
 def _parse_llm_json(content: str) -> dict[str, Any]:
     """Parse LLM JSON with fence stripping, truncation repair, and 3B glitch fixes."""
     content = _strip_json_fences(content)
@@ -597,7 +555,6 @@ def _parse_llm_json(content: str) -> dict[str, Any]:
     assert last_error is not None
     raise last_error
 
-
 def _describe_llm_error(exc: Exception) -> str:
     message = str(exc)
     if "RESOURCE_EXHAUSTED" in message or "429" in message:
@@ -606,7 +563,6 @@ def _describe_llm_error(exc: Exception) -> str:
         return "LLM returned a response that could not be parsed as JSON."
     return f"{type(exc).__name__}: {message[:200]}"
 
-
 def _prepare_text_for_llm(text: str, *, filename: str | None = None) -> str:
     """Shrink long OCR circulars for small local models while keeping the operative head."""
     text = normalize_moe_text(text or "")
@@ -614,7 +570,6 @@ def _prepare_text_for_llm(text: str, *, filename: str | None = None) -> str:
         return text
 
     header = text[:4500]
-    # Keep paragraphs that look like operative MOE content
     keep_pat = re.compile(
         r"(?:circular|financial\s+regulation|establishments?\s+code|"
         r"shall|mandatory|with\s+effect|annexure|accordingly|"
@@ -636,11 +591,6 @@ def _prepare_text_for_llm(text: str, *, filename: str | None = None) -> str:
     note = f"[NOTE: Source truncated for summarization; circular={circ or 'unknown'}]\n\n"
     return note + "\n\n".join(selected)
 
-
-# ──────────────────────────────────────────────────────────────────────
-# LLM Summarization with retry
-# ──────────────────────────────────────────────────────────────────────
-
 def _invoke_with_retry(llm, messages, *, max_attempts: int = 2) -> Any:
     """Invoke the LLM with exponential backoff retry on transient errors."""
     last_exc: Exception | None = None
@@ -650,7 +600,6 @@ def _invoke_with_retry(llm, messages, *, max_attempts: int = 2) -> Any:
         except Exception as exc:
             last_exc = exc
             error_str = str(exc)
-            # Only retry on transient / rate-limit errors
             is_transient = any(
                 marker in error_str
                 for marker in ("429", "RESOURCE_EXHAUSTED", "503", "timeout", "Timeout", "overloaded")
@@ -660,8 +609,7 @@ def _invoke_with_retry(llm, messages, *, max_attempts: int = 2) -> Any:
             wait = 2 ** attempt
             logger.warning("LLM call failed (attempt %d/%d): %s. Retrying in %ds", attempt + 1, max_attempts, error_str[:120], wait)
             time.sleep(wait)
-    raise last_exc  # type: ignore[misc]
-
+    raise last_exc
 
 def _summarize_chunk(
     chunk: str,
@@ -685,7 +633,6 @@ def _summarize_chunk(
             "staff return. Do NOT invent an unrelated policy topic.\n"
         )
 
-
     language = detect_output_language(source_text or chunk, filename)
     lang_rule = OUTPUT_LANGUAGE_INSTRUCTIONS[language]
 
@@ -703,7 +650,6 @@ Return ONLY a single JSON object."""
         system_prompt = _build_system_prompt_summarize(
             source_text or chunk, filename=filename
         )
-        # Truncate chunk further if still huge after prepare
         body = chunk if len(chunk) <= 9000 else chunk[:9000]
         user_prompt = f"""{circ_hint}Source circular text:
 {body}
@@ -736,7 +682,6 @@ No markdown fences, no commentary."""
             len(str(content)),
             str(content).replace("\n", " ")[:400],
         )
-        # One repair pass: ask the model to convert its previous output to JSON only
         repair_prompt = (
             "Convert the following into ONE valid JSON object with keys "
             "circularNumber, issuedDate, issuedBy, targetAudience, effectiveDate, "
@@ -767,7 +712,6 @@ No markdown fences, no commentary."""
             raise
         response = repair_resp
 
-    # Validate and normalise through Pydantic schema
     validated = validate_llm_output(raw_parsed)
     if known_circular and not validated.get("circularNumber"):
         validated["circularNumber"] = known_circular
@@ -775,7 +719,6 @@ No markdown fences, no commentary."""
     validated["language"] = detect_output_language(source_text or chunk, filename)
     validated["rawMarkdown"] = _build_markdown(validated)
     return validated, _token_usage(response)
-
 
 def llm_summarize(
     text: str,
@@ -787,7 +730,6 @@ def llm_summarize(
     prepared = _prepare_text_for_llm(text, filename=filename)
     prioritised = _prioritise_entities(entities)
     chunks = split_text(prepared, filename=filename)
-    # Cap map-reduce depth for small local models
     if len(chunks) > 3:
         chunks = chunks[:3]
     chunk_count = len(chunks)
@@ -814,7 +756,6 @@ def llm_summarize(
             filename=filename,
         )
         total_tokens += tokens
-        # Keep partials compact for reduce step
         partials.append(
             json.dumps(
                 {
@@ -837,11 +778,6 @@ def llm_summarize(
         filename=filename,
     )
     return summary, total_tokens + reduce_tokens, chunk_count
-
-
-# ──────────────────────────────────────────────────────────────────────
-# Enriched Fallback Summarizer
-# ──────────────────────────────────────────────────────────────────────
 
 def fallback_summarize(
     text: str,
@@ -949,7 +885,6 @@ def fallback_summarize(
                 }
             )
 
-    # Build target audience section if extracted
     if target_audience:
         sections.insert(1, {
             "heading": labels["audience"],
@@ -958,7 +893,6 @@ def fallback_summarize(
 
     action_items = extract_action_items(text, entities)
 
-    # Determine issuing authority from entities
     issued_by = None
     for org in orgs:
         if "ministry" in org.lower() and "education" in org.lower():
@@ -994,50 +928,67 @@ def fallback_summarize(
     summary["rawMarkdown"] = _build_markdown(summary)
     return summary
 
-
-# ──────────────────────────────────────────────────────────────────────
-# Public entry point
-# ──────────────────────────────────────────────────────────────────────
-
 def _normalize_circular_metadata(
     summary: dict[str, Any],
     text: str,
     *,
     filename: str | None = None,
 ) -> tuple[dict[str, Any], list[str]]:
-    """Replace invented circular numbers (e.g. Annexure 02/03, bare ED refs) with extracted ones."""
+    """Replace invented circular numbers and impossible issued/effective dates."""
     warnings: list[str] = []
     trusted = extract_circular_number(text, filename)
     raw = (summary.get("circularNumber") or "").strip()
     if not raw and trusted:
         summary["circularNumber"] = trusted
-        return summary, warnings
-
-    if not raw:
-        return summary, warnings
-
-    invented = bool(
-        re.search(r"annexure", raw, re.IGNORECASE)
-        or re.match(r"^ED/", raw, re.IGNORECASE)
-        or not re.search(r"\d{1,4}\s*/\s*\d{2,4}", raw)
-    )
-    if invented and trusted:
-        warnings.append(
-            f"Replaced invented circularNumber '{raw}' with '{trusted}' from source/filename."
+    elif raw:
+        invented = bool(
+            re.search(r"annexure", raw, re.IGNORECASE)
+            or re.match(r"^ED/", raw, re.IGNORECASE)
+            or not re.search(r"\d{1,4}\s*/\s*\d{2,4}", raw)
         )
-        summary["circularNumber"] = trusted
-        title = summary.get("title") or ""
-        if raw in title:
-            summary["title"] = title.replace(raw, trusted)
-    elif invented:
-        warnings.append(f"Dropped invented circularNumber '{raw}'.")
-        summary["circularNumber"] = None
-    elif trusted:
-        # Prefer spaced-normalized form from extractor when LLM has minor OCR spacing
-        summary["circularNumber"] = re.sub(r"\s+", "", raw) if "/" in raw else trusted
+        if invented and trusted:
+            warnings.append(
+                f"Replaced invented circularNumber '{raw}' with '{trusted}' from source/filename."
+            )
+            summary["circularNumber"] = trusted
+            title = summary.get("title") or ""
+            if raw in title:
+                summary["title"] = title.replace(raw, trusted)
+        elif invented:
+            warnings.append(f"Dropped invented circularNumber '{raw}'.")
+            summary["circularNumber"] = None
+        elif trusted:
+            summary["circularNumber"] = re.sub(r"\s+", "", raw) if "/" in raw else trusted
+
+    issued = (summary.get("issuedDate") or "").strip()
+    if issued and not is_moe_header_date(issued):
+        replacement = extract_issued_date(text)
+        if replacement and is_moe_header_date(replacement):
+            logger.info(
+                "Replaced invalid issuedDate %r with %r from source",
+                issued,
+                replacement,
+            )
+            summary["issuedDate"] = replacement
+        else:
+            logger.info("Dropped invalid issuedDate %r (no trusted MOE header date)", issued)
+            summary["issuedDate"] = None
+
+    effective = (summary.get("effectiveDate") or "").strip()
+    if effective and not is_plausible_effective_date(effective):
+        replacement = extract_effective_date(text)
+        if replacement and is_plausible_effective_date(replacement):
+            logger.info(
+                "Replaced invalid effectiveDate %r with %r from source",
+                effective,
+                replacement,
+            )
+            summary["effectiveDate"] = replacement
+        else:
+            logger.info("Dropped invalid effectiveDate %r", effective)
+            summary["effectiveDate"] = None
 
     return summary, warnings
-
 
 def _compact_translate_payload(summary: dict[str, Any]) -> dict[str, Any]:
     """Drop numbers/dates and cap sections/actions so a 3B model is less likely to loop."""
@@ -1064,7 +1015,6 @@ def _compact_translate_payload(summary: dict[str, Any]) -> dict[str, Any]:
         "actionItems": sanitize_action_items(summary.get("actionItems") or []),
     }
 
-
 def _message_text(response) -> str:
     content = response.content
     if isinstance(content, list):
@@ -1073,7 +1023,6 @@ def _message_text(response) -> str:
             for block in content
         )
     return str(content or "")
-
 
 def _split_translate_chunks(text: str) -> list[str]:
     text = (text or "").strip()
@@ -1097,7 +1046,6 @@ def _split_translate_chunks(text: str) -> list[str]:
         chunks.append(buf)
     return chunks or [text[:280]]
 
-
 def _mt_translate_field(
     text: str | None,
     source_lang: SummaryLang,
@@ -1113,7 +1061,6 @@ def _mt_translate_field(
     if text_looks_degenerate(glossed):
         return apply_glossary(raw, source_lang, target_lang)
     return glossed
-
 
 def _mt_translate_summary(
     summary: dict[str, Any],
@@ -1172,7 +1119,6 @@ def _mt_translate_summary(
     translated["rawMarkdown"] = _build_markdown(translated)
     return translated
 
-
 def _source_usable_for_lang(text: str | None, filename: str | None, lang: SummaryLang) -> bool:
     blob = (text or "").strip()
     if not blob:
@@ -1185,7 +1131,6 @@ def _source_usable_for_lang(text: str | None, filename: str | None, lang: Summar
     if lang == "ta":
         return len(re.findall(r"[\u0B80-\u0BFF]", sample)) >= 80
     return False
-
 
 def _glossary_translate_summary(
     summary: dict[str, Any],
@@ -1234,7 +1179,6 @@ def _glossary_translate_summary(
     translated["rawMarkdown"] = _build_markdown(translated)
     return translated
 
-
 def _llm_translate_text(
     llm,
     text: str,
@@ -1282,7 +1226,6 @@ def _llm_translate_text(
             pieces.append(chunk)
     return " ".join(pieces).strip()
 
-
 def _field_too_long_local(translated: str, source: str) -> bool:
     src = (source or "").strip()
     dst = (translated or "").strip()
@@ -1291,7 +1234,6 @@ def _field_too_long_local(translated: str, source: str) -> bool:
     if not src:
         return len(dst) > 800
     return len(dst) > max(240, len(src) * 3)
-
 
 def translate_summary(
     summary: dict[str, Any],
@@ -1312,8 +1254,6 @@ def translate_summary(
     src_lang = cast(SummaryLang, source_lang)
     dst_lang = cast(SummaryLang, target_lang)
 
-    # llama3.2:3b invents mixed-script garbage for SI/TA. Prefer the source circular
-    # text (extractive brief) or NLLB. Never ask the 3B model to write Sinhala.
     if dst_lang in ("si", "ta"):
         if _source_usable_for_lang(source_text, filename, dst_lang):
             brief = fallback_summarize(source_text or "", [], filename=filename)
@@ -1394,7 +1334,6 @@ def translate_summary(
     translated["rawMarkdown"] = _build_markdown(translated)
     return translated
 
-
 def summarize_text(
     text: str,
     entities: list[dict[str, Any]] | None = None,
@@ -1409,7 +1348,6 @@ def summarize_text(
     )
 
     expected_lang = detect_output_language(text, filename)
-    # llama3.2:3b invents mixed-script garbage for Sinhala/Tamil. Extract from OCR instead.
     if expected_lang in ("si", "ta"):
         summary = fallback_summarize(text, entities, filename=filename)
         meta = {
@@ -1511,3 +1449,4 @@ def summarize_text(
         "guardrailWarnings": warnings,
         "processingMeta": meta,
     }
+

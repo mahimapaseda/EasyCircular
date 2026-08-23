@@ -10,34 +10,28 @@ from app.summarize import summarize_text, translate_summary
 
 router = APIRouter(prefix="/v1", tags=["v1"])
 
-
 class ParsePdfRequest(BaseModel):
     base64: str = Field(..., description="Base64-encoded PDF bytes")
     filename: str | None = None
 
-
 class TextRequest(BaseModel):
     text: str = Field(..., min_length=1)
     filename: str | None = None
-
 
 class SummarizeRequest(BaseModel):
     text: str = Field(..., min_length=1)
     entities: list[dict] | None = None
     filename: str | None = None
 
-
 class PipelineRequest(BaseModel):
     text: str = Field(..., min_length=1)
     filename: str | None = None
-
 
 class TranslateSummaryRequest(BaseModel):
     summary: dict
     targetLang: str = Field(..., pattern="^(en|si|ta)$")
     sourceText: str | None = None
     filename: str | None = None
-
 
 @router.post("/parse/pdf")
 def parse_pdf(request: ParsePdfRequest):
@@ -68,19 +62,16 @@ def parse_pdf(request: ParsePdfRequest):
         "filename": request.filename,
     }
 
-
 @router.post("/extract/entities")
 def extract_entities_endpoint(request: TextRequest):
     entities = extract_entities(request.text, filename=request.filename)
     return {"entities": entities, "count": len(entities)}
-
 
 @router.post("/summarize")
 def summarize_endpoint(request: SummarizeRequest):
     return summarize_text(
         request.text, request.entities or [], filename=request.filename
     )
-
 
 @router.post("/pipeline")
 def pipeline_endpoint(request: PipelineRequest):
@@ -90,7 +81,6 @@ def pipeline_endpoint(request: PipelineRequest):
         "entities": entities,
         **result,
     }
-
 
 @router.post("/translate/summary")
 def translate_summary_endpoint(request: TranslateSummaryRequest):
@@ -111,3 +101,4 @@ def translate_summary_endpoint(request: TranslateSummaryRequest):
             detail=f"Could not translate summary: {exc}",
         ) from exc
     return {"summary": translated}
+

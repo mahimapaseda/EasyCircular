@@ -16,7 +16,7 @@ type WorkflowLayoutProps = {
   actions?: ReactNode;
   center?: ReactNode;
   confidence?: number | null;
-  /** Omit entities from meta when Source control already shows the count. */
+  
   hideEntityStat?: boolean;
 };
 

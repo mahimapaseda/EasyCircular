@@ -26,7 +26,6 @@
   }
 
   html {
-    /* Root rem bump: scales all Tailwind rem text (supervisor: larger UI type). */
     font-size: 112.5%;
     scroll-behavior: smooth;
   }

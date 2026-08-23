@@ -15,11 +15,9 @@ _NER_DUMP_HINT = re.compile(
     re.DOTALL,
 )
 
-
 def _looks_like_ner_record(item: dict) -> bool:
     keys = {str(key).lower() for key in item}
     return "label" in keys and ("start" in keys or "end" in keys)
-
 
 def _parse_serialized_object(value: str):
     stripped = value.strip()
@@ -38,7 +36,6 @@ def _parse_serialized_object(value: str):
     except (TypeError, ValueError, SyntaxError, MemoryError):
         pass
     return None
-
 
 def _coerce_action_item(item) -> str | None:
     """Keep natural-language steps; drop NER entity objects and dict dumps."""
@@ -65,19 +62,16 @@ def _coerce_action_item(item) -> str | None:
         return None
     return text
 
-
 MAX_ACTION_ITEMS = 6
 _AUDIENCE_PREFIX = re.compile(
     r"^(all\s+.+?\s+must\s+|heads?\s+of\s+.+?\s+must\s+|.+?\s+must\s+)",
     re.IGNORECASE,
 )
 
-
 def _action_core(text: str) -> str:
     """Strip audience prefixes so 'All X must consider …' matches 'All Y must consider …'."""
     normalized = re.sub(r"\s+", " ", text).strip().lower()
     return _AUDIENCE_PREFIX.sub("", normalized, count=1).strip()
-
 
 def _near_duplicate_action(left: str, right: str) -> bool:
     if not left or not right:
@@ -89,7 +83,6 @@ def _near_duplicate_action(left: str, right: str) -> bool:
             return True
         return SequenceMatcher(None, left, right).ratio() >= 0.82
     return False
-
 
 def sanitize_action_items(items) -> list[str]:
     if not isinstance(items, list):
@@ -109,7 +102,6 @@ def sanitize_action_items(items) -> list[str]:
             break
     return cleaned
 
-
 class SummarySection(BaseModel):
     heading: str = "Section"
     content: str = ""
@@ -125,7 +117,6 @@ class SummarySection(BaseModel):
     @classmethod
     def _default_content(cls, v: str | None) -> str:
         return str(v).strip() if v else ""
-
 
 class CircularSummaryOutput(BaseModel):
     """Validated schema for AI-generated circular summaries.
@@ -188,7 +179,6 @@ class CircularSummaryOutput(BaseModel):
             "actionItems": self.action_items,
         }
 
-
 def validate_llm_output(raw: dict) -> dict:
     """Parse, validate and normalise raw LLM JSON into a clean summary dict.
 
@@ -196,3 +186,4 @@ def validate_llm_output(raw: dict) -> dict:
     """
     parsed = CircularSummaryOutput.model_validate(raw)
     return parsed.to_summary_dict()
+

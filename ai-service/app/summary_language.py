@@ -97,7 +97,6 @@ _HEADING_ALIASES = {
     "annexure": ("annexure / staff return form", "annexure"),
 }
 
-# Longest phrases first. Used when the 3B model cannot be trusted on a whole brief.
 _GLOSSARY: dict[tuple[SummaryLang, SummaryLang], list[tuple[str, str]]] = {
     ("en", "si"): [
         (
@@ -129,7 +128,6 @@ _GLOSSARY: dict[tuple[SummaryLang, SummaryLang], list[tuple[str, str]]] = {
     ],
 }
 
-
 def apply_glossary(text: str, source_lang: SummaryLang, target_lang: SummaryLang) -> str:
     """Replace known MOE phrases. Safe even when the local model loops."""
     if not text or source_lang == target_lang:
@@ -148,7 +146,6 @@ def apply_glossary(text: str, source_lang: SummaryLang, target_lang: SummaryLang
             updated = updated.replace(src, dst)
     return updated
 
-
 def map_section_heading(heading: str, target_lang: SummaryLang) -> str | None:
     needle = re.sub(r"\s+", " ", (heading or "").strip()).lower()
     if not needle:
@@ -162,7 +159,6 @@ def map_section_heading(heading: str, target_lang: SummaryLang) -> str | None:
             return FALLBACK_HEADINGS[target_lang][key]
     return None
 
-
 def text_has_target_script(text: str, language: SummaryLang) -> bool:
     blob = text or ""
     if language == "si":
@@ -170,7 +166,6 @@ def text_has_target_script(text: str, language: SummaryLang) -> bool:
     if language == "ta":
         return len(re.findall(r"[\u0B80-\u0BFF]", blob)) >= 4
     return True
-
 
 OUTPUT_LANGUAGE_INSTRUCTIONS: dict[SummaryLang, str] = {
     "en": (
@@ -193,7 +188,6 @@ OUTPUT_LANGUAGE_INSTRUCTIONS: dict[SummaryLang, str] = {
     ),
 }
 
-
 def detect_output_language(text: str, filename: str | None = None) -> SummaryLang:
     hint = filename_script_hint(filename)
     if hint == "sin":
@@ -207,23 +201,19 @@ def detect_output_language(text: str, filename: str | None = None) -> SummaryLan
         return script
     return "en"
 
-
 def counterpart_language(language: SummaryLang) -> SummaryLang:
     return "en" if language in ("si", "ta") else "si"
-
 
 _SHORT_LOOP = re.compile(r"(.{2,12})\1{6,}", re.DOTALL)
 _LONG_LOOP = re.compile(r"(.{13,80})\1{3,}", re.DOTALL)
 _TOKEN_SPLIT = re.compile(r"\S+")
 _TEX_JUNK = re.compile(r"\\frac|\\text|\\u0[0-9a-f]{2,}|\{u0[0-9a-f]{2,}", re.IGNORECASE)
-# Scripts that never belong in an MOE brief (Thai/Lao/Tibetan/Hebrew/Arabic/Indic-other/CJK).
 _UNEXPECTED_SCRIPTS = re.compile(
     r"[\u0E00-\u0EFF\u0F00-\u0FFF\u0590-\u05FF\u0600-\u06FF"
     r"\u0900-\u097F\u0980-\u09FF\u0A00-\u0AFF\u0C00-\u0CFF"
     r"\u0D00-\u0D7F\u1000-\u109F\u1780-\u17FF\u3040-\u30FF"
     r"\u4E00-\u9FFF\uAC00-\uD7AF\uE000-\uF8FF\uFFF0-\uFFFF\uFFFD]"
 )
-
 
 def text_looks_degenerate(text: str) -> bool:
     """True when a model looped, mixed in foreign scripts, or collapsed to a few unique tokens."""
@@ -244,7 +234,6 @@ def text_looks_degenerate(text: str) -> bool:
             return True
     return False
 
-
 def _field_too_long(translated: str, source: str) -> bool:
     src = (source or "").strip()
     dst = (translated or "").strip()
@@ -253,7 +242,6 @@ def _field_too_long(translated: str, source: str) -> bool:
     if not src:
         return len(dst) > 2000
     return len(dst) > max(400, len(src) * 4)
-
 
 def leftover_english_dominates(text: str, language: SummaryLang) -> bool:
     """True when Latin letters outnumber the target script (glossary word-swap)."""
@@ -264,7 +252,6 @@ def leftover_english_dominates(text: str, language: SummaryLang) -> bool:
     if language == "ta":
         return latin > len(re.findall(r"[\u0B80-\u0BFF]", blob))
     return False
-
 
 def translation_quality_error(
     translated: dict[str, Any],
@@ -325,7 +312,6 @@ def translation_quality_error(
             return message
     return None
 
-
 def _summary_text_blob(summary: dict[str, Any]) -> str:
     parts = [
         str(summary.get("title") or ""),
@@ -340,10 +326,8 @@ def _summary_text_blob(summary: dict[str, Any]) -> str:
     ]
     return " ".join(parts)
 
-
 def summary_looks_degenerate(summary: dict[str, Any]) -> bool:
     return text_looks_degenerate(_summary_text_blob(summary))
-
 
 def summary_matches_output_language(summary: dict[str, Any], language: SummaryLang) -> bool:
     """True when the brief is written in the script expected for this circular."""
@@ -358,3 +342,4 @@ def summary_matches_output_language(summary: dict[str, Any], language: SummaryLa
     if language == "ta":
         return tamil >= 12 and tamil >= latin * 0.15
     return True
+

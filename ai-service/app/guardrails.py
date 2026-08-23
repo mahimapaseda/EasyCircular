@@ -13,10 +13,8 @@ MONTH_NAME_PATTERN = (
     r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
 )
 
-
 def _normalize_whitespace(text: str) -> str:
     return re.sub(r"\s+", " ", text.replace("\n", " ")).strip()
-
 
 def _parse_date_key(value: str) -> tuple[int, int, int] | None:
     value = _normalize_whitespace(value)
@@ -67,9 +65,11 @@ def _parse_date_key(value: str) -> tuple[int, int, int] | None:
                 day, month, year = int(match.group(1)), int(match.group(2)), int(match.group(3))
                 if year < 100:
                     year += 2000
+                datetime(year, month, day)
                 return (year, month, day)
             if kind == "ymd":
                 year, month, day = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                datetime(year, month, day)
                 return (year, month, day)
             if kind == "dmy_words":
                 day = int(match.group(1))
@@ -79,6 +79,7 @@ def _parse_date_key(value: str) -> tuple[int, int, int] | None:
                     return None
                 year = int(match.group(2))
                 month = datetime.strptime(month_match.group(0)[:3], "%b").month
+                datetime(year, month, day)
                 return (year, month, day)
             if kind == "mdy_words":
                 month_match = re.search(MONTH_NAME_PATTERN, value, re.IGNORECASE)
@@ -87,6 +88,7 @@ def _parse_date_key(value: str) -> tuple[int, int, int] | None:
                 day = int(match.group(1))
                 year = int(match.group(2))
                 month = datetime.strptime(month_match.group(0)[:3], "%b").month
+                datetime(year, month, day)
                 return (year, month, day)
             if kind == "mdy_words_no_comma":
                 month_match = re.search(MONTH_NAME_PATTERN, value, re.IGNORECASE)
@@ -95,12 +97,12 @@ def _parse_date_key(value: str) -> tuple[int, int, int] | None:
                 day = int(match.group(1))
                 year = int(match.group(2))
                 month = datetime.strptime(month_match.group(0)[:3], "%b").month
+                datetime(year, month, day)
                 return (year, month, day)
         except ValueError:
             return None
 
     return None
-
 
 def _expand_date_keys(value: str) -> set[tuple[int, int, int]]:
     value = _normalize_whitespace(value)
@@ -122,7 +124,6 @@ def _expand_date_keys(value: str) -> set[tuple[int, int, int]]:
     if key:
         keys.add(key)
     return keys
-
 
 def _collect_dates(text: str) -> set[str]:
     normalized = _normalize_whitespace(text)
@@ -151,13 +152,11 @@ def _collect_dates(text: str) -> set[str]:
 
     return dates
 
-
 def _infer_document_year(text: str) -> int | None:
     years = [int(match.group(0)) for match in re.finditer(r"\b20\d{2}\b", text)]
     if not years:
         return None
     return max(set(years), key=years.count)
-
 
 def _collect_month_day_keys(text: str) -> set[tuple[int, int, int]]:
     normalized = _normalize_whitespace(text)
@@ -182,7 +181,6 @@ def _collect_month_day_keys(text: str) -> set[tuple[int, int, int]]:
             continue
     return keys
 
-
 def _collect_loose_day_year_keys(text: str) -> set[tuple[int, int, int]]:
     normalized = _normalize_whitespace(text)
     keys: set[tuple[int, int, int]] = set()
@@ -205,7 +203,6 @@ def _collect_loose_day_year_keys(text: str) -> set[tuple[int, int, int]]:
 
     return keys
 
-
 def _collect_date_keys(text: str, entities: list[dict[str, Any]]) -> set[tuple[int, int, int]]:
     keys: set[tuple[int, int, int]] = set()
     normalized = _normalize_whitespace(text)
@@ -225,7 +222,6 @@ def _collect_date_keys(text: str, entities: list[dict[str, Any]]) -> set[tuple[i
 
     return keys
 
-
 def _summary_text_blob(summary: dict[str, Any]) -> str:
     parts: list[str] = [summary.get("title") or ""]
     for section in summary.get("sections") or []:
@@ -234,7 +230,6 @@ def _summary_text_blob(summary: dict[str, Any]) -> str:
     parts.extend(summary.get("actionItems") or [])
     parts.append(summary.get("rawMarkdown") or "")
     return "\n".join(parts)
-
 
 def verify_summary_dates(
     source_text: str,
@@ -257,7 +252,6 @@ def verify_summary_dates(
         )
 
     return warnings
-
 
 _GENERIC_HALLMARKS = frozenset(
     {
@@ -288,7 +282,6 @@ _CIRCULAR_NUMBER_TOKEN = re.compile(
     re.IGNORECASE,
 )
 
-
 def _is_plausible_circular_number(value: str) -> bool:
     compact = re.sub(r"\s+", "", value or "")
     match = re.match(r"^(\d{1,4})/(\d{2,4})(?:\([a-z0-9]+\))?$", compact, re.IGNORECASE)
@@ -297,11 +290,9 @@ def _is_plausible_circular_number(value: str) -> bool:
     first, second = int(match.group(1)), int(match.group(2))
     return first >= 1990 or second >= 1990
 
-
 def _normalize_circular_token(value: str) -> str:
     compact = re.sub(r"\s+", "", (value or "").lower())
     return re.sub(r"\([^)]*\)", "", compact)
-
 
 def _quoted_phrases(text: str) -> list[str]:
     return [
@@ -310,12 +301,10 @@ def _quoted_phrases(text: str) -> list[str]:
         if phrase.strip()
     ]
 
-
 def _title_case_phrases(text: str) -> list[str]:
     phrases = re.findall(r"\b(?:[A-Z][a-z]+(?:[\s-][A-Z]?[a-z]+){1,5})\b", text or "")
     hyphenated = re.findall(r"\b[A-Z][a-z]+(?:-[A-Za-z]+){1,3}\b", text or "")
     return phrases + hyphenated
-
 
 def _gold_text_blob(example: dict) -> str:
     gold = example.get("gold") or {}
@@ -328,7 +317,6 @@ def _gold_text_blob(example: dict) -> str:
         parts.append(str(section.get("content") or ""))
     parts.extend(str(item) for item in (gold.get("actionItems") or []))
     return "\n".join(parts)
-
 
 def _hallmarks_from_example(example: dict) -> list[str]:
     blob = _gold_text_blob(example)
@@ -344,7 +332,6 @@ def _hallmarks_from_example(example: dict) -> list[str]:
         seen.add(key)
         phrases.append(cleaned)
     return phrases
-
 
 def _example_matches_document(
     example: dict,
@@ -375,7 +362,6 @@ def _example_matches_document(
         if recall >= 0.35:
             return True
     return False
-
 
 def detect_topic_bleed(
     source_text: str,
@@ -435,3 +421,4 @@ def detect_topic_bleed(
         )
 
     return warnings
+

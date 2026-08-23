@@ -13,7 +13,6 @@ function buildPlainText(
     "",
   ];
 
-  // Metadata block
   const metaFields: [string, string | null | undefined][] = [
     ["Circular Number", summary.circularNumber],
     ["Issued Date", summary.issuedDate],

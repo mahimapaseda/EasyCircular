@@ -2,7 +2,6 @@ import re
 
 from app.config import settings
 
-
 def _build_preamble(text: str, *, filename: str | None = None) -> str:
     """Build a short document context preamble from the circular header.
 
@@ -23,7 +22,6 @@ def _build_preamble(text: str, *, filename: str | None = None) -> str:
     parts.append(f"Opening: {first_lines}")
     parts.append("[END CONTEXT]\n")
     return "\n".join(parts)
-
 
 def split_text(
     text: str,
@@ -70,4 +68,5 @@ def split_text(
         chunks.append(f"{preamble}{current}" if preamble else current)
 
     return chunks
+
 

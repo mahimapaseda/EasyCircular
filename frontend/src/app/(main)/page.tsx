@@ -82,9 +82,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* ─── Hero ────────────────────────────────────────────────── */}
+      
       <section className="relative min-h-[90vh] overflow-hidden">
-        {/* Sparkle decorations */}
+        
         <Sparkle className="absolute left-[15%] top-[18%] text-ink-400/70 animate-pulse dark:text-white/80" />
         <SparkleSmall className="absolute left-[25%] top-[12%] text-ink-300 dark:text-white/40" />
         <Sparkle className="absolute left-[35%] top-[30%] text-ink-300/80 animate-pulse dark:text-white/50" />
@@ -95,15 +95,15 @@ export default function HomePage() {
         <SparkleSmall className="absolute right-[30%] bottom-[25%] text-ink-400 dark:text-white/50" />
 
         <div className="relative mx-auto grid max-w-7xl gap-8 px-5 pt-24 sm:px-8 lg:grid-cols-2 lg:items-center lg:gap-12 lg:pt-32">
-          {/* Left: Text content */}
+          
           <div className="animate-fade-up">
-            {/* Top badge */}
+            
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-sm text-ink-600 backdrop-blur-md dark:border-white/15 dark:bg-white/5 dark:text-slate-300">
               <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
               AI-powered, fast & easy.
             </div>
 
-            {/* Main heading */}
+            
             <h1 className="mt-8 text-4xl font-black leading-[1.08] tracking-tight text-ink-900 sm:text-6xl lg:text-[4.2rem] dark:text-white">
               Summarize.
               <br />
@@ -114,14 +114,14 @@ export default function HomePage() {
               </span>
             </h1>
 
-            {/* Description */}
+            
             <p className="mt-6 max-w-lg text-[15px] leading-relaxed text-ink-600 dark:text-slate-300">
               Welcome to EasyCircular. Import circulars from the official Ministry of Education
               site, extract key information, and review AI-powered summaries. The original PDF
               remains the legal source.
             </p>
 
-            {/* Buttons */}
+            
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
                 href={uploadHref}
@@ -141,15 +141,15 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: Floating badges / visual area */}
+          
           <div className="relative hidden lg:block">
-            {/* Decorative glow */}
+            
             <div className="absolute -right-20 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-purple-600/20 blur-[100px]" />
             <div className="absolute -right-10 top-1/4 h-60 w-60 rounded-full bg-cyan-500/15 blur-[80px]" />
 
-            {/* Floating info badges */}
+            
             <div className="relative flex h-[500px] items-center justify-center">
-              {/* Center visual element */}
+              
               <div className="relative h-72 w-72 rounded-full border border-slate-200 bg-gradient-to-br from-white/80 to-white/0 dark:border-white/10 dark:from-white/5 dark:to-white/0">
                 <div className="absolute inset-4 rounded-full border border-slate-200 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 backdrop-blur-sm dark:border-white/10" />
                 <div className="absolute inset-12 flex items-center justify-center rounded-full border border-cyan-400/30 bg-white/80 backdrop-blur-xl dark:border-cyan-400/20 dark:bg-black/40">
@@ -159,11 +159,10 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Floating badge: Top right */}
+              
               <div className="absolute right-4 top-16 rounded-xl border border-slate-200 bg-white/90 px-4 py-2.5 shadow-xl backdrop-blur-xl animate-float dark:border-white/15 dark:bg-black/60">
                 <p className="text-xs font-bold text-ink-900 dark:text-white">Multi-language OCR</p>
               </div>
-
 
               <div className="absolute bottom-16 right-12 rounded-xl border border-slate-200 bg-white/90 px-4 py-2.5 shadow-xl backdrop-blur-xl animate-float dark:border-white/15 dark:bg-black/60">
                 <p className="text-xs font-bold text-ink-900 dark:text-white">Process in &lt;60 seconds</p>
@@ -182,7 +181,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Features ─────────────────────────────────────────────── */}
+      
       <section id="features" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 sm:px-8">
         <div className="mb-14 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-700 dark:text-cyan-300">Features</p>
@@ -216,7 +215,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── How it works ─────────────────────────────────────────── */}
+      
       <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 sm:px-8">
         <div className="mb-14 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-700 dark:text-cyan-300">How it works</p>
@@ -249,7 +248,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── System status ───────────────────────────────────────── */}
+      
       <section id="system-status" className="mx-auto max-w-2xl scroll-mt-20 px-5 py-10 sm:px-8">
         <div className="mb-5 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-700 dark:text-cyan-300">System Status</p>
@@ -265,7 +264,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Upload zone ──────────────────────────────────────────── */}
+      
       <section id="upload" className="relative scroll-mt-20">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
         <div className="mx-auto max-w-2xl px-5 py-20 sm:px-8">

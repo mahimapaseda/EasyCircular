@@ -1,7 +1,4 @@
-/**
- * Cross-service API contract for EasyCircular.
- * Imported by backend; mirrored in frontend TypeScript types.
- */
+
 
 const CIRCULAR_STATUS = Object.freeze({
   UPLOADED: "uploaded",

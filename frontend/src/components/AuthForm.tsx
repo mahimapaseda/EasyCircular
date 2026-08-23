@@ -112,7 +112,7 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
 
   return (
     <div>
-      {/* Title */}
+      
       <div className="mb-7">
         <h1 className="text-2xl font-black tracking-tight text-ink-900 dark:text-white">
           {isSignUp ? "Create your account" : "Welcome back!"}
@@ -249,7 +249,7 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
                 }}
                 onFocus={() => setDistrictOpen(true)}
                 onBlur={() => {
-                  // Delay so suggestion click registers before close
+
                   window.setTimeout(() => setDistrictOpen(false), 120);
                 }}
                 className={`${inputClass} px-4`}
@@ -332,7 +332,7 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
         </button>
       </form>
 
-      {/* Divider */}
+      
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-slate-200 dark:border-white/10" />
@@ -361,7 +361,7 @@ export default function AuthForm({ mode, returnTo, onSubmit, onGoogleSignIn }: A
         </button>
       )}
 
-      {/* Switch mode */}
+      
       <p className="mt-7 text-center text-sm text-ink-500 dark:text-slate-400">
         {isSignUp ? (
           <>

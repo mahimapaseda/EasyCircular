@@ -31,19 +31,17 @@ _tokenizer: Any = None
 _model: Any = None
 _device: str | None = None
 
-
 def mt_is_configured() -> bool:
     """True when torch/transformers are installed and translation is not disabled."""
     flag = os.getenv("TRANSLATE_DISABLED", "").strip().lower()
     if flag in {"1", "true", "yes"}:
         return False
     try:
-        import torch  # noqa: F401
-        import transformers  # noqa: F401
+        import torch
+        import transformers
     except ImportError:
         return False
     return True
-
 
 def _resolve_device() -> str:
     requested = (settings.translate_device or "auto").strip().lower()
@@ -61,7 +59,6 @@ def _resolve_device() -> str:
         return "cuda" if torch.cuda.is_available() else "cpu"
     except ImportError:
         return "cpu"
-
 
 def _load_model() -> tuple[Any, Any, str]:
     global _tokenizer, _model, _device
@@ -92,7 +89,6 @@ def _load_model() -> tuple[Any, Any, str]:
         _device = device
         return tokenizer, model, device
 
-
 def split_mt_sentences(text: str) -> list[str]:
     """Split on sentence boundaries; keep chunks short enough for NLLB."""
     raw = (text or "").strip()
@@ -122,7 +118,6 @@ def split_mt_sentences(text: str) -> list[str]:
         chunks.append(buf)
     return chunks
 
-
 def _generate_chunk(text: str, source: str, target: str) -> str:
     import torch
 
@@ -144,7 +139,6 @@ def _generate_chunk(text: str, source: str, target: str) -> str:
         )
     return tokenizer.batch_decode(tokens, skip_special_tokens=True)[0].strip()
 
-
 def translate_text(
     text: str,
     source: SummaryLang | str = "en",
@@ -160,7 +154,7 @@ def translate_text(
         return ""
     if source_lang == target_lang:
         return raw
-    if target_lang in ("si", "ta") and text_has_target_script(raw, target_lang):  # type: ignore[arg-type]
+    if target_lang in ("si", "ta") and text_has_target_script(raw, target_lang):
         return raw
     if not mt_is_configured():
         raise RuntimeError(
@@ -180,3 +174,4 @@ def translate_text(
             ) from exc
         pieces.append(out or chunk)
     return " ".join(pieces).strip()
+

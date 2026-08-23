@@ -11,9 +11,8 @@ logger = logging.getLogger("easycircular.ai.pdf")
 TEXT_DENSITY_THRESHOLD = 50
 MIN_EMBEDDED_IMAGE_SIDE = 400
 MIN_OCR_HEIGHT = 1800
-RENDER_ZOOM = 3.0  # ~216 DPI on an A4 page
+RENDER_ZOOM = 3.0
 
-# Scanner watermarks / near-empty text layers that must never be treated as content.
 WATERMARK_ONLY_PATTERN = re.compile(
     r"^(?:camscanner|scanned\s+by|scanned\s+with|scanbot|adobe\s+scan|"
     r"microsoft\s+lens|genius\s+scan|.*?scanner)$",
@@ -21,7 +20,6 @@ WATERMARK_ONLY_PATTERN = re.compile(
 )
 SINHALA_RE = re.compile(r"[\u0D80-\u0DFF]")
 TAMIL_RE = re.compile(r"[\u0B80-\u0BFF]")
-
 
 @dataclass
 class ParseResult:
@@ -32,16 +30,13 @@ class ParseResult:
     page_texts: list[str]
     error: str | None = None
 
-
 def _normalize_text(text: str) -> str:
     return normalize_moe_text(text)
-
 
 def _average_density(text: str, pages: int) -> float:
     if pages <= 0:
         return 0.0
     return len(text.strip()) / pages
-
 
 def _is_insufficient_text(text: str, pages: int = 1) -> bool:
     """True when extracted text is empty, watermark-only, or far too short for a circular."""
@@ -51,11 +46,9 @@ def _is_insufficient_text(text: str, pages: int = 1) -> bool:
     collapsed = re.sub(r"\s+", " ", cleaned)
     if WATERMARK_ONLY_PATTERN.match(collapsed):
         return True
-    # A real MOE circular page almost never has fewer than ~80 readable chars.
     if len(collapsed) < 80 and _average_density(cleaned, max(pages, 1)) < TEXT_DENSITY_THRESHOLD:
         return True
     return False
-
 
 def _missing_expected_script(text: str, filename: str | None) -> bool:
     """After OCR, -Si/-Ta filenames should contain that script, not Latin garbage."""
@@ -67,7 +60,6 @@ def _missing_expected_script(text: str, filename: str | None) -> bool:
         return len(TAMIL_RE.findall(sample)) < 15
     return False
 
-
 def _extract_with_pdfplumber(data: bytes) -> tuple[list[str], int]:
     import pdfplumber
 
@@ -78,7 +70,6 @@ def _extract_with_pdfplumber(data: bytes) -> tuple[list[str], int]:
         page_count = len(pdf.pages)
     return page_texts, page_count
 
-
 def _extract_with_pymupdf(data: bytes) -> tuple[list[str], int]:
     import fitz
 
@@ -88,7 +79,6 @@ def _extract_with_pymupdf(data: bytes) -> tuple[list[str], int]:
             page_texts.append(page.get_text("text") or "")
         page_count = doc.page_count
     return page_texts, page_count
-
 
 def _preprocess_for_ocr(image):
     from PIL import Image, ImageOps
@@ -101,7 +91,6 @@ def _preprocess_for_ocr(image):
             Image.Resampling.LANCZOS,
         )
     return gray.convert("RGB")
-
 
 def _largest_embedded_image(doc, page):
     best = None
@@ -123,13 +112,11 @@ def _largest_embedded_image(doc, page):
             best = payload
     return best
 
-
 def _tesseract_image(image, ocr_lang: str, tess_config: str | None, psm: int) -> str:
     import pytesseract
 
     config = " ".join(part for part in ((tess_config or "").strip(), f"--psm {psm}") if part)
     return pytesseract.image_to_string(image, lang=ocr_lang, config=config)
-
 
 def _ocr_image(image, ocr_lang: str, tess_config: str | None) -> str:
     prepared = _preprocess_for_ocr(image)
@@ -140,14 +127,12 @@ def _ocr_image(image, ocr_lang: str, tess_config: str | None) -> str:
             return retry
     return text
 
-
 def _render_page_image(page, zoom: float = RENDER_ZOOM):
     import fitz
     from PIL import Image
 
     pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
     return Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-
 
 def _ocr_page(doc, page, ocr_lang: str, tess_config: str | None) -> str:
     from PIL import Image
@@ -165,13 +150,12 @@ def _ocr_page(doc, page, ocr_lang: str, tess_config: str | None) -> str:
 
     return text
 
-
 def _ocr_with_pymupdf(data: bytes, filename: str | None = None) -> tuple[list[str], int, str]:
     import fitz
 
     try:
-        import pytesseract  # noqa: F401
-        from PIL import Image  # noqa: F401
+        import pytesseract
+        from PIL import Image
     except ImportError as exc:
         raise RuntimeError("OCR dependencies are not installed") from exc
 
@@ -187,7 +171,6 @@ def _ocr_with_pymupdf(data: bytes, filename: str | None = None) -> tuple[list[st
 
     return page_texts, page_count, ocr_lang
 
-
 def _is_tesseract_available() -> bool:
     try:
         import pytesseract
@@ -196,7 +179,6 @@ def _is_tesseract_available() -> bool:
         return True
     except Exception:
         return False
-
 
 def _ocr_failure_message(
     *,
@@ -223,7 +205,6 @@ def _ocr_failure_message(
         message = f"{message} ({'; '.join(errors)})"
     return message
 
-
 def parse_pdf_bytes(data: bytes, filename: str | None = None) -> ParseResult:
     if not data:
         return ParseResult(
@@ -249,7 +230,6 @@ def parse_pdf_bytes(data: bytes, filename: str | None = None) -> ParseResult:
     combined = _normalize_text("\n\n".join(page_texts))
     density = _average_density(combined, page_count)
 
-    # Force OCR for watermark-only / tiny text layers even if density math is odd.
     needs_ocr = density < TEXT_DENSITY_THRESHOLD or _is_insufficient_text(combined, page_count)
 
     if needs_ocr:
@@ -326,3 +306,4 @@ def parse_pdf_bytes(data: bytes, filename: str | None = None) -> ParseResult:
         page_texts=page_texts,
         error="; ".join(errors) if errors and not combined else None,
     )
+

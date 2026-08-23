@@ -105,7 +105,7 @@ export default function UploadDropzone({ disabled = false }: UploadDropzoneProps
             : "border-slate-300 bg-white/70 hover:border-cyan-500/50 hover:bg-white dark:border-white/20 dark:bg-white/5 dark:hover:border-white/40 dark:hover:bg-white/10"
         } ${disabled || uploading ? "cursor-not-allowed opacity-80" : ""}`}
       >
-        {/* Icon */}
+        
         <div
           className={`relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br transition-all duration-300 ${
             uploading

@@ -92,7 +92,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               key={toast.id}
               className={`pointer-events-auto animate-fade-up overflow-hidden rounded-2xl border-2 shadow-toast ${config.border} ${config.bg}`}
             >
-              {/* Top color bar */}
+              
               <div className={`h-1 w-full ${config.bar}`} />
               <div className="flex items-center gap-3 px-4 py-3.5">
                 {config.icon}

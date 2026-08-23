@@ -6,9 +6,12 @@ from app.moe_text import (
     build_summary_title,
     extract_circular_number,
     extract_effective_date,
+    extract_issued_date,
     extract_key_requirements,
     extract_subject,
     is_letterhead_line,
+    is_moe_header_date,
+    is_plausible_effective_date,
     is_valid_date_text,
 )
 from app.ner import extract_entities
@@ -113,6 +116,18 @@ def test_date_filter_rejects_ed_reference_and_phone_noise():
     assert not is_valid_date_text("694112785162")
     assert is_valid_date_text("27.11.2006")
     assert is_valid_date_text("15 March 2026")
+    assert is_valid_date_text("2026.07.06")
+    assert is_valid_date_text("06.07.2026")
+    assert not is_valid_date_text("96.07.2026")
+    assert not is_valid_date_text("06.13.2026")
+    assert not is_valid_date_text("31.02.2026")
+    assert not is_valid_date_text("7/1/11")
+    assert not is_moe_header_date("7/1/11")
+    assert is_moe_header_date("06.07.2026")
+    assert is_plausible_effective_date("With immediate effect")
+    assert is_plausible_effective_date("As at 31.12.2026")
+    assert is_plausible_effective_date("ක්ෂණිකව බලපැවැත්වේ")
+    assert not is_plausible_effective_date("7/1/11")
 
 
 def test_ner_extracts_circular_and_ed_reference():

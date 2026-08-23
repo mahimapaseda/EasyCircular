@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from typing import Literal
 
 LanguageHint = Literal["en", "si", "ta", "mixed"]
@@ -12,7 +13,6 @@ CIRCULAR_NUMBER_PATTERNS = [
         r"(?:Circular\s*(?:Number|No\.?)\s*[:\-]?\s*)(\d{1,4}\s*/\s*\d{2,4}(?:\s*\([a-z]\))?)",
         re.IGNORECASE,
     ),
-    # Sinhala: චක්‍රලේඛ අංක : 03 /2014 (1)  and  අංක 2010/22 චක්‍රලේඛය
     re.compile(
         r"(?:චක්[\u200d]?රලේඛ[යු]?\s*අංක\s*[:\-]?\s*)(\d{1,4}\s*/\s*\d{2,4}(?:\s*\([^)]+\))?)",
         re.IGNORECASE,
@@ -21,7 +21,6 @@ CIRCULAR_NUMBER_PATTERNS = [
         r"(?:අංක\s+)(\d{1,4}\s*/\s*\d{2,4})(?:\s*චක්[\u200d]?රලේඛ)",
         re.IGNORECASE,
     ),
-    # Tamil: சுற்றறிக்கை / சுற்றுநிருபம் இலக்கம் 23/2026 (OCR variants)
     re.compile(
         r"(?:சுற்ற(?:றிக்கை|றிக்கை)|சுற்றுநிருப(?:ம்|த்தின்)?)\s*"
         r"(?:இல(?:க்)?கம்?|இல\.?|எண்)\s*[:\-]?\s*(\d{1,4}\s*/\s*\d{2,4})",
@@ -31,9 +30,7 @@ CIRCULAR_NUMBER_PATTERNS = [
         r"(?:இலக்கம்|இல\.?)\s*[:\-]?\s*(\d{1,4}\s*/\s*\d{2,4})",
         re.IGNORECASE,
     ),
-    # "Circular No. 2006/44 (i)" year-first form
     re.compile(r"(?:Circular\s*No\.?\s*)(\d{4}\s*/\s*\d{1,4}(?:\s*\([a-z]\))?)", re.IGNORECASE),
-    # OCR variants with hyphen glued: "Circular No.- 10/2026"
     re.compile(
         r"(?:Circular\s*(?:Number|No\.?)\s*[-:.]+\s*)(\d{1,4}\s*/\s*\d{2,4}(?:\s*\([a-z]\))?)",
         re.IGNORECASE,
@@ -92,7 +89,6 @@ RECIPIENT_PREFIXES = (
     "parivenacharya",
 )
 
-# Role/institution lines that are still recipients even without "All …" prefixes.
 RECIPIENT_ROLE_MARKERS = (
     "of all the",
     "in the island",
@@ -112,7 +108,6 @@ SUBJECT_STOP_MARKERS = (
     re.compile(r"^therefore[,.]?", re.IGNORECASE),
 )
 
-# First line of circular body (not a recipient / short subject title).
 BODY_START_PATTERN = re.compile(
     r"^(?:it\s+is\s+(?:hereby\s+)?(?:mandatory|notified|informed|decided)|"
     r"it\s+is\s+hereby|"
@@ -181,7 +176,6 @@ REGISTER_NOISE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-# Common OCR / letterhead fragments that must never become entities or parties.
 LETTERHEAD_NOISE_PATTERN = re.compile(
     r"^(?:இலங்கை|ශ්‍රී\s*ලංකාව?|sri\s*lanka|st\s*lanka|battaramulla|isurupaya|"
     r"buddhist|trainin|camscanner|lanka|moe\.gov\.lk|www\.moe)$",
@@ -212,21 +206,17 @@ NOISE_DATE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-
 def normalize_moe_text(text: str) -> str:
     text = text.replace("\x00", "")
     text = re.sub(r"[ \t]+\n", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     text = re.sub(r"[ \t]{2,}", " ", text)
-    # Common OCR word breaks seen on CamScanner MOE PDFs
     text = re.sub(r"\btrainin[,.]?\s*rogramme\b", "training programme", text, flags=re.IGNORECASE)
     text = re.sub(r"\bsuch[_\s]+in\b", "such in", text, flags=re.IGNORECASE)
     text = re.sub(r"\bSt\s+Lanka\b", "Sri Lanka", text)
-    # OCR often inserts underscore before short words: "_at", "_the"
     text = re.sub(r"\b_([a-zA-Z]{2,})\b", r"\1", text)
     text = re.sub(r"\s+_", " ", text)
     return text.strip()
-
 
 def detect_language_hint(text: str) -> LanguageHint:
     sample = text[:4000]
@@ -244,7 +234,6 @@ def detect_language_hint(text: str) -> LanguageHint:
     if tamil == dominant:
         return "ta"
     return "en"
-
 
 def extract_circular_number(text: str, filename: str | None = None) -> str | None:
     header = "\n".join(text.splitlines()[:30])
@@ -274,13 +263,11 @@ def extract_circular_number(text: str, filename: str | None = None) -> str | Non
 
     return matches[0] if matches else None
 
-
 def is_letterhead_line(line: str) -> bool:
     lowered = line.lower().strip()
     if not lowered or len(lowered) < 4:
         return True
     return any(marker in lowered for marker in LETTERHEAD_MARKERS)
-
 
 def is_recipient_line(line: str) -> bool:
     stripped = line.strip()
@@ -302,7 +289,6 @@ def is_recipient_line(line: str) -> bool:
     if lowered.startswith(RECIPIENT_PREFIXES):
         return True
     if any(marker in lowered for marker in RECIPIENT_ROLE_MARKERS) and len(stripped) < 140:
-        # Role lists like "Kruthyadhikari/Parivenadhipathi of all the Pirivenas…"
         if not POLICY_SUBJECT_PATTERN.search(stripped) or lowered.startswith(
             ("kruthyadhikari", "parivenadhipathi", "heads of", "head of")
         ):
@@ -317,10 +303,8 @@ def is_recipient_line(line: str) -> bool:
         return False
     return False
 
-
 def _is_subject_stop(line: str) -> bool:
     return any(pattern.search(line.strip()) for pattern in SUBJECT_STOP_MARKERS)
-
 
 def _is_circular_meta_line(line: str) -> bool:
     if any(pattern.search(line) for pattern in CIRCULAR_NUMBER_PATTERNS):
@@ -331,12 +315,10 @@ def _is_circular_meta_line(line: str) -> bool:
         return True
     return False
 
-
 def extract_subject(text: str) -> str | None:
     text = normalize_moe_text(text)
     lines = [line.strip() for line in text.splitlines()]
 
-    # "Annexure" headings in English, Tamil (incl. common OCR variant), Sinhala
     annexure_pattern = r"^(?:annexure\b|இணைப்பு|இகைப்பு|ඇමුණුම)"
     for index, line in enumerate(lines[:20]):
         if re.match(annexure_pattern, line, re.IGNORECASE):
@@ -414,7 +396,6 @@ def extract_subject(text: str) -> str | None:
         if phase == "subject":
             if _is_subject_stop(line):
                 break
-            # Keep wrapping OCR lines that continue the same sentence.
             if subject_lines and (
                 line[0].islower()
                 or (
@@ -424,7 +405,6 @@ def extract_subject(text: str) -> str | None:
                 )
             ):
                 subject_lines.append(line)
-                # Stop once we have a complete sentence long enough for a subject.
                 joined = re.sub(r"\s+", " ", " ".join(subject_lines)).strip()
                 if joined.endswith((".", "!", "?")) and len(joined) >= 60:
                     break
@@ -439,7 +419,6 @@ def extract_subject(text: str) -> str | None:
         return None
     return subject[:500]
 
-
 def extract_body_text(text: str) -> str:
     subject = extract_subject(text)
     if not subject:
@@ -450,20 +429,17 @@ def extract_body_text(text: str) -> str:
         return text
     return text[index + len(subject) :].strip()
 
-
 def looks_like_staff_register(text: str) -> bool:
     """True for annexure / staff-return / service-register circulars (e.g. 23/2026)."""
     if not REGISTER_DOC_PATTERN.search(text or ""):
         return False
     return bool(REGISTER_SERVICE_PATTERN.search(text or ""))
 
-
 def extract_as_at_date(text: str) -> str | None:
     match = AS_AT_DATE_PATTERN.search(text or "")
     if not match:
         return None
     return match.group(1).strip()
-
 
 def _is_register_noise_line(text: str) -> bool:
     stripped = re.sub(r"[.\s_�]+", " ", text).strip()
@@ -478,7 +454,6 @@ def _is_register_noise_line(text: str) -> bool:
     ):
         return True
     return False
-
 
 def _register_instruction_lines(text: str, max_items: int = 8) -> list[str]:
     items: list[str] = []
@@ -503,7 +478,6 @@ def _register_instruction_lines(text: str, max_items: int = 8) -> list[str]:
         if len(items) >= max_items:
             break
     return items
-
 
 def extract_register_requirements(text: str, max_items: int = 8) -> list[str]:
     """Extractive bullets for annexure / service-register circulars."""
@@ -547,7 +521,6 @@ def extract_register_requirements(text: str, max_items: int = 8) -> list[str]:
 
     return items[:max_items]
 
-
 def extract_register_action_items(text: str, max_items: int = 6) -> list[str]:
     """Concrete register actions grounded in the annexure instructions."""
     items: list[str] = []
@@ -588,7 +561,6 @@ def extract_register_action_items(text: str, max_items: int = 6) -> list[str]:
 
     return items[:max_items]
 
-
 def extract_register_purpose(text: str) -> str | None:
     """Purpose for annexure/register circulars: complete forms + service-length instructions."""
     annexure_ids = []
@@ -619,7 +591,6 @@ def extract_register_purpose(text: str) -> str | None:
         return None
     return re.sub(r"\s+", " ", " ".join(parts)).strip()[:1200]
 
-
 def _split_requirement_sentences(body: str) -> list[str]:
     """Split body into requirement-sized chunks.
 
@@ -641,7 +612,6 @@ def _split_requirement_sentences(body: str) -> list[str]:
                 sentences.append(cleaned)
     return sentences
 
-
 def extract_key_requirements(text: str, max_items: int = 8) -> list[str]:
     if looks_like_staff_register(text):
         register_items = extract_register_requirements(text, max_items=max_items)
@@ -657,7 +627,6 @@ def extract_key_requirements(text: str, max_items: int = 8) -> list[str]:
         cleaned = re.sub(r"\s+", " ", sentence).strip()
         if len(cleaned) < 40 or len(cleaned) > 500:
             continue
-        # Skip OCR fragments that start mid-clause (Latin only; Sinhala has no case).
         if cleaned[0].islower() and cleaned[0].isascii():
             continue
         if not ACTION_SENTENCE_PATTERN.search(cleaned):
@@ -673,7 +642,6 @@ def extract_key_requirements(text: str, max_items: int = 8) -> list[str]:
             break
 
     return requirements
-
 
 def extract_action_items(text: str, entities: list[dict] | None = None, max_items: int = 6) -> list[str]:
     if looks_like_staff_register(text):
@@ -691,7 +659,6 @@ def extract_action_items(text: str, entities: list[dict] | None = None, max_item
         fallback.append(f"Note key dates: {', '.join(dates[:5])}.")
     fallback.append("Review the full circular text and confirm requirements with the original PDF.")
     return fallback
-
 
 def collect_valid_dates(text: str, entities: list[dict] | None = None) -> list[str]:
     found: list[str] = []
@@ -716,6 +683,30 @@ def collect_valid_dates(text: str, entities: list[dict] | None = None) -> list[s
 
     return found[:12]
 
+def _calendar_parts_ok(year: int, month: int, day: int) -> bool:
+    if not (1900 <= year <= 2100):
+        return False
+    try:
+        datetime(year, month, day)
+        return True
+    except ValueError:
+        return False
+
+def _numeric_date_is_calendar_valid(value: str) -> bool | None:
+    """Return True/False for dotted or slash numeric dates; None if not that shape."""
+    value = value.strip()
+    m = re.fullmatch(r"(\d{4})[.\-](\d{2})[.\-](\d{2})", value)
+    if m:
+        return _calendar_parts_ok(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    m = re.fullmatch(r"(\d{1,2})\.(\d{2})\.(\d{4})", value)
+    if m:
+        return _calendar_parts_ok(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+    if re.fullmatch(r"\d{1,2}\s*/\s*\d{1,2}\s*/\s*\d{2}", value):
+        return False
+    m = re.fullmatch(r"(\d{1,2})\s*/\s*(\d{1,2})\s*/\s*(\d{4})", value)
+    if m:
+        return _calendar_parts_ok(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+    return None
 
 def is_valid_date_text(value: str) -> bool:
     value = value.strip()
@@ -727,34 +718,85 @@ def is_valid_date_text(value: str) -> bool:
         return False
     if ED_REF_PATTERN.fullmatch(value) or ED_REF_PATTERN.search(value):
         return False
-    if re.fullmatch(r"\d{1,2}/\d{2}/\d{2}", value):
+    if re.fullmatch(r"\d{1,2}\s*/\s*\d{1,2}\s*/\s*\d{2}", value):
         return False
-    if any(pattern.search(value) for pattern in DATE_PATTERNS):
+
+    numeric_ok = _numeric_date_is_calendar_valid(value)
+    if numeric_ok is False:
+        return False
+    if numeric_ok is True:
         return True
+
+    if any(pattern.search(value) for pattern in DATE_PATTERNS):
+        cleaned = re.sub(r"(\d+)(st|nd|rd|th)", r"\1", value, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s+of\s+", " ", cleaned, flags=re.IGNORECASE)
+        for fmt in ("%d %B %Y", "%B %d, %Y", "%B %d %Y"):
+            try:
+                datetime.strptime(cleaned, fmt)
+                return True
+            except ValueError:
+                continue
+        return False
     if re.fullmatch(r"\d{4}", value) and 2000 <= int(value) <= 2100:
         return True
     return False
 
+EFFECTIVE_DATE_PHRASE = re.compile(
+    r"immediate|effect|as\s+at|w\.?\s*e\.?\s*f|effective|not\s+specified|"
+    r"ක්ෂණික|බලපැවැත්|உடனடி|நடைமுறை",
+    re.IGNORECASE,
+)
+
+def is_plausible_effective_date(value: str) -> bool:
+    """Effective dates may be calendar dates or free-text phrases."""
+    value = (value or "").strip()
+    if not value or len(value) > 160:
+        return False
+    if is_valid_date_text(value):
+        return True
+    if EFFECTIVE_DATE_PHRASE.search(value):
+        return True
+    if re.search(r"[A-Za-z\u0D80-\u0DFF\u0B80-\u0BFF]", value) and not re.fullmatch(
+        r"[\d./\-\s]+", value
+    ):
+        return True
+    return False
+
+def is_moe_header_date(value: str) -> bool:
+    """Issued dates on MOE letterheads use dotted or ISO forms, not short slash dates."""
+    value = (value or "").strip()
+    if not is_valid_date_text(value):
+        return False
+    if re.fullmatch(r"\d{4}\.\d{2}\.\d{2}", value):
+        return True
+    if re.fullmatch(r"\d{1,2}\.\d{2}\.\d{4}", value):
+        return True
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        return True
+    if re.search(
+        r"(?:January|February|March|April|May|June|July|August|September|October|November|December)",
+        value,
+        re.IGNORECASE,
+    ):
+        return True
+    return False
 
 def build_summary_title(text: str, filename: str | None = None) -> str:
     text = normalize_moe_text(text)
     circular_no = extract_circular_number(text, filename)
     subject = extract_subject(text)
-    # Annexure-only PDFs (e.g. 23-2026-En): prefer circular + annexure label over form gibberish
     if subject and re.match(r"^annexure\b", subject, re.IGNORECASE) and circular_no:
         return f"MOE Circular {circular_no}: {subject[:80]}"
     if circular_no and subject:
         short_subject = subject if len(subject) <= 80 else f"{subject[:77]}..."
         return f"MOE Circular {circular_no}: {short_subject}"
     if circular_no:
-        # Filename-backed circulars whose body is only an annexure form
         if re.search(r"\bannexure\b", text[:800], re.IGNORECASE):
             return f"MOE Circular {circular_no}: Annexure / staff return form"
         return f"MOE Circular {circular_no}"
     if subject and not is_recipient_line(subject):
         return subject if len(subject) <= 100 else f"{subject[:97]}..."
     return "MOE circular summary"
-
 
 def top_org_entities(entities: list[dict], limit: int = 8) -> list[str]:
     priority_terms = (
@@ -796,22 +838,35 @@ def top_org_entities(entities: list[dict], limit: int = 8) -> list[str]:
 
     return unique[:limit]
 
-
 def extract_issued_date(text: str) -> str | None:
     """Extract the date the circular was issued from the header area."""
     header_lines = text.splitlines()[:15]
     header = "\n".join(header_lines)
 
-    # Try common MOE header date formats: "2026.03.15", "04.05.2026", "2026-03-15"
-    for pattern in DATE_PATTERNS:
+    moe_patterns = [
+        re.compile(r"\b\d{4}\.\d{2}\.\d{2}\b"),
+        re.compile(r"\b\d{1,2}\.\d{2}\.\d{4}\b"),
+        re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),
+        re.compile(
+            r"\b\d{1,2}(?:st|nd|rd|th)?\s+(?:of\s+)?"
+            r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
+            r"\s+\d{4}\b",
+            re.IGNORECASE,
+        ),
+        re.compile(
+            r"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)"
+            r"\s+\d{1,2},?\s+\d{4}\b",
+            re.IGNORECASE,
+        ),
+    ]
+    for pattern in moe_patterns:
         match = pattern.search(header)
         if match:
             value = match.group(0).strip()
-            if is_valid_date_text(value):
+            if is_moe_header_date(value):
                 return value
 
     return None
-
 
 def extract_target_audience(text: str) -> list[str]:
     """Extract the list of recipients from the circular header.
@@ -830,8 +885,6 @@ def extract_target_audience(text: str) -> list[str]:
         if not line:
             if in_recipients and audience:
                 blank_streak += 1
-                # MOE lists often have a blank between recipients; only stop after
-                # a larger gap that usually precedes the body.
                 if blank_streak >= 2:
                     break
             continue
@@ -853,17 +906,14 @@ def extract_target_audience(text: str) -> list[str]:
                     audience.append(cleaned)
                 continue
 
-            # Non-recipient substantive line ends the recipient block.
             if len(line) >= 25:
                 break
 
     return audience[:15]
 
-
 def _is_subject_stop_line(line: str) -> bool:
     """Check if a line signals the start of the body/subject."""
     return any(pattern.search(line.strip()) for pattern in SUBJECT_STOP_MARKERS)
-
 
 def extract_effective_date(text: str) -> str | None:
     """Extract when the circular takes effect.
@@ -871,16 +921,13 @@ def extract_effective_date(text: str) -> str | None:
     Looks for phrases like 'with immediate effect', 'effective from',
     'from 01 April 2026', 'w.e.f.', etc.
     """
-    # Normalise for searching
     search_text = " ".join(text.splitlines()[:60])
 
-    # "with immediate effect"
     if re.search(r"with\s+immediate\s+effect", search_text, re.IGNORECASE):
         return "With immediate effect"
     if re.search(r"ක්ෂණිකව", search_text):
         return "ක්ෂණිකව බලපැවැත්වේ"
 
-    # "w.e.f. <date>" or "with effect from <date>"
     wef_match = re.search(
         r"(?:w\.?\s*e\.?\s*f\.?|with\s+effect\s+from|effective\s+from)\s+"
         r"(\d{1,2}[\./]\d{2}[\./]\d{4}|\d{4}[\./]\d{2}[\./]\d{2}|"
@@ -893,7 +940,6 @@ def extract_effective_date(text: str) -> str | None:
     if wef_match:
         return wef_match.group(1).strip()
 
-    # "from <date>" near the end of a sentence about implementation
     from_match = re.search(
         r"(?:shall\s+(?:be\s+)?(?:implemented|applicable|enforced|effective)|"
         r"(?:implemented|applicable|enforced)\s+)"
@@ -912,3 +958,4 @@ def extract_effective_date(text: str) -> str | None:
         return f"As at {as_at}"
 
     return None
+

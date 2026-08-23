@@ -5,10 +5,8 @@ from fastapi.responses import JSONResponse
 
 PUBLIC_PATHS = frozenset({"/", "/health", "/docs", "/openapi.json", "/redoc"})
 
-
 def ai_service_token() -> str:
     return (os.getenv("AI_SERVICE_TOKEN") or "").strip()
-
 
 async def require_ai_token(request: Request, call_next):
     if request.method == "OPTIONS":
@@ -37,3 +35,4 @@ async def require_ai_token(request: Request, call_next):
         return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
 
     return await call_next(request)
+
