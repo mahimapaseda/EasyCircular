@@ -71,10 +71,19 @@ sections:
   id: api
   level: 2
   paragraphs:
-  - Table 4.2 ප්‍රධාන REST API endpoints. Extended list appendix එකේ.
+  - Table 4.2 ප්‍රධාන REST API endpoints ලැයිස්තුගත කරයි. විස්තීර්ණ ලැයිස්තුව appendix එකේ ඇත.
+  - Backend Express router (backend/src/index.js) මගින් /api/auth, /api/circulars සහ /api/moe
+    යන prefix තුන mount කරයි. චක්‍රලේඛ කාර්යප්‍රවාහය circulars.js හි ක්‍රියාත්මක වන අතර AI සේවාව
+    FastAPI routes_v1.py හි /v1/parse/pdf සහ /v1/pipeline endpoints සපයයි.
+  - පහත code screenshots මගින් Table 4.2 හි තීරණාත්මක endpoints තුනක ක්‍රියාත්මක කිරීම පෙන්වා ඇත.
+    පළමු රූපය JWT-ආරක්ෂිත PDF උඩුගත route එකයි; දෙවන රූපය process route එකයි (NER + සාරාංශ);
+    තෙවන රූපය AI microservice හි parse සහ pipeline handlers වේ.
   bullets: []
   numbered: []
-  figures: []
+  figures:
+  - code_api_circulars
+  - code_api_process
+  - code_api_fastapi
   table_ref: api
   table_caption: 'Table 4.2: EasyCircular ප්‍රධාන API endpoints'
 - title: 4.6 AI-generated content සහ code referencing
@@ -106,7 +115,7 @@ sections:
   numbered: []
   figures: []
   table:
-    caption: 'Table 4.3: AI-assisted code artefacts - reason, function සහ system design fit'
+    caption: 'Table 4.3: AI-assisted code artefacts - reason, function and system design fit'
     headers:
     - '#'
     - Code Artefact
@@ -120,89 +129,132 @@ sections:
       - docker-compose.yml service definitions
       - ChatGPT
       - Boilerplate orchestration config; low design value
-      - Frontend, backend, ai-service, MongoDB සහ Ollama containers define කර network සහ volume mapping සපයයි
-      - Deployment layer - ත්‍රිස්ථර architecture එක එකම command එකකින් run කිරීමට ඉඩ දෙයි
-      - Manual run + health-check endpoints පරීක්ෂා කරන ලදී
+      - Defines Frontend, backend, ai-service, MongoDB and Ollama containers with network and volume mappings
+      - Deployment layer - runs the three-tier architecture with a single command
+      - Manual run + health-check endpoint verification
     - - '2'
       - PDF text extraction fallback wrapper
       - ChatGPT
       - try/except cascade pattern boilerplate
-      - pdfplumber අසාර්ථක වූ විට PyMuPDF, ඉන්පසු Tesseract OCR වෙත මාරු වේ
-      - AI tier - extraction stage 1; robustness ensure කරයි
-      - Scanned සහ digital PDF නියැදි මගින් පරීක්ෂා; pytest coverage එකතු කරන ලදී
+      - Falls back from pdfplumber to PyMuPDF, then Tesseract OCR
+      - AI tier - extraction stage 1; ensures robustness
+      - Verified with scanned and digital PDF samples; pytest coverage added
     - - '3'
       - Sinhala/English date regex patterns
       - ChatGPT
-      - Regex syntax නිවැරදිව ලිවීම කාලය ගතවන කාර්යයකි
-      - පෙළ තුළ dd/mm/yyyy, yyyy-mm-dd සහ සිංහල මාස නාම හඳුනා ගනී
-      - AI tier - date guardrail module; hallucinated දින ප්‍රතික්ෂේප කිරීමට යොදා ගනී
-      - Unit tests 12ක් ලියා edge cases සත්‍යාපනය කරන ලදී
+      - Writing correct regex syntax is time-consuming
+      - Detects dd/mm/yyyy, yyyy-mm-dd and Sinhala month names in text
+      - AI tier - date guardrail module; rejects hallucinated dates
+      - Wrote 12 unit tests and verified edge cases
     - - '4'
       - LangChain map-reduce summarization chain
       - ChatGPT
-      - LangChain API syntax reference එකක් ලෙස
-      - දිගු චක්‍රලේඛ chunk කර එක් එක් chunk සාරාංශ කර ඒකාබද්ධ සාරාංශයක් ලබා දේ
-      - AI tier - summarization stage; Ollama LLM එකට prompt pipeline සපයයි
-      - යල් පැන ගිය chain API නිවැරදි කර නැවත ලියන ලදී; ROUGE මගින් තක්සේරු කරන ලදී
+      - Used as a LangChain API syntax reference
+      - Chunks long circulars, summarises each chunk, and returns a combined summary
+      - AI tier - summarization stage; provides the prompt pipeline to the Ollama LLM
+      - Corrected outdated chain API and rewrote it; evaluated with ROUGE
     - - '5'
       - SHA-256 content-hash cache middleware
       - ChatGPT
       - Repetitive middleware boilerplate
-      - Upload කරන ලද පෙළෙහි hash එක ගණනය කර දැනටමත් process කළ ලේඛන නැවත process කිරීම වළක්වයි
-      - Application tier - Express middleware; LLM පිරිවැය සහ latency අවම කරයි
-      - Duplicate upload test මගින් cache hit තහවුරු කරන ලදී
+      - Hashes uploaded text and skips re-processing of already processed documents
+      - Application tier - Express middleware; reduces LLM cost and latency
+      - Confirmed cache hit with a duplicate upload test
     - - '6'
       - JWT authentication middleware skeleton
       - ChatGPT
-      - Standard security pattern; නැවත නිර්මාණය අවශ්‍ය නොවේ
-      - Bearer token verify කර protected routes වලට පමණක් ප්‍රවේශය ලබා දේ
-      - Application tier - සියලු /api/circulars routes ආරක්ෂා කරයි
-      - Invalid/expired token tests; error handling අතින් වැඩිදියුණු කරන ලදී
+      - Standard security pattern; redesign not required
+      - Verifies Bearer tokens and grants access only to protected routes
+      - Application tier - secures all /api/circulars routes
+      - Invalid/expired token tests; error handling improved manually
     - - '7'
       - Entity highlighting React component
       - ChatGPT
       - Text offset rendering logic boilerplate
-      - NER offsets අනුව පෙළ තුළ entities වර්ණ-කේතගත span ලෙස render කරයි
-      - Presentation tier - summary detail view; primary research අවශ්‍යතාවක් (78%) ඉටු කරයි
-      - Overlapping entity bug එකක් හඳුනාගෙන අතින් නිවැරදි කරන ලදී
+      - Renders entities as colour-coded spans in text according to NER offsets
+      - Presentation tier - summary detail view; meets a primary research need (78%)
+      - Found and manually fixed an overlapping entity bug
     - - '8'
-      - Pytest fixtures සහ test scaffolding
+      - Pytest fixtures and test scaffolding
       - ChatGPT
-      - Test boilerplate ලිවීමේ කාලය අවම කිරීම
-      - FastAPI TestClient fixtures, sample PDF fixtures සහ mock LLM responses සපයයි
-      - Testing layer - AI service pytest 91 සඳහා පදනම
-      - සියලු assertions අතින් ලියා ඇත; test logic ශිෂ්‍යයාගේ කාර්යයයි
+      - Reduce time spent writing test boilerplate
+      - Provides FastAPI TestClient fixtures, sample PDF fixtures and mock LLM responses
+      - Testing layer - foundation for the 91 AI service pytest cases
+      - All assertions written manually; test logic is the student's work
     - - '9'
       - python-docx thesis generator helpers
       - ChatGPT
-      - python-docx XML-level API එක සංකීර්ණයි
-      - Iskoola Pota font, 1.5 line spacing, TOC field codes සහ caption numbering සපයයි
-      - Documentation tooling - artefact එකෙන් පිටත; report generation pipeline
-      - Generated .docx එක Word තුළ පරීක්ෂා කරන ලදී
+      - python-docx XML-level API is complex
+      - Provides Iskoola Pota font, 1.5 line spacing, TOC field codes and caption numbering
+      - Documentation tooling - outside the artefact; report generation pipeline
+      - Verified the generated .docx in Word
     - - '10'
       - Rate limiting configuration
       - ChatGPT
       - express-rate-limit config boilerplate
-      - IP එකකට කාල පරාසයක් තුළ ඉල්ලීම් සංඛ්‍යාව සීමා කරයි
-      - Application tier - abuse සහ LLM resource exhaustion වළක්වයි
-      - Load test script මගින් limit ක්‍රියාත්මක වන බව තහවුරු කරන ලදී
+      - Limits the number of requests per IP within a time window
+      - Application tier - prevents abuse and LLM resource exhaustion
+      - Confirmed the limit works via a load test script
 - title: 4.7 ස්වයංක්‍රීය පරීක්ෂණ
   id: auto
   level: 2
   paragraphs:
-  - 'EasyCircular පද්ධතියේ ගුණාත්මකභාවය සහතික කිරීම සඳහා ස්වයංක්‍රීය පරීක්ෂණ කට්ටල භාවිත කරන ලදී: AI service සඳහා
-    pytest පරීක්ෂණ 91ක්, backend සඳහා පරීක්ෂණ 13ක් සහ ඒවාට අමතරව අදියර සත්‍යාපන scripts.'
-  - පරීක්ෂණ ආවරණයට PDF විග්‍රහ කිරීම, OCR fallback ක්‍රියාත්මක වීම, NER නිස්සාරණය, සාරාංශකරණ guardrails (ජනනය කළ
-    ව්‍යාජ දින ප්‍රතික්ෂේප කිරීම), JWT authentication, upload validation සහ cache හැසිරීම ඇතුළත් වේ.
-  - විවේචනාත්මක මාර්ගය (critical path) ලෙස upload කිරීමේ සිට නිස්සාරණය, පරිශීලක සංස්කරණය, සැකසීම සහ අවසාන ප්‍රදර්ශනය
-    දක්වා සම්පූර්ණ ප්‍රවාහය පරීක්ෂා කරන ලදී.
-  - 'AI-assisted code සත්‍යාපනය: පරිච්ඡේදය 4 කොටස 4.6 හි ලේඛනගත කළ AI සහාය ලබා ගත් සෑම කේත කොටසක්ම මෙම පරීක්ෂණ
-    කට්ටලය මගින් ආවරණය කර ඇත. උදාහරණයක් ලෙස date regex patterns සඳහා unit tests 12ක්, extraction fallback wrapper
-    සඳහා scanned සහ digital PDF නියැදි පරීක්ෂණ, සහ cache middleware සඳහා duplicate upload පරීක්ෂණයක් ලියන ලදී. එබැවින්
-    AI-generated යෝජනා පද්ධතියට ඇතුළත් වූයේ පරීක්ෂණ මගින් තහවුරු වූ පසුව පමණි.'
+  - 'AI සේවා pytest කට්ටලය පරීක්ෂණ අවස්ථා 91ක් ආවරණය කරයි: NER ශ්‍රිත පරීක්ෂණ (entity නිස්සාරණ නිරවද්‍යතාව, entity
+    වර්ග වර්ගීකරණය, අභිරුචි EntityRuler රටා ගැලපීම), සාරාංශකරණ පරීක්ෂණ (map-reduce chain, fallback මාදිලිය), guardrail
+    පරීක්ෂණ සහ නිස්සාරණ ශ්‍රිත පරීක්ෂණ. Pytest කට්ටලය AI සේවාවේ තීරණාත්මක මාර්ග සවිස්තරව ආවරණය කරයි.'
+  - 'Guardrail පරීක්ෂණ අවස්ථා තීරණාත්මක ආරක්ෂක සත්‍යාපනයයි: නිර්මිත දින ප්‍රතික්ෂේප පරීක්ෂණය (මූලාශ්‍රයේ නොමැති
+    දින සහිත සාරාංශය හඳුනා ප්‍රතික්ෂේප කිරීම), සත්‍යාපිත දින සමත් පරීක්ෂණය (මූලාශ්‍ර-සත්‍යාපිත දින සහිත සාරාංශය
+    පිළිගැනීම), fallback ක්‍රියාකාරී පරීක්ෂණය (ප්‍රතික්ෂේපයෙන් පසු extractive මාදිලිය ක්‍රියාත්මක වීම). Guardrail
+    පරීක්ෂණ ආරක්ෂක හැසිරීම තහවුරු කරයි.'
+  - 'NER පරීක්ෂණ අවස්ථා entity නිස්සාරණ නිරවද්‍යතාව සත්‍යාපනය කරයි: දින entity පරීක්ෂණය (පරීක්ෂණ පෙළෙහි දන්නා
+    දින නිවැරදිව හඳුනා ගැනීම), සංවිධාන entity පරීක්ෂණය (Ministry of Education වැනි සංවිධාන හඳුනා ගැනීම), නීතිමය
+    entity පරීක්ෂණය සහ අභිරුචි රටා පරීක්ෂණය. NER පරීක්ෂණ entity pipeline නිවැරදිබව තහවුරු කරයි.'
+  - 'Backend පරීක්ෂණ කට්ටලය අවස්ථා 13ක් ආවරණය කරයි: සත්‍යාපන පරීක්ෂණ (ලියාපදිංචිය, login, JWT ටෝකන් වලංගුකරණය,
+    ආරක්ෂිත මාර්ග ප්‍රවේශය), චක්‍රලේඛ CRUD පරීක්ෂණ (නිර්මාණය, කියවීම, යාවත්කාලීන, මකා දැමීම), ගොනු උඩුගත පරීක්ෂණ
+    සහ සැකසුම් endpoint පරීක්ෂණ. Backend පරීක්ෂණ API ගිවිසුම් අනුකූලතාව සහතික කරයි.'
+  - 'පරීක්ෂණ ක්‍රියාත්මක කිරීම: AI සේවා පරීක්ෂණ pytest විධානයෙන් Python අතථ්‍ය පරිසරයේ ධාවනය වේ; backend පරීක්ෂණ
+    npm test විධානයෙන් Jest රාමුවේ ධාවනය වේ; CI pipeline එක දෙකම pull request එකකදී ක්‍රියාත්මක කරයි. පරීක්ෂණ
+    ක්‍රියාත්මක කිරීම සංවර්ධන කාර්යප්‍රවාහයට ඒකාබද්ධ වේ.'
+  - 'පරීක්ෂණ ආවරණ විශ්ලේෂණය: AI සේවාවේ තීරණාත්මක මාර්ග හොඳින් ආවරණය වේ (NER, guardrails); නිස්සාරණ ආන්තික අවස්ථා
+    අර්ධ වශයෙන් ආවරණය වේ (අසාමාන්‍ය PDF ආකෘති, අන්ත ලේඛන දිග); ඒකාබද්ධ පරීක්ෂණ සීමිතය. ආවරණ විශ්ලේෂණය අනාගත පරීක්ෂණ
+    ප්‍රමුඛතාකරණයට මග පෙන්වයි.'
+  - 'Pytest fixtures සහ mocking: test client fixture FastAPI test client සපයයි; mock LLM ප්‍රතිචාර LLM API ඇමතුම
+    mock කර නිර්ණයාත්මක පරීක්ෂණ ප්‍රතිදානය සපයයි; නියමු පෙළ fixtures දන්නා entities සහිත පෙළ සපයයි. Fixtures සහ
+    mocking පරීක්ෂණ නැවත නිපදවිය හැකිබව සහ වේගය වැඩි දියුණු කරයි.'
+  - 'පරීක්ෂණ නඩත්තු උපාය: පරීක්ෂණ නිෂ්පාදන කේතය සමඟ repository එකේ අනුවාද-පාලිතය. නව විශේෂාංග සංවර්ධනයේදී අනුරූප
+    පරීක්ෂණ අවස්ථාව ලියයි (පරීක්ෂණ-පාදක සංවර්ධන පරිචය). Refactoring වලදී පරීක්ෂණ යාවත්කාලීන කර සමත් තත්ත්වය පවත්වා
+    ගනියි. පරීක්ෂණ නඩත්තුව දිගුකාලීන ගුණාත්මකභාවයට අත්‍යවශ්‍යය.'
+  - 'ස්වයංක්‍රීය පරීක්ෂණ සාධක සාරාංශය: 91 pytest සහ backend පරීක්ෂණ 13ක් එකතුවට ස්වයංක්‍රීය පරීක්ෂණ 104ක් සම්පූර්ණ
+    පද්ධති සත්‍යාපනය සපයයි. පරීක්ෂණ ප්‍රතිඵල තක්සේරු සාධකයකි: guardrails සත්‍යාපනය කර ඇත, NER නිවැරදිය, API ගිවිසුම්
+    පවත්වා ගෙන ඇත. ස්වයංක්‍රීය පරීක්ෂණ ගණන ගුණාත්මකභාව කැපවීම පෙන්වයි.'
+  - 'පරීක්ෂණ-පාදක සංවර්ධනය (TDD) අර්ධ අනුග්‍රහණය: guardrail ශ්‍රිත TDD ප්‍රවේශය අනුගමනය කළේය (පළමුව පරීක්ෂණ ලිවීම,
+    පසුව ක්‍රියාත්මක කිරීම); අනෙකුත් සංරචක ක්‍රියාත්මක-කිරීම-පළමු පරීක්ෂණය. TDD guardrail සංවර්ධනයට විශේෂයෙන්
+    ඵලදායී විය: අපේක්ෂිත හැසිරීම පැහැදිලිව නිර්වචනය විය. අර්ධ TDD ප්‍රායෝගික සමතුලිතතාවකි.'
+  - 'අඛණ්ඩ ඒකාබද්ධ කිරීමේ පරීක්ෂණ ක්‍රියාත්මක කිරීම: GitHub Actions workflow එක එක් එක් push/pull request එකේදී
+    ස්වයංක්‍රීය පරීක්ෂණ කට්ටලය ධාවනය කරයි. CI කොළ (සියලු පරීක්ෂණ සමත්) merge පූර්ව අවශ්‍යතාවයකි. CI රතු (ඕනෑම
+    පරීක්ෂණයක් අසාර්ථක) වහාම අවධානය අවශ්‍ය කරයි. CI අඛණ්ඩ ගුණාත්මකභාව ප්‍රතිපෝෂණ ලූපය සපයයි.'
+  - 'පරීක්ෂණ අවස්ථා ප්‍රමුඛතාකරණ උපාය: තීරණාත්මක ආරක්ෂක පරීක්ෂණ (guardrails) ඉහළම ප්‍රමුඛතාව, මූලික ක්‍රියාකාරීත්ව
+    පරීක්ෂණ (NER, නිස්සාරණය) ඉහළ ප්‍රමුඛතාව, ආන්තික අවස්ථා පරීක්ෂණ මධ්‍යස්ථ ප්‍රමුඛතාව, අලංකාර පරීක්ෂණ අඩු ප්‍රමුඛතාව.
+    ප්‍රමුඛතාකරණය සීමිත සංවර්ධන කාලය තුළ උපරිම අවදානම් ආවරණය සහතික කරයි.'
+  - 'Mutation testing සංකල්පය: මූලාශ්‍ර කේතයට හිතාමතා දෝෂ ඇතුළත් කර (mutants) පරීක්ෂණ කට්ටලය mutant හඳුනා ගැනීමේ
+    හැකියාව මනියි. Mutation testing පරීක්ෂණ කට්ටල ඵලදායීතාව තක්සේරු කරයි: ඉහළ mutation ලකුණු පරීක්ෂණ දෝෂ හඳුනා
+    ගැනීමට හොඳින් ක්‍රියා කරන බව දක්වයි. Mutation testing Phase 6 පරීක්ෂණ වැඩිදියුණු කිරීමක් ලෙස නිර්දේශ කරයි.'
+  - 'පරීක්ෂණ පරිසර හුදකලාව: pytest fixtures පරීක්ෂණ දත්ත සමුදාය සංවර්ධන දත්ත සමුදායෙන් වෙන් කරයි; mock වස්තු බාහිර
+    සේවා (Ollama) යැපීම හුදකලා කරයි; තාවකාලික ගොනු පරීක්ෂණ ක්‍රියාත්මක කිරීමෙන් පසු පිරිසිදු කරයි. පරිසර හුදකලාව
+    පරීක්ෂණ නැවත නිපදවිය හැකිබව සහ පැති බලපෑම් වළක්වයි.'
+  - Pytest suite guardrails සහ security paths ප්‍රමුඛ කරයි. Invented date rejection සහ auth 401 tests අත්‍යවශ්‍යය.
+  - Backend tests JWT සහ upload validation ආවරණය කරයි. මෙය regression අවදානම අඩු කරයි.
+  - CI pipeline lint සහ unit tests ධාවනය කරන අතර Docker-based verifiers දේශීයව ධාවනය වේ.
+  - UI critical path සඳහා Selenium IDE suite එකක්ද භාවිත කරන ලදී (docs/thesis/selenium/easycircular.side).
+    එය pytest සහ backend ඒකක පරීක්ෂණවලට අමතරව sign-in, PDF උඩුගත කිරීම, පෙළ නිස්සාරණය, සාරාංශ ජනනය සහ
+    non-PDF rejection (Table 4.4 TC 1) browser තුළ පරීක්ෂා කරයි. පහත රූප Selenium IDE 3.17.2
+    UI එකේ test ලැයිස්තුව, TC-UI-03 command table එක සහ TC-UI-04 Reject non-PDF පෙන්වයි.
   bullets: []
   numbered: []
-  figures: []
+  figures:
+  - selenium_ide_suite
+  - selenium_ide_commands
+  - selenium_ide_log
 - title: 4.8 අදියර සත්‍යාපන scripts
   id: phase
   level: 2
@@ -213,9 +265,14 @@ sections:
     කරයි. එසේම authentication නොමැතිව process ඉල්ලීමක් යැවූ විට HTTP 401 ප්‍රතිචාරය ලැබෙන බව තහවුරු කරයි.
   - මෙම scripts මගින් ලබා දෙන ප්‍රතිඵල නැවත ලබා ගත හැකි (reproducible) බැවින්, තෙවන පාර්ශවයකට ද පද්ධතියේ ක්‍රියාකාරිත්වය
     ස්වාධීනව සත්‍යාපනය කළ හැක.
+  - පහත code screenshots මගින් Phase 1 health exit gate සහ Phase 4 MVP verifier හි තීරණාත්මක කොටස් පෙන්වා ඇත.
+    පළමු රූපය verify-phase1.mjs (AI/backend/frontend /health); දෙවන රූපය verify-phase4.mjs හි upload 401
+    සහ upload-extract-process flow checks වේ.
   bullets: []
   numbered: []
-  figures: []
+  figures:
+  - code_verify_phase1
+  - code_verify_phase4
 - title: 4.9 නියෝජිත පරීක්ෂණ අවස්ථා
   id: test_cases
   level: 2
@@ -225,9 +282,15 @@ sections:
   - 'TC #1 විශේෂයෙන් වැදගත් වේ. AI මෙවලමක් විසින් මුලින් යෝජනා කළ upload handler එකේ file type validation නොතිබූ
     බැවින්, එය අතින් එකතු කර මෙම පරීක්ෂණය මගින් සත්‍යාපනය කරන ලදී - AI-generated code සමාලෝචනය කිරීමේ අවශ්‍යතාව
     මෙය පැහැදිලිව පෙන්වයි.'
+  - 'වගුවෙන් පසු රූප තුනකින් තීරණාත්මක test cases දෙකක ක්‍රියාත්මක කිරීම පෙන්වයි: (i) TC #1 සඳහා pdf.js
+    magic-byte validation සහ ඊට අදාළ backend unit test; (ii) TC #2 සඳහා invented date 2099 ප්‍රතික්ෂේප කර
+    extractive fallback භාවිත කරන pytest අවස්ථා.'
   bullets: []
   numbered: []
-  figures: []
+  figures:
+  - code_tc_pdf_magic
+  - code_tc_pdf_test
+  - code_tc_date_guardrail
   table:
     caption: 'Table 4.4: System test cases (Expected vs Actual)'
     headers:

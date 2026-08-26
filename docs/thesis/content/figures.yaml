@@ -63,6 +63,36 @@ figures:
     file: wbs.png
     caption_si: 'Figure: Work Breakdown Structure (WBS)'
     chapter: A
+    width_cm: 16
+  survey_google_form:
+    file: survey-google-form.png
+    caption_si: 'Figure: EasyCircular Google Form survey (full page)'
+    chapter: B
+    width_cm: 14
+  survey_google_form_part1:
+    file: survey-google-form-part1.png
+    caption_si: 'Figure: Google Form survey Part 1 (introduction and early questions)'
+    chapter: B
+    width_cm: 14
+  survey_google_form_part2:
+    file: survey-google-form-part2.png
+    caption_si: 'Figure: Google Form survey Part 2'
+    chapter: B
+    width_cm: 14
+  survey_google_form_part3:
+    file: survey-google-form-part3.png
+    caption_si: 'Figure: Google Form survey Part 3'
+    chapter: B
+    width_cm: 14
+  survey_google_form_part4:
+    file: survey-google-form-part4.png
+    caption_si: 'Figure: Google Form survey Part 4'
+    chapter: B
+    width_cm: 14
+  survey_google_form_part5:
+    file: survey-google-form-part5.png
+    caption_si: 'Figure: Google Form survey Part 5 (final questions)'
+    chapter: B
     width_cm: 14
   architecture:
     file: architecture.png
@@ -99,6 +129,11 @@ figures:
     caption_si: 'Figure: Sign-in තිරය (email/password + Google)'
     chapter: 3
     width_cm: 14
+  ui_artefact_overview:
+    file: ui-04-dashboard-auth.png
+    caption_si: 'Figure: EasyCircular නිපැයුම  සත්‍යාපිත පරිශීලකයෙකුගේ dashboard දසුන'
+    chapter: 1
+    width_cm: 14
   ui_documents:
     file: ui-05-documents.png
     caption_si: 'Figure: Documents list / workspace dashboard'
@@ -114,13 +149,88 @@ figures:
     caption_si: 'Figure: මූලාශ්‍ර පෙළ මත entity highlights (NER)  DATE, ORG, LAW ලේබල'
     chapter: 4
     width_cm: 14
+  code_api_circulars:
+    file: code-api-circulars.png
+    caption_si: 'Figure: POST /api/circulars/upload  JWT අවශ්‍ය PDF උඩුගත route (circulars.js)'
+    chapter: 4
+    width_cm: 14
+  code_api_process:
+    file: code-api-process.png
+    caption_si: 'Figure: POST /api/circulars/:id/process  NER සහ සාරාංශ route (circulars.js)'
+    chapter: 4
+    width_cm: 14
+  code_api_fastapi:
+    file: code-api-fastapi.png
+    caption_si: 'Figure: AI සේවා FastAPI endpoints  POST /v1/parse/pdf සහ POST /v1/pipeline'
+    chapter: 4
+    width_cm: 14
+  selenium_ide_suite:
+    file: selenium-ide-suite.png
+    caption_si: 'Figure: Selenium IDE 3.17.2  EasyCircular UI tests (TC-UI-01 Sign in)'
+    chapter: 4
+    width_cm: 14
+  selenium_ide_commands:
+    file: selenium-ide-commands.png
+    caption_si: 'Figure: Selenium IDE command table  TC-UI-03 Extract and generate summary'
+    chapter: 4
+    width_cm: 14
+  selenium_ide_log:
+    file: selenium-ide-log.png
+    caption_si: 'Figure: Selenium IDE command table  TC-UI-04 Reject non-PDF'
+    chapter: 4
+    width_cm: 14
+  code_verify_phase1:
+    file: code-verify-phase1.png
+    caption_si: 'Figure: verify-phase1.mjs  AI, backend සහ frontend health exit gate'
+    chapter: 4
+    width_cm: 14
+  code_verify_phase4:
+    file: code-verify-phase4.png
+    caption_si: 'Figure: verify-phase4.mjs  upload 401 සහ MVP upload-extract-process flow'
+    chapter: 4
+    width_cm: 14
+  code_tc_pdf_magic:
+    file: code-tc-pdf-magic.png
+    caption_si: 'Figure: TC #1  pdf.js  %PDF- magic-byte validation (assertUploadedPdf)'
+    chapter: 4
+    width_cm: 14
+  code_tc_pdf_test:
+    file: code-tc-pdf-test.png
+    caption_si: 'Figure: TC #1  backend/test/pdf.test.js  non-PDF upload rejection unit tests'
+    chapter: 4
+    width_cm: 14
+  code_tc_date_guardrail:
+    file: code-tc-date-guardrail.png
+    caption_si: 'Figure: TC #2  test_guardrails.py  invented date 2099 rejection සහ fallback'
+    chapter: 4
+    width_cm: 14
   ui_mobile:
     file: ui-08-mobile-dashboard.png
-    caption_si: 'Figure: Mobile-responsive dashboard'
+    caption_si: 'Figure: ජංගම උපාංග මත EasyCircular dashboard අතුරුමුහුණත'
     chapter: 5
     width_cm: 7
   ui_mobile_summary:
     file: ui-09-mobile-summary.png
-    caption_si: 'Figure: Mobile summary interface'
+    caption_si: 'Figure: ජංගම උපාංග මත සාරාංශ ප්‍රතිඵල අතුරුමුහුණත'
     chapter: 5
     width_cm: 7
+  eval_verify_phase1:
+    file: eval-verify-phase1.png
+    caption_si: 'Figure: අදියර 1 මෙහෙයුම් සත්‍යාපන ප්‍රතිඵල  සියලු සේවා සෞඛ්‍ය සමත්'
+    chapter: 5
+    width_cm: 14
+  eval_verify_phase4:
+    file: eval-verify-phase4.png
+    caption_si: 'Figure: අදියර 4 මෙහෙයුම් සත්‍යාපන ප්‍රතිඵල  401 gate සහ MVP ප්‍රවාහය'
+    chapter: 5
+    width_cm: 14
+  eval_rouge_chart:
+    file: eval-rouge-chart.png
+    caption_si: 'Figure: නියමු චක්‍රලේඛ අනුව ROUGE-1, ROUGE-2 සහ ROUGE-L F1 අගයන් (fallback මාදිලිය)'
+    chapter: 5
+    width_cm: 14
+  eval_sample_entities:
+    file: eval-sample-entities.png
+    caption_si: 'Figure: නියමු චක්‍රලේඛ තක්සේරුවේ entity ගණන් සහ ක්‍රියාකාරී අයිතම ව්‍යාප්තිය'
+    chapter: 5
+    width_cm: 14

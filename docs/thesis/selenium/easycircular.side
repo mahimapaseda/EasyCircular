@@ -1,0 +1,193 @@
+{
+  "id": "a7c4e2b1-9d08-4f3a-8e11-6b2d0f5c8a91",
+  "version": "2.0",
+  "name": "EasyCircular UI",
+  "url": "http://localhost:3002",
+  "urls": [
+    "http://localhost:3002/"
+  ],
+  "plugins": [],
+  "suites": [
+    {
+      "id": "c1e8d3a4-2b70-4a19-9f56-0d4e7c8b1a22",
+      "name": "Critical path",
+      "persistSession": true,
+      "parallel": false,
+      "timeout": 300,
+      "tests": [
+        "e11a0b22-3c44-4d55-8e66-7f880099aabb",
+        "e22b1c33-4d55-4e66-8f77-800911bbccdd",
+        "e33c2d44-5e66-4f77-9088-911a22ccddee",
+        "e44d3e55-6f77-4088-a199-a22b33ddeeff"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "id": "e11a0b22-3c44-4d55-8e66-7f880099aabb",
+      "name": "TC-UI-01 Sign in",
+      "commands": [
+        {
+          "id": "c01-open",
+          "comment": "",
+          "command": "open",
+          "target": "/sign-in",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "id": "c01-wait-email",
+          "comment": "",
+          "command": "waitForElementVisible",
+          "target": "id=email",
+          "targets": [["id=email", "id"]],
+          "value": "10000"
+        },
+        {
+          "id": "c01-type-email",
+          "comment": "",
+          "command": "type",
+          "target": "id=email",
+          "targets": [["id=email", "id"], ["css=#email", "css:finder"]],
+          "value": "screenshots@easycircular.local"
+        },
+        {
+          "id": "c01-type-password",
+          "comment": "",
+          "command": "type",
+          "target": "id=password",
+          "targets": [["id=password", "id"], ["css=#password", "css:finder"]],
+          "value": "Screenshots!2026"
+        },
+        {
+          "id": "c01-click-signin",
+          "comment": "",
+          "command": "click",
+          "target": "css=button[type='submit']",
+          "targets": [
+            ["css=button[type='submit']", "css:finder"],
+            ["xpath=//button[contains(., 'Sign in')]", "xpath:innerText"]
+          ],
+          "value": ""
+        },
+        {
+          "id": "c01-assert-url",
+          "comment": "Leaves /sign-in after a successful login",
+          "command": "waitForElementNotPresent",
+          "target": "id=email",
+          "targets": [["id=email", "id"]],
+          "value": "10000"
+        }
+      ]
+    },
+    {
+      "id": "e22b1c33-4d55-4e66-8f77-800911bbccdd",
+      "name": "TC-UI-02 Upload PDF",
+      "commands": [
+        {
+          "id": "c02-open",
+          "comment": "",
+          "command": "open",
+          "target": "/#upload",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "id": "c02-wait-input",
+          "comment": "",
+          "command": "waitForElementPresent",
+          "target": "id=circular-upload",
+          "targets": [["id=circular-upload", "id"]],
+          "value": "10000"
+        },
+        {
+          "id": "c02-type-file",
+          "comment": "Sample digital circular used by evaluate:samples",
+          "command": "type",
+          "target": "id=circular-upload",
+          "targets": [["id=circular-upload", "id"], ["css=#circular-upload", "css:finder"]],
+          "value": "${projectRoot}/samples/test-digital.pdf"
+        },
+        {
+          "id": "c02-wait-circular",
+          "comment": "",
+          "command": "waitForElementVisible",
+          "target": "xpath=//button[contains(., 'Extract text')]",
+          "targets": [["xpath=//button[contains(., 'Extract text')]", "xpath:innerText"]],
+          "value": "20000"
+        }
+      ]
+    },
+    {
+      "id": "e33c2d44-5e66-4f77-9088-911a22ccddee",
+      "name": "TC-UI-03 Extract and generate summary",
+      "commands": [
+        {
+          "id": "c03-click-extract",
+          "comment": "",
+          "command": "click",
+          "target": "xpath=//button[contains(., 'Extract text')]",
+          "targets": [["xpath=//button[contains(., 'Extract text')]", "xpath:innerText"]],
+          "value": ""
+        },
+        {
+          "id": "c03-wait-generate",
+          "comment": "",
+          "command": "waitForElementVisible",
+          "target": "xpath=//button[contains(., 'Generate summary')]",
+          "targets": [["xpath=//button[contains(., 'Generate summary')]", "xpath:innerText"]],
+          "value": "30000"
+        },
+        {
+          "id": "c03-click-generate",
+          "comment": "",
+          "command": "click",
+          "target": "xpath=//button[contains(., 'Generate summary')]",
+          "targets": [["xpath=//button[contains(., 'Generate summary')]", "xpath:innerText"]],
+          "value": ""
+        },
+        {
+          "id": "c03-wait-summary",
+          "comment": "Summary panel renders issued-by / action items after process",
+          "command": "waitForText",
+          "target": "css=body",
+          "targets": [["css=body", "css:finder"]],
+          "value": "Action"
+        }
+      ]
+    },
+    {
+      "id": "e44d3e55-6f77-4088-a199-a22b33ddeeff",
+      "name": "TC-UI-04 Reject non-PDF",
+      "commands": [
+        {
+          "id": "c04-open",
+          "comment": "",
+          "command": "open",
+          "target": "/#upload",
+          "targets": [],
+          "value": ""
+        },
+        {
+          "id": "c04-type-txt",
+          "comment": "Client-side check rejects a non-PDF before the API call",
+          "command": "type",
+          "target": "id=circular-upload",
+          "targets": [["id=circular-upload", "id"]],
+          "value": "${projectRoot}/samples/not-a-circular.txt"
+        },
+        {
+          "id": "c04-assert-error",
+          "comment": "Matches Table 4.4 TC #1 upload rejection",
+          "command": "assertText",
+          "target": "css=.text-rose-800, .text-rose-300",
+          "targets": [
+            ["css=.text-rose-800", "css:finder"],
+            ["xpath=//*[contains(., 'Please choose a PDF file.')]", "xpath:innerText"]
+          ],
+          "value": "Please choose a PDF file."
+        }
+      ]
+    }
+  ]
+}

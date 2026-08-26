@@ -26,8 +26,8 @@ MEDIA_MAP = {
     "image11.png": "survey-highlight-entities.png",
     "image12.png": "survey-ai-concerns.png",
     "image13.png": "survey-efficiency.png",
-    "image14.png": "gantt.png",
-    "image15.png": "wbs.png",
+    # image14/image15 in Contextual report.docx are survey UI screenshots,
+    # not Gantt/WBS. Generate those via scripts/render_plan_figures.py instead.
     "image2.emf": "architecture.emf",
 }
 

@@ -1,0 +1,124 @@
+# EasyCircular A1 poster content — source for generate_poster.py and Gemini prompts
+meta:
+  title: EasyCircular
+  subtitle: AI-Assisted Web System for Summarising Sri Lanka Ministry of Education (MOE) Circulars
+  subtitle_si: "ශ්‍රී ලංකා අධ්‍යාපන අමාත්‍යාංශ චක්‍රලේඛ සාරාංශක AI වෙබ් පද්ධතිය"
+  student_name: G G M P Kusumsiri
+  student_id: "2540881"
+  supervisor: Mr. Anuruddha Abeysinghe
+  module_lecturer: Dr. Gayana Fernando
+  degree: BSc (Hons) Computer Science
+  university: The University of Bedfordshire
+  date: August 2026
+
+sections:
+  introduction: |
+    MOE educational circulars are long, complex PDF documents (often 5–20 pages) distributed to principals, teachers, and education officers. They contain critical deadlines, legal references, and action items buried in administrative language. Misinterpretation risks compliance failures. EasyCircular is a purpose-built AI web system that extracts text (including scanned Sinhala/Tamil/English OCR), lets users review extracted text, and produces structured summaries with highlighted entities.
+
+  aim: |
+    Develop an AI-powered web application using NLP to extract and summarise complex MOE circulars, improving administrative efficiency in Sri Lanka schools.
+
+  objectives:
+    - Evaluate NLP and summarisation techniques for administrative documents
+    - Build secure PDF ingestion with OCR fallback and human-in-the-loop text review
+    - Implement NER for dates, organisations, and legal references
+    - Deliver a dynamic summarisation engine with hallucination guardrails
+    - Evaluate accuracy (ROUGE, automated tests) and stakeholder needs (n=41 survey)
+
+  methodology: |
+    Agile SDLC across 5 phases (10 weeks): Foundation → Ingestion → AI Core → MVP → Validate & Release. Primary research: Google Forms survey (n=41 school stakeholders). Evaluation: ROUGE on 6 MOE circulars, 91+ AI pytest, phase exit-gate scripts.
+
+  phases:
+    - Phase 1 Foundation
+    - Phase 2 Ingestion
+    - Phase 3 AI Core
+    - Phase 4 MVP
+    - Phase 5 Validate
+
+  requirements:
+    - PDF upload with tri-library extraction + Tesseract OCR (sin+eng+tam)
+    - Human-in-the-loop mandatory text review before AI processing
+    - Date guardrails reject hallucinated dates; extractive TextRank fallback
+    - Content-hash caching (~114ms cached response)
+    - JWT auth, rate limiting, mobile-responsive UI
+    - Local Ollama deployment for privacy
+
+  tech_stack:
+    - Next.js
+    - Express.js
+    - FastAPI
+    - MongoDB
+    - Docker
+    - SpaCy
+    - LangChain
+    - Ollama
+    - Tesseract OCR
+    - pdfplumber
+    - PyMuPDF
+    - JWT
+    - GitHub Actions CI
+
+  evaluation:
+    survey_n: 41
+    want_summary_pct: 97.6
+    entity_highlight_pct: 78
+    efficiency_pct: 78
+    ai_hesitation_pct: 68.3
+    rouge1_f1: 0.414
+    rouge2_f1: 0.215
+    rougeL_f1: 0.292
+    ai_pytest: "91/91"
+    backend_tests: "13/13"
+    uat_note: Formal school staff UAT pending
+
+  achievements:
+    - "End-to-end MVP: upload → extract → edit → summarise → display"
+    - Tri-tier Docker deployment with health checks
+    - Guardrails reduce date hallucination (~15% rejection rate)
+    - MOE official catalog import endpoint
+    - Full thesis documentation + AI-assisted development disclosure
+
+  challenges:
+    - Scanned Sinhala PDF OCR quality varies — mitigated by human review
+    - Full Sinhala/Tamil NER not yet available (English NER achieved)
+    - LLM summarisation quality vs. privacy trade-off addressed via local Ollama
+    - Single-developer scope; formal UAT not completed before submission
+
+  future_work:
+    - Full Sinhala/Tamil NER and bilingual UI
+    - Formal school staff UAT and expanded ROUGE corpus
+    - Async job queue for long documents
+    - Role-based access control and admin analytics dashboard
+    - Production cloud deployment with MOE integration
+
+  references:
+    - "Lin, C.Y. (2004) ROUGE: a package for automatic evaluation of summaries"
+    - "Nadkarni, P.M. et al. (2011) Natural language processing: an introduction"
+    - "Ministry of Education Sri Lanka (2026) Official circulars portal — moe.gov.lk"
+    - "Honnibal, M. and Montani, I. (2017) spaCy"
+    - "Sumathi, S. et al. (2025) A LangChain integration approach"
+    - "OpenAI (2024) ChatGPT — AI-assisted development disclosure"
+
+figures:
+  architecture: architecture.png
+  screenshots:
+    - file: ui-03-signin.png
+      caption: Sign-in
+    - file: ui-02-upload.png
+      caption: PDF upload
+    - file: review-text.png
+      caption: Human-in-the-loop review
+      alt_path: ../../user-manual/images/review-text.png
+    - file: ui-06-summary.png
+      caption: Summary + entity highlights
+  mobile: ui-09-mobile-summary.png
+  rouge_chart: eval-rouge-chart.png
+
+style:
+  navy: "1E3A5F"
+  teal: "0D9488"
+  amber: "D97706"
+  bg: "F0F4F8"
+  white: "FFFFFF"
+  slate: "334155"
+  muted: "64748B"

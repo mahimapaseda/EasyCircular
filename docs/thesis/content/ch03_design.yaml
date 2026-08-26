@@ -9,7 +9,7 @@ sections:
     (n=41) ව්‍යුත්පන්න කර, ගෘහනිර්මාණය ලෙස ත්‍රිස්ථර microservices රටාව යොදාගෙන, AI pipeline එකට human-in-the-loop
     සහ guardrails ඒකාබද්ධ කර ඇත.
   - 'නිර්මාණ තීරණ stakeholder අවශ්‍යතා දක්වා පසුබැසිය හැක: 97.6% සාරාංශ අවශ්‍ය බව, 78% highlighting අවශ්‍ය බව, 68.3%
-    AI භාවිතයට කැමති නොවීම සහ රහස්‍යතා පිළිබඳ අදහස් 17ක්. මෙම පරිච්ඡේදයට architecture රූපසටහන, class සහ ER ආකෘති,
+    AI භාවිතයට කැමති නොවීම සහ රහස්‍යතා පිළිබඳ අදහස් 17ක්. මෙම පරිච්ඡේදයට architecture රූපසටහන, class diagram,
     UI සහ wireframes, algorithm flowchart, අවශ්‍යතා, තාක්ෂණ තොගය, ආරක්ෂාව, API අන්ත ලක්ෂ්‍ය සහ AI සහායක සංවර්ධනය
     පිළිබඳ ප්‍රකාශනය ඇතුළත් වේ.'
   bullets: []
@@ -41,18 +41,18 @@ sections:
   numbered: []
   figures:
   - architecture
-- title: 3.4 Class diagram සහ ER / Data model
+- title: 3.4 Class diagram / Domain model
   id: class_er
   level: 2
   paragraphs:
-  - 'ප්‍රධාන domain entities: User, Circular, Summary සහ Entity. User එකකට circulars බහුවක් තිබිය හැකි අතර Circular
-    එකක entities සහ summary එබ්බවී ගබඩා වේ.'
-  - Class diagram සහ MongoDB ER-style document model පහත රූපවලින් පෙන්වයි.
+  - 'ප්‍රධාන domain classes: User, Circular, Summary, Entity සහ AiServiceClient. User එකකට circulars බහුවක් තිබිය
+    හැකි අතර Circular එකක entities සහ summary එබ්බවී ගබඩා වේ.'
+  - පහත class diagram මගින් EasyCircular domain model එකේ classes, attributes, methods සහ associations ඉදිරිපත්
+    කෙරේ.
   bullets: []
   numbered: []
   figures:
   - class_diagram
-  - er_diagram
 - title: 3.5 අතුරුමුහුණත් නිර්මාණය / Wireframes (UI design)
   id: ui_design
   level: 2

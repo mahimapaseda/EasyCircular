@@ -47,6 +47,9 @@ def merge_bulk(chapter: dict[str, Any], bulk: dict[str, Any], chapter_key: str) 
         if sid and sid in extra:
             section.setdefault("paragraphs", [])
             section["paragraphs"].extend(extra[sid].get("paragraphs") or [])
+            if extra[sid].get("closing_paragraphs"):
+                section.setdefault("closing_paragraphs", [])
+                section["closing_paragraphs"].extend(extra[sid]["closing_paragraphs"])
             if extra[sid].get("bullets"):
                 section.setdefault("bullets", [])
                 section["bullets"].extend(extra[sid]["bullets"])
@@ -117,7 +120,7 @@ def split_by_script(text: str) -> list[tuple[str, str]]:
     return segments
 
 
-def add_runs(paragraph, text: str, meta: dict, size_pt: int, bold: bool = False) -> None:
+def add_runs(paragraph, text: str, meta: dict, size_pt: int, bold: bool = False, italic: bool = False) -> None:
     """Add text as one run per script, so Sinhala and Latin each get their font.
 
     The guidelines ask for Times New Roman, which has no Sinhala glyphs, so
@@ -130,6 +133,20 @@ def add_runs(paragraph, text: str, meta: dict, size_pt: int, bold: bool = False)
             continue
         run = paragraph.add_run(segment)
         set_run_font(run, sinhala if script == "si" else latin, size_pt, bold=bold)
+        if italic:
+            run.font.italic = True
+
+
+def add_runs_with_italics(paragraph, text: str, meta: dict, size_pt: int) -> None:
+    """Render text where *asterisk pairs* mark italic Harvard title segments."""
+    parts = re.split(r"(\*[^*]+\*)", text)
+    for part in parts:
+        if not part:
+            continue
+        if part.startswith("*") and part.endswith("*") and len(part) > 2:
+            add_runs(paragraph, part[1:-1], meta, size_pt, italic=True)
+        else:
+            add_runs(paragraph, part, meta, size_pt)
 
 
 def fill_cell(cell, text: str, meta: dict, size_pt: int, bold: bool = False) -> None:
@@ -162,6 +179,17 @@ def add_paragraph(doc: Document, text: str, meta: dict, style: str | None = None
     p.paragraph_format.line_spacing = meta.get("line_spacing", 1.5)
     p.paragraph_format.space_after = Pt(6)
     add_runs(p, text, meta, meta["font_size"])
+
+
+def add_reference(doc: Document, text: str, meta: dict) -> None:
+    """Harvard reference list entry with hanging indent and italic titles."""
+    p = doc.add_paragraph()
+    p.paragraph_format.line_spacing_rule = WD_LINE_SPACING.MULTIPLE
+    p.paragraph_format.line_spacing = meta.get("line_spacing", 1.5)
+    p.paragraph_format.space_after = Pt(8)
+    p.paragraph_format.left_indent = Cm(1.27)
+    p.paragraph_format.first_line_indent = Cm(-1.27)
+    add_runs_with_italics(p, text, meta, meta["font_size"])
 
 
 def add_heading(doc: Document, text: str, level: int, meta: dict) -> None:
@@ -279,6 +307,8 @@ def render_section(doc: Document, section: dict, meta: dict, figures_cfg: dict) 
     for item in section.get("numbered") or []:
         p = doc.add_paragraph(style="List Number")
         add_runs(p, item, meta, meta["font_size"])
+    for para in section.get("closing_paragraphs") or []:
+        add_paragraph(doc, para, meta)
     if section.get("table"):
         t = section["table"]
         add_table(doc, t["headers"], t["rows"], meta, t.get("caption"))
@@ -431,10 +461,10 @@ def build_document() -> Document:
             render_section(doc, section, meta, figures_cfg.get("figures") or {})
         doc.add_page_break()
 
-    # References
+    # References (Harvard / Cite Them Right)
     add_heading(doc, "මූලාශ්‍ර (References)", 1, meta)
     for ref in refs.get("items") or []:
-        add_paragraph(doc, ref, meta)
+        add_reference(doc, ref, meta)
     doc.add_page_break()
 
     # Appendix

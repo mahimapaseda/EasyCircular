@@ -24,13 +24,13 @@ the guidelines require.
 | Part | Content |
 |------|---------|
 | Front matter | Title page, Declaration, AI-use declaration, Abstract (≤ 200 words), Acknowledgements, Dedication, Keywords (≤ 8), Contents, List of Tables, List of Figures, Glossary |
-| Chapter 1 | Introduction |
+| Chapter 1 | Introduction: 1.1 Background and Context, 1.2 Research Problem, 1.3 Research Questions, 1.4 Aims and Objectives, 1.5 Scope of the Research, 1.6 Research Contribution, 1.7 Structure of the Report |
 | Chapter 2 | Market Research and Literature Review |
 | Chapter 3 | Artefact Design |
 | Chapter 4 | Development and Testing |
 | Chapter 5 | Evaluation |
 | Chapter 6 | Conclusions and Further Work |
-| Appendices | A Project Plan, B Survey questions, C Extended API endpoints, D A4 poster, E AI-assisted code segments |
+| Appendices | A Project Plan, B Survey questions, C Extended API endpoints, D A1 poster, E AI-assisted code segments |
 
 Page setup: A4, 1.5 line spacing, 12pt, 4cm left margin for spiral binding, other margins 2.54cm.
 
@@ -51,7 +51,20 @@ python scripts/generate_thesis.py
 
 Output: [`EasyCircular-Thesis.docx`](EasyCircular-Thesis.docx)
 
-The script prints word count and estimated pages. Target is **≥ 80 pages** (~28,000 Sinhala words).
+The script prints word count and estimated pages. The tagged guidelines suggest a main body of
+around 70 pages, so `min_pages` in [`content/meta.yaml`](content/meta.yaml) is set to 70 and the
+script warns below that.
+
+The session guidelines also give per-chapter page budgets, which are worth checking after any edit
+because `bulk.yaml` filler can push a chapter well past its range:
+
+| Chapter | Target | Current |
+|---------|--------|---------|
+| 1 Introduction | 5-7 | 6.8 |
+| 2 Literature Review | 8-10 | 7.7 |
+| 6 Conclusion | 2-4 | 8.7 |
+
+Chapters 2 and 6 are still outside their ranges.
 
 ## After opening in Word
 
@@ -69,12 +82,14 @@ The script prints word count and estimated pages. Target is **≥ 80 pages** (~2
 | [`content/bulk.yaml`](content/bulk.yaml) | Extra paragraphs merged by section `id`, keyed by chapter file stem |
 | [`content/figures.yaml`](content/figures.yaml) | Figure paths and Sinhala captions |
 | [`content/references.yaml`](content/references.yaml) | Harvard bibliography |
+| [`content/poster.yaml`](content/poster.yaml) | A1 poster content (English-primary) |
 | [`content/supplementary.yaml`](content/supplementary.yaml) | Appendices A-E |
 
 Single chapters can be regenerated on their own:
 
 ```bash
-python scripts/generate_chapter.py 4   # -> Chapter-04-Development.docx
+python scripts/generate_chapter.py 4           # -> Chapter-04-Development.docx
+python scripts/generate_chapter.py appendices  # -> Appendices-and-References.docx
 ```
 
 **ROUGE** and **sample evaluation** tables are auto-loaded from:
@@ -83,6 +98,24 @@ python scripts/generate_chapter.py 4   # -> Chapter-04-Development.docx
 - [`scripts/sample-evaluation.json`](../../scripts/sample-evaluation.json)
 
 Re-run `npm run evaluate:rouge` before regenerating to refresh the Chapter 5 scores.
+
+## A1 project poster (Appendix D)
+
+Session Three requires a separate **A1 portrait** poster. Two artefacts are provided:
+
+| File | Purpose |
+|------|---------|
+| [`EasyCircular-Poster-A1.docx`](EasyCircular-Poster-A1.docx) | Print-ready Word poster with verified thesis text and embedded screenshots |
+| [`EasyCircular-Poster-A1.pdf`](EasyCircular-Poster-A1.pdf) | PDF export for submission |
+| [`GEMINI-POSTER-PROMPT.md`](GEMINI-POSTER-PROMPT.md) | Master prompt + follow-ups for Gemini image generation (optional visual layout) |
+
+Regenerate from YAML:
+
+```bash
+npm run generate:poster
+```
+
+Content source: [`content/poster.yaml`](content/poster.yaml). If PDF export fails, open the DOCX in Word → **File → Export → Create PDF**.
 
 ## One-off restructuring scripts
 
@@ -118,6 +151,42 @@ When new AI-assisted code is added to the artefact, add a row to Table 4.3 and a
 
 Figure widths are capped at 14cm, the width of the text area once the 4cm binding
 margin is applied. Mobile screenshots use 7cm because they are portrait.
+
+All nine UI captures are in use. The signed-in dashboard
+(`ui-04-dashboard-auth.png`) is the artefact overview in Chapter 1 section 1.5;
+sign-in, dashboard, upload and the document library sit in Chapter 3 section 3.5;
+the AI summary and entity highlights in Chapter 4 section 4.2; API route
+screenshots (`code-api-circulars.png`, `code-api-process.png`,
+`code-api-fastapi.png`) sit in Chapter 4 section 4.5; Selenium IDE suite
+figures (`selenium-ide-suite.png`, `selenium-ide-commands.png`,
+`selenium-ide-log.png`) sit in Chapter 4 section 4.7; phase verifier
+screenshots (`code-verify-phase1.png`, `code-verify-phase4.png`) sit in
+Chapter 4 section 4.8; representative test-case figures
+(`code-tc-pdf-magic.png`, `code-tc-pdf-test.png`,
+`code-tc-date-guardrail.png`) sit in Chapter 4 section 4.9; Chapter 5 uses
+verify terminals (`eval-verify-phase1.png`, `eval-verify-phase4.png`), ROUGE
+and sample-eval charts (`eval-rouge-chart.png`, `eval-sample-entities.png`),
+mobile views, survey evidence in 5.5, and the PDF magic-byte figure again in
+5.6.
+
+API code figures are generated from the live source files:
+
+```bash
+python scripts/render_code_screenshots.py
+```
+
+Chapter 5 evaluation charts and verify terminals:
+
+```bash
+python scripts/render_eval_figures.py
+```
+
+Selenium IDE figures are captured from the official Selenium IDE 3.17.2 UI
+with [`selenium/easycircular.side`](selenium/easycircular.side) loaded:
+
+```bash
+python scripts/capture_selenium_ide.py
+```
 
 ### Refreshing the UI screenshots
 

@@ -14,5 +14,5 @@ font_latin: "Times New Roman"
 font_fallback: "Noto Sans Sinhala"
 font_size_body: 12
 line_spacing: 1.5
-min_pages: 80
+min_pages: 70
 words_per_page: 350
