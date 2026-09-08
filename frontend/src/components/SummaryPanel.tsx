@@ -484,23 +484,41 @@ export default function SummaryPanel({
               </header>
             </AnimateIn>
 
-            <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(260px,34%)] lg:items-start lg:gap-10">
+            <div
+              className={`mt-8 grid gap-8 lg:items-start lg:gap-10 ${
+                displayed.sections.length > 0
+                  ? "lg:grid-cols-[minmax(0,1fr)_minmax(260px,34%)]"
+                  : "lg:grid-cols-1"
+              }`}
+            >
               <div className="min-w-0 space-y-7">
-                {displayed.sections.map((section, index) => (
-                  <AnimateIn key={`${section.heading}-${index}`} delay={40 * (index + 1)}>
-                    <section className="relative pl-12 sm:pl-14">
-                      <span className="absolute left-0 top-0 font-display text-sm font-bold tabular-nums text-cyan-700 dark:text-cyan-400/80">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <h3 className="ws-label tracking-[0.16em]">
-                        {section.heading}
-                      </h3>
-                      <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7 text-ink-800 sm:text-base sm:leading-7 dark:text-slate-100">
-                        {section.content}
+                {displayed.sections.length === 0 ? (
+                  <AnimateIn>
+                    <section className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-5 dark:border-white/10 dark:bg-white/[0.03] sm:px-5">
+                      <h3 className="ws-label tracking-[0.16em]">Overview</h3>
+                      <p className="mt-2 text-[15px] leading-7 text-ink-800 sm:text-base dark:text-slate-100">
+                        {displayed.title ||
+                          "No section breakdown was generated. Use the action items and source text, or click Regenerate."}
                       </p>
                     </section>
                   </AnimateIn>
-                ))}
+                ) : (
+                  displayed.sections.map((section, index) => (
+                    <AnimateIn key={`${section.heading}-${index}`} delay={40 * (index + 1)}>
+                      <section className="relative pl-12 sm:pl-14">
+                        <span className="absolute left-0 top-0 font-display text-sm font-bold tabular-nums text-cyan-700 dark:text-cyan-400/80">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <h3 className="ws-label tracking-[0.16em]">
+                          {section.heading}
+                        </h3>
+                        <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7 text-ink-800 sm:text-base sm:leading-7 dark:text-slate-100">
+                          {section.content}
+                        </p>
+                      </section>
+                    </AnimateIn>
+                  ))
+                )}
               </div>
 
               <aside className="min-w-0 space-y-6 lg:sticky lg:top-4">

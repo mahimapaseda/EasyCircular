@@ -11,11 +11,17 @@ logger = logging.getLogger("easycircular.ai.pdf")
 TEXT_DENSITY_THRESHOLD = 50
 MIN_EMBEDDED_IMAGE_SIDE = 400
 MIN_OCR_HEIGHT = 1800
-RENDER_ZOOM = 3.0
+# Higher zoom improves Tesseract on CamScanner/phone-scan PDFs (A4 pages).
+RENDER_ZOOM = 3.5
 
 WATERMARK_ONLY_PATTERN = re.compile(
-    r"^(?:camscanner|scanned\s+by|scanned\s+with|scanbot|adobe\s+scan|"
-    r"microsoft\s+lens|genius\s+scan|.*?scanner)$",
+    r"^(?:camscanner|scanned\s+by(?:\s+\w+)?|scanned\s+with(?:\s+\w+)?|scanbot|"
+    r"adobe\s+scan|microsoft\s+lens|genius\s+scan)$",
+    re.IGNORECASE,
+)
+SCANNER_FOOTER_LINE = re.compile(
+    r"^\s*(?:scanned\s+(?:by|with)\s+)?(?:camscanner|scanbot|adobe\s+scan|"
+    r"microsoft\s+lens|genius\s+scan)\s*$",
     re.IGNORECASE,
 )
 SINHALA_RE = re.compile(r"[\u0D80-\u0DFF]")
@@ -31,7 +37,14 @@ class ParseResult:
     error: str | None = None
 
 def _normalize_text(text: str) -> str:
-    return normalize_moe_text(text)
+    return normalize_moe_text(_strip_scanner_footers(text))
+
+def _strip_scanner_footers(text: str) -> str:
+    """Remove CamScanner-style footer lines without discarding the page body."""
+    if not text:
+        return ""
+    kept = [line for line in text.splitlines() if not SCANNER_FOOTER_LINE.match(line)]
+    return "\n".join(kept).strip()
 
 def _average_density(text: str, pages: int) -> float:
     if pages <= 0:
@@ -44,7 +57,8 @@ def _is_insufficient_text(text: str, pages: int = 1) -> bool:
     if not cleaned:
         return True
     collapsed = re.sub(r"\s+", " ", cleaned)
-    if WATERMARK_ONLY_PATTERN.match(collapsed):
+    # CamScanner appends a footer to real OCR text. Only reject short watermark-only blobs.
+    if len(collapsed) < 80 and WATERMARK_ONLY_PATTERN.match(collapsed):
         return True
     if len(collapsed) < 80 and _average_density(cleaned, max(pages, 1)) < TEXT_DENSITY_THRESHOLD:
         return True
@@ -112,6 +126,26 @@ def _largest_embedded_image(doc, page):
             best = payload
     return best
 
+def _ocr_text_score(text: str) -> tuple[int, int, int]:
+    """Higher is better: more content, fewer 1-letter OCR junk tokens, more real words."""
+    cleaned = re.sub(r"\s+", " ", (text or "").strip())
+    if not cleaned:
+        return (0, 0, 0)
+    words = cleaned.split()
+    singles = sum(1 for word in words if len(word) == 1 and word.isalpha())
+    real_words = sum(1 for word in words if len(word) >= 3)
+    return (len(cleaned), real_words, -singles)
+
+def _pick_better_ocr(*candidates: str) -> str:
+    best = ""
+    best_score = _ocr_text_score("")
+    for candidate in candidates:
+        score = _ocr_text_score(candidate)
+        if score > best_score:
+            best = candidate or ""
+            best_score = score
+    return best
+
 def _tesseract_image(image, ocr_lang: str, tess_config: str | None, psm: int) -> str:
     import pytesseract
 
@@ -120,12 +154,10 @@ def _tesseract_image(image, ocr_lang: str, tess_config: str | None, psm: int) ->
 
 def _ocr_image(image, ocr_lang: str, tess_config: str | None) -> str:
     prepared = _preprocess_for_ocr(image)
-    text = _tesseract_image(prepared, ocr_lang, tess_config, psm=4)
-    if _is_insufficient_text(text, 1):
-        retry = _tesseract_image(prepared, ocr_lang, tess_config, psm=6)
-        if len((retry or "").strip()) > len((text or "").strip()):
-            return retry
-    return text
+    # PSM 6 (block) usually beats PSM 4 on MOE circular scans; keep both and pick.
+    primary = _tesseract_image(prepared, ocr_lang, tess_config, psm=6)
+    secondary = _tesseract_image(prepared, ocr_lang, tess_config, psm=4)
+    return _pick_better_ocr(primary, secondary)
 
 def _render_page_image(page, zoom: float = RENDER_ZOOM):
     import fitz
@@ -137,18 +169,18 @@ def _render_page_image(page, zoom: float = RENDER_ZOOM):
 def _ocr_page(doc, page, ocr_lang: str, tess_config: str | None) -> str:
     from PIL import Image
 
-    text = ""
+    candidates: list[str] = []
     embedded = _largest_embedded_image(doc, page)
     if embedded:
         image = Image.open(io.BytesIO(embedded))
-        text = _ocr_image(image, ocr_lang, tess_config)
+        candidates.append(_ocr_image(image, ocr_lang, tess_config))
 
-    if _is_insufficient_text(text, 1):
-        rendered = _ocr_image(_render_page_image(page), ocr_lang, tess_config)
-        if len((rendered or "").strip()) > len((text or "").strip()):
-            text = rendered
+    # Always OCR a high-zoom page render. Embedded CamScanner images are often
+    # ~1000px wide and beat a denser render on "enough characters" even when
+    # the render reads dates/words more accurately.
+    candidates.append(_ocr_image(_render_page_image(page), ocr_lang, tess_config))
 
-    return text
+    return _pick_better_ocr(*candidates)
 
 def _ocr_with_pymupdf(data: bytes, filename: str | None = None) -> tuple[list[str], int, str]:
     import fitz
@@ -168,6 +200,28 @@ def _ocr_with_pymupdf(data: bytes, filename: str | None = None) -> tuple[list[st
             page_texts.append(_ocr_page(doc, page, ocr_lang, tess_config))
             logger.info("OCR page %s/%s chars=%s", index, doc.page_count, len(page_texts[-1].strip()))
         page_count = doc.page_count
+
+        # Misnamed *-En scans of Sinhala circulars OCR as Latin gibberish under eng.
+        # If a Sinhala pass recovers real Sinhala letters, prefer it.
+        if ocr_lang == "eng" and page_count <= 4:
+            combined = "\n\n".join(page_texts)
+            if len(SINHALA_RE.findall(combined)) < 15:
+                si_lang, si_config = resolve_ocr_settings("probe-Si.pdf")
+                if "sin" in si_lang.split("+"):
+                    si_pages = [
+                        _ocr_page(doc, page, si_lang, si_config) for page in doc
+                    ]
+                    si_combined = "\n\n".join(si_pages)
+                    if len(SINHALA_RE.findall(si_combined)) >= 15 and _ocr_text_score(
+                        si_combined
+                    ) >= _ocr_text_score(combined):
+                        logger.info(
+                            "Preferring %s OCR over eng for %s (Sinhala letters recovered)",
+                            si_lang,
+                            filename,
+                        )
+                        page_texts = si_pages
+                        ocr_lang = si_lang
 
     return page_texts, page_count, ocr_lang
 

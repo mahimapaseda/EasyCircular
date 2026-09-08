@@ -253,6 +253,58 @@ def verify_summary_dates(
 
     return warnings
 
+def _field_dates_grounded(
+    value: str,
+    allowed_keys: set[tuple[int, int, int]],
+) -> bool:
+    """True when every concrete date in the field is present in the source."""
+    value = _normalize_whitespace(value or "")
+    if not value:
+        return True
+    dates = _collect_dates(value)
+    keys = set()
+    for date in dates:
+        keys.update(_expand_date_keys(date))
+    if not keys:
+        keys.update(_expand_date_keys(value))
+    if not keys:
+        # Prose without a parseable calendar date (e.g. "with immediate effect").
+        return True
+    return any(key in allowed_keys for key in keys)
+
+def scrub_ungrounded_dates(
+    source_text: str,
+    entities: list[dict[str, Any]],
+    summary: dict[str, Any],
+) -> tuple[dict[str, Any], list[str]]:
+    """Drop invented metadata dates so a good LLM body is not discarded.
+
+    OCR often garbles the circular's issued date; models may repair it into a
+    plausible DD.MM.YYYY that is not literally in the source. Clearing those
+    metadata fields (and leaving body text for a second verify pass) matches
+    summarizerVersion v13-silent-date-cleanup.
+    """
+    allowed_keys = _collect_date_keys(source_text, entities)
+    cleaned = dict(summary)
+    warnings: list[str] = []
+
+    for field in ("issuedDate", "effectiveDate"):
+        value = cleaned.get(field)
+        if value is None:
+            continue
+        text_value = str(value).strip()
+        if not text_value:
+            cleaned[field] = None
+            continue
+        if _field_dates_grounded(text_value, allowed_keys):
+            continue
+        warnings.append(
+            f"Removed {field} '{text_value}' because it was not found in the source text."
+        )
+        cleaned[field] = None
+
+    return cleaned, warnings
+
 _GENERIC_HALLMARKS = frozenset(
     {
         "ministry of education",

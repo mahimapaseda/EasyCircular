@@ -18,6 +18,17 @@ def test_watermark_only_text_is_insufficient():
     assert _is_insufficient_text("")
 
 
+def test_camscanner_footer_does_not_discard_real_body():
+    body = (
+        "Circular No. 26/2026\n"
+        "Ministry of Education\n"
+        "All Provincial Directors of Education\n"
+        "Subject: School calendar arrangements for the second term.\n"
+        "CamScanner\n"
+    )
+    assert not _is_insufficient_text(body)
+
+
 def test_real_circular_text_is_sufficient():
     body = (
         "Circular No. 10/2026\n"

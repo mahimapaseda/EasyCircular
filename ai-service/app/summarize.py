@@ -10,7 +10,7 @@ from typing import Any, cast
 
 from app.chunking import split_text
 from app.config import settings
-from app.guardrails import detect_topic_bleed, verify_summary_dates
+from app.guardrails import detect_topic_bleed, scrub_ungrounded_dates, verify_summary_dates
 from app.llm import active_model_name, active_provider, get_chat_model, llm_is_configured
 from app.mt import mt_is_configured, translate_text
 from app.moe_text import (
@@ -53,7 +53,7 @@ logger = logging.getLogger("easycircular.ai.summarize")
 
 FEWSHOT_DIR = Path(__file__).resolve().parents[1] / "training" / "fewshot"
 # Bump when prompt/few-shot/guardrail behaviour changes so the backend cache misses.
-SUMMARIZER_VERSION = "v13-silent-date-cleanup"
+SUMMARIZER_VERSION = "v15-ensure-body-sections"
 
 _OVERLAP_STOPWORDS = frozenset(
     {
@@ -928,6 +928,65 @@ def fallback_summarize(
     summary["rawMarkdown"] = _build_markdown(summary)
     return summary
 
+def _ensure_body_sections(
+    summary: dict[str, Any],
+    text: str,
+    entities: list[dict[str, Any]],
+    *,
+    filename: str | None = None,
+) -> dict[str, Any]:
+    """Guarantee the brief has readable body sections for the UI left column.
+
+    Some LLM responses only fill actionItems/audience and leave sections=[].
+    That renders as a blank panel beside action items — fill from extractive
+    purpose/requirements when needed.
+    """
+    sections = [
+        {
+            "heading": str(section.get("heading") or "Section").strip() or "Section",
+            "content": str(section.get("content") or "").strip(),
+        }
+        for section in (summary.get("sections") or [])
+        if isinstance(section, dict)
+    ]
+    usable = [section for section in sections if section["content"]]
+    if usable:
+        summary["sections"] = usable
+        return summary
+
+    language = detect_output_language(text, filename)
+    labels = FALLBACK_HEADINGS[language]
+    filled = fallback_summarize(text, entities, filename=filename)
+    borrowed = [
+        {
+            "heading": str(section.get("heading") or labels["purpose"]).strip(),
+            "content": str(section.get("content") or "").strip(),
+        }
+        for section in (filled.get("sections") or [])
+        if str(section.get("content") or "").strip()
+    ]
+    if not borrowed:
+        title = (summary.get("title") or "").strip()
+        actions = [
+            str(item).strip()
+            for item in (summary.get("actionItems") or [])
+            if str(item).strip()
+        ]
+        content = title
+        if actions:
+            content = (content + "\n\n" if content else "") + "\n".join(
+                f"• {item}" for item in actions[:4]
+            )
+        borrowed = [
+            {
+                "heading": labels["purpose"],
+                "content": content or labels["missing_purpose"],
+            }
+        ]
+    summary["sections"] = borrowed
+    return summary
+
+
 def _normalize_circular_metadata(
     summary: dict[str, Any],
     text: str,
@@ -1395,7 +1454,7 @@ def summarize_text(
         summary, text, filename=filename
     )
     bleed_warnings: list[str] = []
-    date_hardfail: list[str] = []
+    date_warnings: list[str] = []
     if summary.get("mode") == "llm":
         bleed_warnings = detect_topic_bleed(
             text,
@@ -1404,14 +1463,20 @@ def summarize_text(
             fewshot_examples=_load_fewshot_examples(),
             document_circular=extract_circular_number(text, filename),
         )
-        date_hardfail = verify_summary_dates(text, entities, summary)
+        # Silent date cleanup: drop invented issued/effective dates from metadata
+        # (common after OCR) before deciding whether to discard the whole summary.
+        summary, scrubbed = scrub_ungrounded_dates(text, entities, summary)
+        if scrubbed:
+            summary["rawMarkdown"] = _build_markdown(summary)
+            circ_warnings = scrubbed + circ_warnings
+        date_warnings = verify_summary_dates(text, entities, summary)
         expected_lang = detect_output_language(text, filename)
         lang_mismatch = not summary_matches_output_language(summary, expected_lang)
         degenerate = summary_looks_degenerate(summary)
         reject_reasons: list[str] = []
         if bleed_warnings:
             reject_reasons.append("topic-bleed")
-        if date_hardfail:
+        if date_warnings:
             reject_reasons.append("invented-dates")
         if lang_mismatch:
             reject_reasons.append("wrong-language")
@@ -1422,7 +1487,7 @@ def summarize_text(
             logger.warning(
                 "Discarding LLM summary due to %s: %s",
                 reason,
-                bleed_warnings + date_hardfail,
+                bleed_warnings + date_warnings,
             )
             summary = fallback_summarize(text, entities, filename=filename)
             summary, extra_circ = _normalize_circular_metadata(
@@ -1440,6 +1505,7 @@ def summarize_text(
     summary.setdefault("translations", {})
     if not summary.get("actionItems"):
         summary["actionItems"] = extract_action_items(text, entities)
+    summary = _ensure_body_sections(summary, text, entities, filename=filename)
     summary["rawMarkdown"] = _build_markdown(summary)
 
     meta["summarizerVersion"] = SUMMARIZER_VERSION

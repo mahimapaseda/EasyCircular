@@ -3,9 +3,13 @@ import os
 import time
 from datetime import datetime, timezone
 
+from pathlib import Path
+
 from dotenv import load_dotenv
 
-load_dotenv()
+# Override so a restarted worker picks up LLM_PROVIDER changes from .env
+# (default load_dotenv does not replace vars inherited from a parent process).
+load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=True)
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware

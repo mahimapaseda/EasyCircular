@@ -77,3 +77,42 @@ def test_invented_dates_discard_llm_summary(mock_llm, _configured):
         for section in (result["summary"] or {}).get("sections") or []
     )
     assert "2099" not in blob
+
+
+@patch("app.summarize.llm_is_configured", return_value=True)
+@patch("app.summarize.llm_summarize")
+def test_ungrounded_issued_date_is_scrubbed_not_discarded(mock_llm, _configured):
+    """OCR-repaired issuedDate must not throw away an otherwise grounded LLM brief."""
+    source = (
+        "Circular No. 26/2026\n"
+        "Board meeting held on 03.06.2026.\n"
+        "Appointments since 24.03.2025 must include the training certificate."
+    )
+    mock_llm.return_value = (
+        {
+            "title": "Circular No. 26/2026: Training certificate",
+            "circularNumber": "26/2026",
+            "issuedDate": "26.07.2026",
+            "effectiveDate": "With retroactive effect from 24.03.2025",
+            "sections": [
+                {
+                    "heading": "Purpose",
+                    "content": (
+                        "Require the training certificate when confirming service "
+                        "after the 03.06.2026 board decision."
+                    ),
+                },
+            ],
+            "actionItems": ["Record the certificate for appointments since 24.03.2025."],
+            "rawMarkdown": "Issued Date: 26.07.2026\n",
+            "mode": "llm",
+        },
+        20,
+        1,
+    )
+    result = summarize_text(source, [], filename="26-2026-En.pdf")
+    assert result["processingMeta"]["mode"] == "llm"
+    assert result["summary"].get("issuedDate") in (None, "")
+    assert "24.03.2025" in (result["summary"].get("effectiveDate") or "")
+    assert not (result["processingMeta"].get("llmError") or "")
+    assert any("issuedDate" in warning for warning in result.get("guardrailWarnings") or [])
