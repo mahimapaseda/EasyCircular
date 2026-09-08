@@ -13,6 +13,7 @@
     "capture:screenshots": "python scripts/capture_screenshots.py",
     "generate:thesis": "python scripts/extract_contextual_figures.py && python scripts/generate_thesis.py",
     "generate:user-manual": "python scripts/generate_user_manual.py",
+    "generate:conference-paper": "python scripts/generate_conference_paper.py",
     "generate:poster": "python scripts/generate_poster.py"
   }
 }

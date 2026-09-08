@@ -1,0 +1,41 @@
+--- Page 1 ---
+Author Compliance Guidelines (Strictly Enforced) 
+ 
+1. Double-Blind Review Compliance 
+• Submissions must be fully anonymized. 
+• Author names, affiliations, acknowledgments, and identifying information must not 
+appear in the manuscript. 
+Violation will result in immediate desk rejection 
+ 
+2. Paper Length Requirement 
+• Papers must be a minimum of 4 pages and a maximum of 6 pages (inclusive of all 
+content, references, and appendices). 
+Papers not complying with page limits will be desk rejected 
+ 
+3. Originality and Multiple Submission Policy 
+• Submitting the same or substantially similar paper to: 
+o Multiple venues, or 
+o Multiple tracks within the same conference is strictly prohibited. 
+Violations will result in immediate rejection of all instances of the same manuscript 
+ 
+4. Authorship Declaration 
+• All authors must be listed in the submission system at the time of submission. 
+• The author list in the submission system must match exactly with the camera-ready 
+submission if accepted . 
+No additions, removals, or reordering of authors are allowed after the review process is 
+completed. 
+ 
+5. Plagiarism and Similarity Check 
+• All submissions will be screened using Turnitin for plagiarism and AI content (Plagiarism 
+<30% and AI content < 50%). 
+--- Page 2 ---
+• Plagiarism, including self-plagiarism, is strictly prohibited. 
+Papers exceeding acceptable similarity thresholds will be rejected without review 
+ 
+6. Formatting Compliance 
+• Papers must strictly follow official IEEE formatting guidelines and templates. 
+Non-compliant submissions will be desk rejected. 
+ 
+Failure to comply with any of the above requirements will result in Desk rejection without 
+review 
+ 

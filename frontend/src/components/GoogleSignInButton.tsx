@@ -27,7 +27,7 @@ export default function GoogleSignInButton({
   onCredential,
   submitting = false,
 }: GoogleSignInButtonProps) {
-  const hiddenRef = useRef<HTMLDivElement>(null);
+  const buttonHostRef = useRef<HTMLDivElement>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
@@ -70,22 +70,25 @@ export default function GoogleSignInButton({
 
     function initGoogle() {
       const google = window.google;
-      if (!google?.accounts?.id || !hiddenRef.current) return;
+      if (!google?.accounts?.id || !buttonHostRef.current) return;
 
       google.accounts.id.initialize({
         client_id: clientId as string,
         callback: handleCredential,
         ux_mode: "popup",
         auto_select: false,
+        cancel_on_tap_outside: true,
       });
 
-      hiddenRef.current.innerHTML = "";
-      google.accounts.id.renderButton(hiddenRef.current, {
+      const width = Math.max(buttonHostRef.current.offsetWidth || 320, 280);
+      buttonHostRef.current.innerHTML = "";
+      google.accounts.id.renderButton(buttonHostRef.current, {
         type: "standard",
         theme: "outline",
         size: "large",
-        width: 320,
+        width,
         text: "continue_with",
+        shape: "rectangular",
       });
 
       setReady(true);
@@ -110,17 +113,6 @@ export default function GoogleSignInButton({
     script.onload = initGoogle;
     document.body.appendChild(script);
   }, [clientId, handleCredential]);
-
-  function triggerGoogleSignIn() {
-    const button = hiddenRef.current?.querySelector(
-      'div[role="button"]',
-    ) as HTMLElement | null;
-    if (button) {
-      button.click();
-      return;
-    }
-    window.google?.accounts?.id?.prompt();
-  }
 
   if (clientId === null) {
     return (
@@ -150,17 +142,12 @@ export default function GoogleSignInButton({
   }
 
   return (
-    <>
-      <div ref={hiddenRef} className="sr-only" aria-hidden />
-      <button
-        type="button"
-        onClick={triggerGoogleSignIn}
-        disabled={!ready || submitting}
-        className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        <GoogleIcon />
-        {submitting ? "Signing in with Google…" : "Continue with Google"}
-      </button>
-    </>
+    <div
+      ref={buttonHostRef}
+      className={`flex w-full justify-center overflow-hidden rounded-xl bg-white py-1 ${
+        submitting ? "pointer-events-none opacity-60" : ""
+      } ${ready ? "" : "min-h-[48px]"}`}
+      aria-busy={!ready || submitting}
+    />
   );
 }

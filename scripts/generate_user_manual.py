@@ -483,20 +483,21 @@ def toc_page(doc) -> None:
     heading(doc, "00", "Contents", CYAN)
     items = [
         ("01", "What this is", "Why you would use it"),
-        ("02", "What you need", "Browser, login, PDF size"),
-        ("03", "The usual path", "Upload, check, summarise"),
-        ("04", "Accounts", "Sign up, Google, sign out"),
-        ("05", "Home", "The first screen"),
-        ("06", "Uploading a PDF", "The drop box and the 50 MB limit"),
-        ("07", "Checking the text", "Editor, then Text is correct"),
-        ("08", "The summary", "What you get, and when it fails"),
-        ("09", "Coloured labels in the text", "Dates, names, circular numbers"),
-        ("10", "Saving and translating", "Export, Copy, language tabs"),
-        ("11", "Library", "Your files"),
-        ("12", "Official catalog", "Import from moe.gov.lk"),
-        ("13", "On a phone", "Same account, smaller screen"),
-        ("14", "Those little status labels", "Uploaded through Failed"),
-        ("15", "When something goes wrong", "The usual snags"),
+        ("02", "What you need", "PC software, browser, login"),
+        ("03", "How to start EasyCircular", "start.bat, three windows, the URL"),
+        ("04", "The usual path", "Upload, check, summarise"),
+        ("05", "Accounts", "Sign up, Google, sign out"),
+        ("06", "Home", "The first screen"),
+        ("07", "Uploading a PDF", "The drop box and the 50 MB limit"),
+        ("08", "Checking the text", "Editor, then Text is correct"),
+        ("09", "The summary", "What you get, and when it fails"),
+        ("10", "Coloured labels in the text", "Dates, names, circular numbers"),
+        ("11", "Saving and translating", "Export, Copy, language tabs"),
+        ("12", "Library", "Your files"),
+        ("13", "Official catalog", "Import from moe.gov.lk"),
+        ("14", "On a phone", "Same account, smaller screen"),
+        ("15", "Those little status labels", "Uploaded through Failed"),
+        ("16", "When something goes wrong", "The usual snags"),
     ]
     colours = [CYAN, BLUE, PURPLE, FUCHSIA, EMERALD, AMBER, ROSE, CYAN_DK]
     table = full_width_table(doc, cols=1)
@@ -561,8 +562,21 @@ def build() -> Document:
 
     # 02
     heading(doc, "02", "What you need", BLUE)
-    body(doc, "Chrome, Edge, Firefox, or Safari is fine. You need an account — email and a password, or Google. The file has to be a real PDF, not bigger than 50 MB.")
-    body(doc, "You can look around without signing in. You cannot upload or import until you do.")
+    body(doc, "To run EasyCircular on a Windows PC you need the software below already installed. To use the website after it is running, Chrome, Edge, Firefox, or Safari is fine.")
+    colored_table(
+        doc,
+        ["You need", "Why"],
+        [
+            ["Windows", "start.bat is written for a Windows PC"],
+            ["Node.js 20 or newer", "Runs the website and the API"],
+            ["Python 3.11 or newer", "Runs the AI service. Tick Add python.exe to PATH when you install it"],
+            ["MongoDB Community, or Docker Desktop", "Stores the circulars. start.bat will try Docker if the MongoDB service is not there"],
+            ["Ollama (llama3.2:3b)", "Local summaries. start.bat will try to install it with winget if it is missing"],
+            ["A browser", "Chrome is fine. Open http://localhost:3002"],
+        ],
+        BLUE,
+    )
+    body(doc, "You need an account: email and a password, or Google. The file has to be a real PDF, not bigger than 50 MB. You can look around without signing in. You cannot upload or import until you do.")
     callout(
         doc,
         "note",
@@ -571,7 +585,44 @@ def build() -> Document:
     )
 
     # 03
-    heading(doc, "03", "The usual path", EMERALD)
+    heading(doc, "03", "How to start EasyCircular", CYAN_DK)
+    body(doc, "Open the project folder. If you were given the assessment copy, that folder is named EasyCircular_2540881. Double-click start.bat. If you see Run-System.cmd instead, double-click that. It does the same job.")
+    body(doc, "The first time can take several minutes. It installs Node packages, Python packages and the SpaCy model, and it may download the Ollama model. Later starts are quicker.")
+    add_figure(doc, "run-folder.png", "Figure 2  ·  Project folder. Double-click start.bat")
+    step_row(
+        doc,
+        [
+            ("1", "start.bat", "Double-click it in the project folder.", CYAN_DK),
+            ("2", "Wait", "Three extra windows open and stay open.", BLUE),
+            ("3", "Browser", "Go to http://localhost:3002", PURPLE),
+            ("4", "Status", "Scroll to System Status. All should be healthy.", EMERALD),
+        ],
+    )
+    body(doc, "Three extra windows should stay open while you use the site:")
+    colored_table(
+        doc,
+        ["Window title", "Port", "What it is"],
+        [
+            ["AI :5000", "5000", "Reads PDFs and writes summaries"],
+            ["Backend :4000", "4000", "Accounts, uploads, library"],
+            ["Frontend :3002", "3002", "The website you open in Chrome"],
+        ],
+        CYAN_DK,
+    )
+    add_figure(doc, "run-services.png", "Figure 3  ·  After start.bat. Leave these windows open")
+    body(doc, "Open Chrome and type http://localhost:3002. Keep the three windows open while you work. Close them when you have finished.")
+    add_figure(doc, "run-browser.png", "Figure 4  ·  Chrome at http://localhost:3002")
+    body(doc, "On the home page, scroll down to System Status. Backend, MongoDB and AI should show as healthy before you upload a circular. If AI is still unreachable, wait until the window titled AI :5000 has finished loading, then refresh the page.")
+    add_figure(doc, "run-system-status.png", "Figure 5  ·  System Status. Wait until this looks healthy")
+    callout(
+        doc,
+        "important",
+        "You only need start.bat",
+        "You do not need to run docker compose for the whole application. If MongoDB is not installed as a Windows service, start.bat will try Docker for MongoDB only.",
+    )
+
+    # 04
+    heading(doc, "04", "The usual path", EMERALD)
     body(doc, "Along the top of a document you will see four steps: Upload, Extract, Review, Summarize. That is the whole job, in order.")
     step_row(
         doc,
@@ -583,14 +634,14 @@ def build() -> Document:
         ],
     )
     body(doc, "From home, Start Processing or New Analysis gets you a file in. Then: Editor, Save edits, Text is correct, Generate summary. The two things worth checking by hand are the circular number and the dates. Staff act on those.")
-    add_figure(doc, "home-signed-in.png", "Figure 2  ·  Signed in — the upload box is available")
+    add_figure(doc, "home-signed-in.png", "Figure 6  ·  Signed in. The upload box is available")
 
     # 04
-    heading(doc, "04", "Accounts", FUCHSIA)
+    heading(doc, "05", "Accounts", FUCHSIA)
     subheading(doc, "New account", FUCHSIA)
     body(doc, "Click Get Started or Sign up. You will be asked for your name, email, a password of at least eight characters, and your job role (Teacher, Principal, or Education administration). District is optional; type a few letters and pick from the list.")
     body(doc, "Create account, or Continue with Google if that is easier. After that you land back at upload.")
-    add_figure(doc, "sign-up.png", "Figure 3  ·  Sign-up form")
+    add_figure(doc, "sign-up.png", "Figure 7  ·  Sign-up form")
 
     subheading(doc, "Coming back", BLUE)
     body(doc, "Use Sign in. Same email and password, or Google again. Remember me is there if you want it.")
@@ -600,16 +651,16 @@ def build() -> Document:
         "Forgot password?",
         "The link is on the form. It does not actually reset anything yet. If you are stuck, try Google, or get someone to make a new account.",
     )
-    add_figure(doc, "sign-in.png", "Figure 4  ·  Sign-in")
+    add_figure(doc, "sign-in.png", "Figure 8  ·  Sign-in")
     body(doc, "Sign out is in the top bar on the home page, and in the left sidebar once you are in a document.")
 
     # 05
-    heading(doc, "05", "Home", CYAN)
+    heading(doc, "06", "Home", CYAN)
     body(doc, "This is the first screen. The dark Start Processing button takes you to upload (it will send you to sign in if you have not). Official circulars opens the moe.gov.lk list inside EasyCircular.")
     body(doc, "Get Started is sign in / sign up. The moon (or sun) icon switches dark mode. Library is your own files. The four cards under the fold are just a description of the product. You do not click them to do the work.")
 
     # 06
-    heading(doc, "06", "Uploading a PDF", BLUE)
+    heading(doc, "07", "Uploading a PDF", BLUE)
     body(doc, "If you are not signed in, the box says Sign in to upload. Fair enough.")
     body(doc, "From home, scroll down to the drop area, or once you are in the workspace use New Analysis on the left. Drop the file, or click to browse. You should see Uploading your circular…, then the document screen opens.")
     colored_table(
@@ -622,10 +673,10 @@ def build() -> Document:
         ],
         BLUE,
     )
-    add_figure(doc, "upload.png", "Figure 5  ·  The upload box on the home page")
+    add_figure(doc, "upload.png", "Figure 9  ·  The upload box on the home page")
 
     # 07
-    heading(doc, "07", "Checking the text", PURPLE)
+    heading(doc, "08", "Checking the text", PURPLE)
     body(doc, "Extraction usually starts on its own. If it does not, use Extract text. Re-extract runs it again if the first pass looked empty or garbled. Sinhala and Tamil scans can sit there for a while. Leave the tab open.")
     body(doc, "You cannot generate a summary until you have said the text is all right. That is the Review step.")
     bullets(
@@ -643,10 +694,10 @@ def build() -> Document:
         "Working copy",
         "The text on screen is a working copy. The PDF is still the circular. Fix the number and the dates here before you trust the brief.",
     )
-    add_figure(doc, "review-text.png", "Figure 6  ·  Review. Read the text, then confirm it before you summarise.")
+    add_figure(doc, "review-text.png", "Figure 10  ·  Review. Read the text, then confirm it before you summarise.")
 
     # 08
-    heading(doc, "08", "The summary", EMERALD)
+    heading(doc, "09", "The summary", EMERALD)
     body(doc, "Generate summary shows Building brief… for a bit. What you get is a title, the number, who issued it, who it is for, when it takes effect, a purpose, the main requirements, Action items, and sometimes Key references.")
     colored_table(
         doc,
@@ -661,7 +712,7 @@ def build() -> Document:
         EMERALD,
     )
     body(doc, "There is a small disclaimer on every brief. Read it. The model can skip things or make things up. If the file came from the catalog, Open on moe.gov.lk is a link back to the ministry page. Use it.")
-    add_figure(doc, "summary.png", "Figure 7  ·  A finished brief. Action items are on the right.")
+    add_figure(doc, "summary.png", "Figure 11  ·  A finished brief. Action items are on the right.")
 
     subheading(doc, "When the summary is not quite right", ROSE)
     colored_table(
@@ -676,7 +727,7 @@ def build() -> Document:
     )
 
     # 09
-    heading(doc, "09", "Coloured labels in the text", AMBER)
+    heading(doc, "10", "Coloured labels in the text", AMBER)
     body(doc, "After a summary, expand Source text and switch to Highlights. Dates, organisations, people, and legal-looking phrases are marked. You might see something like “13 entities · 90% confidence” on the bar. Treat that as a hint, not a score you report to anyone.")
     colored_table(
         doc,
@@ -690,10 +741,10 @@ def build() -> Document:
         ],
         AMBER,
     )
-    add_figure(doc, "entities.png", "Figure 8  ·  Highlights on the source text")
+    add_figure(doc, "entities.png", "Figure 12  ·  Highlights on the source text")
 
     # 10
-    heading(doc, "10", "Saving and translating", CYAN_DK)
+    heading(doc, "11", "Saving and translating", CYAN_DK)
     subheading(doc, "Export", CYAN)
     body(doc, "Export is on the brief toolbar. That PDF is the summary, for a staff meeting or an email. If you only need a paste, use Copy.")
     subheading(doc, "Translate", BLUE)
@@ -704,32 +755,32 @@ def build() -> Document:
         "Translations",
         "Handy for sharing with staff. Not more official than the circular you uploaded.",
     )
-    add_figure(doc, "export-translate.png", "Figure 9  ·  Language tabs, Edit, Copy, Export")
+    add_figure(doc, "export-translate.png", "Figure 13  ·  Language tabs, Edit, Copy, Export")
 
     # 11
-    heading(doc, "11", "Library", BLUE)
+    heading(doc, "12", "Library", BLUE)
     body(doc, "Library in the sidebar (or from home) is your pile of work. Uploads and catalog imports both land here. The switch at the top is Your library versus Official catalog. On your library you can filter All, Summarized, or In progress, and you can search by file name or a bit of the summary.")
     body(doc, "Click a card to open it. Each card shows how old it is, pages, words, and how many tags it found. Imports from the ministry are marked Official moe.gov.lk. Delete is on the card. It asks once. After that the file is gone.")
     body(doc, "If you are not signed in you can still see the layout, but you will be asked to sign in before anything is saved against you.")
-    add_figure(doc, "library.png", "Figure 10  ·  Library")
+    add_figure(doc, "library.png", "Figure 14  ·  Library")
 
     # 12
-    heading(doc, "12", "Official catalog", EMERALD)
+    heading(doc, "13", "Official catalog", EMERALD)
     body(doc, "This is the list from moe.gov.lk, shown inside EasyCircular. Importing a PDF does not mean EasyCircular is the ministry. The summary is still made here, from that file.")
     body(doc, "Open Official catalog (home has Official circulars as well). Search. On an entry, open PDFs, then Import. If you are not signed in it will say Sign in to import. Importing… takes a moment. After that it is the same as an upload: extract, review, summarise. Previous and Next move through the list.")
-    add_figure(doc, "official-catalog.png", "Figure 11  ·  Catalog search and import")
+    add_figure(doc, "official-catalog.png", "Figure 15  ·  Catalog search and import")
 
     # 13
-    heading(doc, "13", "On a phone", PURPLE)
+    heading(doc, "14", "On a phone", PURPLE)
     body(doc, "It works in the phone browser with the same login. Buttons stack. New Analysis is still how you upload. If you are going to sit and correct a long Sinhala scan, a laptop is less painful.")
     add_two_figures(
         doc,
-        ("mobile-home.png", "Figure 12  ·  Home on a phone"),
-        ("mobile-summary.png", "Figure 13  ·  A brief on a phone"),
+        ("mobile-home.png", "Figure 16  ·  Home on a phone"),
+        ("mobile-summary.png", "Figure 17  ·  A brief on a phone"),
     )
 
     # 14
-    heading(doc, "14", "Those little status labels", AMBER)
+    heading(doc, "15", "Those little status labels", AMBER)
     colored_table(
         doc,
         ["Label", "Colour", "Meaning"],
@@ -744,13 +795,16 @@ def build() -> Document:
     )
 
     # 15
-    heading(doc, "15", "When something goes wrong", ROSE)
+    heading(doc, "16", "When something goes wrong", ROSE)
     body(doc, "Check the circular number and the dates first. If those are wrong, fix them in the editor and regenerate. Prefer Official catalog when you can, so you are not working from a photocopy someone emailed last year. Export once you are happy, and file that PDF with the original circular.")
     colored_table(
         doc,
         ["Problem", "Try this"],
         [
             ["Sign in to upload", "You are not logged in."],
+            ["Cannot open http://localhost:3002", "The Frontend :3002 window is closed, or start.bat has not finished yet."],
+            ["AI unreachable / System Status not healthy", "Wait for the AI :5000 window, then refresh the page."],
+            ["start.bat stops with a red message", "Install Node.js 20+, Python 3.11+, and MongoDB or Docker, then run start.bat again."],
             ["File rejected", "It is not a real PDF, or it is over 50 MB."],
             ["Blank or messy text", "Wait, then Re-extract. Edit what you can."],
             ["Summary is nonsense", "Fix the source, Save edits, Regenerate."],
@@ -823,6 +877,10 @@ def main() -> None:
         name
         for name in (
             "home.png",
+            "run-folder.png",
+            "run-services.png",
+            "run-browser.png",
+            "run-system-status.png",
             "home-signed-in.png",
             "sign-up.png",
             "sign-in.png",

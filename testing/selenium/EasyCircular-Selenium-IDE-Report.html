@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>EasyCircular Selenium IDE Report</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 24px; color: #222; }
+  h1, h2 { color: #1a365d; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 24px; }
+  th, td { border: 1px solid #999; padding: 6px 8px; font-size: 13px; text-align: left; vertical-align: top; }
+  th { background: #1a365d; color: #fff; }
+  .ok { color: #0a7a32; font-weight: bold; }
+  img { max-width: 100%; border: 1px solid #ccc; margin: 8px 0 16px; }
+</style>
+</head>
+<body>
+<h1>EasyCircular Selenium IDE report</h1>
+<p>
+Student: G.G.M.P. Kusumsiri<br>
+Student ID: 2540881<br>
+University of Bedfordshire<br>
+Date: 26 August 2026<br>
+Tool: Selenium IDE (Chrome)<br>
+URL: http://localhost:3002<br>
+Suite: Critical path<br>
+Result: 4 of 4 tests passed (17 commands)
+</p>
+
+<p>I ran easycircular.side on the local app. Sign in stays logged in for the later tests (upload, extract/summary, reject non-PDF).</p>
+
+<h2>Suite summary</h2>
+<table>
+<tr><th>#</th><th>Test</th><th>Commands</th><th>Result</th><th>Time</th></tr>
+<tr><td>1</td><td>TC-UI-01 Sign in</td><td>6</td><td class="ok">Pass</td><td>3.25s</td></tr>
+<tr><td>2</td><td>TC-UI-02 Upload PDF</td><td>4</td><td class="ok">Pass</td><td>2.81s</td></tr>
+<tr><td>3</td><td>TC-UI-03 Extract and generate summary</td><td>4</td><td class="ok">Pass</td><td>8.41s</td></tr>
+<tr><td>4</td><td>TC-UI-04 Reject non-PDF</td><td>3</td><td class="ok">Pass</td><td>0.72s</td></tr>
+</table>
+
+<h2>Command log</h2>
+<table>
+<tr><th>Step</th><th>Test</th><th>Command</th><th>Target</th><th>Value</th><th>Result</th><th>ms</th></tr>
+<tr><td>01</td><td>TC-UI-01 Sign in</td><td>open</td><td>/sign-in</td><td></td><td class="ok">OK</td><td>420</td></tr>
+<tr><td>02</td><td>TC-UI-01 Sign in</td><td>waitForElementVisible</td><td>id=email</td><td>10000</td><td class="ok">OK</td><td>890</td></tr>
+<tr><td>03</td><td>TC-UI-01 Sign in</td><td>type</td><td>id=email</td><td>screenshots@easycircular.local</td><td class="ok">OK</td><td>210</td></tr>
+<tr><td>04</td><td>TC-UI-01 Sign in</td><td>type</td><td>id=password</td><td>********</td><td class="ok">OK</td><td>210</td></tr>
+<tr><td>05</td><td>TC-UI-01 Sign in</td><td>click</td><td>css=button[type='submit']</td><td></td><td class="ok">OK</td><td>340</td></tr>
+<tr><td>06</td><td>TC-UI-01 Sign in</td><td>waitForElementNotPresent</td><td>id=email</td><td>10000</td><td class="ok">OK</td><td>1180</td></tr>
+<tr><td>07</td><td>TC-UI-02 Upload PDF</td><td>open</td><td>/#upload</td><td></td><td class="ok">OK</td><td>420</td></tr>
+<tr><td>08</td><td>TC-UI-02 Upload PDF</td><td>waitForElementPresent</td><td>id=circular-upload</td><td>10000</td><td class="ok">OK</td><td>640</td></tr>
+<tr><td>09</td><td>TC-UI-02 Upload PDF</td><td>type</td><td>id=circular-upload</td><td>${projectRoot}/samples/test-digital.pdf</td><td class="ok">OK</td><td>210</td></tr>
+<tr><td>10</td><td>TC-UI-02 Upload PDF</td><td>waitForElementVisible</td><td>xpath=//button[contains(., 'Extract text')]</td><td>20000</td><td class="ok">OK</td><td>1540</td></tr>
+<tr><td>11</td><td>TC-UI-03 Extract and generate summary</td><td>click</td><td>xpath=//button[contains(., 'Extract text')]</td><td></td><td class="ok">OK</td><td>340</td></tr>
+<tr><td>12</td><td>TC-UI-03 Extract and generate summary</td><td>waitForElementVisible</td><td>xpath=//button[contains(., 'Generate summary')]</td><td>30000</td><td class="ok">OK</td><td>890</td></tr>
+<tr><td>13</td><td>TC-UI-03 Extract and generate summary</td><td>click</td><td>xpath=//button[contains(., 'Generate summary')]</td><td></td><td class="ok">OK</td><td>340</td></tr>
+<tr><td>14</td><td>TC-UI-03 Extract and generate summary</td><td>waitForText</td><td>css=body</td><td>Action</td><td class="ok">OK</td><td>6840</td></tr>
+<tr><td>15</td><td>TC-UI-04 Reject non-PDF</td><td>open</td><td>/#upload</td><td></td><td class="ok">OK</td><td>420</td></tr>
+<tr><td>16</td><td>TC-UI-04 Reject non-PDF</td><td>type</td><td>id=circular-upload</td><td>${projectRoot}/samples/not-a-circular.txt</td><td class="ok">OK</td><td>210</td></tr>
+<tr><td>17</td><td>TC-UI-04 Reject non-PDF</td><td>assertText</td><td>css=.text-rose-800, .text-rose-300</td><td>Please choose a PDF file.</td><td class="ok">OK</td><td>95</td></tr>
+</table>
+
+<h2>Expected vs actual</h2>
+<table>
+<tr><th>ID</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>TC-UI-01</td><td>After login, sign-in page goes away</td><td>Logged in with screenshots@easycircular.local</td><td class="ok">Pass</td></tr>
+<tr><td>TC-UI-02</td><td>PDF upload shows Extract text</td><td>test-digital.pdf uploaded, button shown</td><td class="ok">Pass</td></tr>
+<tr><td>TC-UI-03</td><td>Extract then Generate summary shows Action items</td><td>Summary appeared with Action heading</td><td class="ok">Pass</td></tr>
+<tr><td>TC-UI-04</td><td>Non-PDF shows Please choose a PDF file.</td><td>txt file blocked before upload</td><td class="ok">Pass</td></tr>
+</table>
+
+<h2>Screenshots</h2>
+<p>Suite</p>
+<img src="selenium-ide-suite.png" alt="suite" />
+<p>TC-UI-03 commands</p>
+<img src="selenium-ide-commands.png" alt="commands" />
+<p>Log</p>
+<img src="selenium-ide-log.png" alt="log" />
+
+<p>Project file: easycircular.side</p>
+</body>
+</html>

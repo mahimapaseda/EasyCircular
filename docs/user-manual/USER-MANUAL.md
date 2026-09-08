@@ -12,19 +12,20 @@ Ministry circulars are long. EasyCircular is a website that pulls out the useful
 
 1. [What this is](#1-what-this-is)
 2. [What you need](#2-what-you-need)
-3. [The usual path](#3-the-usual-path)
-4. [Accounts](#4-accounts)
-5. [Home](#5-home)
-6. [Uploading a PDF](#6-uploading-a-pdf)
-7. [Checking the text](#7-checking-the-text)
-8. [The summary](#8-the-summary)
-9. [Coloured labels in the text](#9-coloured-labels-in-the-text)
-10. [Saving and translating](#10-saving-and-translating)
-11. [Library](#11-library)
-12. [Official catalog](#12-official-catalog)
-13. [On a phone](#13-on-a-phone)
-14. [Those little status labels](#14-those-little-status-labels)
-15. [When something goes wrong](#15-when-something-goes-wrong)
+3. [How to start EasyCircular](#3-how-to-start-easycircular)
+4. [The usual path](#4-the-usual-path)
+5. [Accounts](#5-accounts)
+6. [Home](#6-home)
+7. [Uploading a PDF](#7-uploading-a-pdf)
+8. [Checking the text](#8-checking-the-text)
+9. [The summary](#9-the-summary)
+10. [Coloured labels in the text](#10-coloured-labels-in-the-text)
+11. [Saving and translating](#11-saving-and-translating)
+12. [Library](#12-library)
+13. [Official catalog](#13-official-catalog)
+14. [On a phone](#14-on-a-phone)
+15. [Those little status labels](#15-those-little-status-labels)
+16. [When something goes wrong](#16-when-something-goes-wrong)
 
 ---
 
@@ -44,7 +45,18 @@ After that you can copy the brief, download it as a PDF, or switch it to Sinhala
 
 ## 2. What you need
 
-Chrome, Edge, Firefox, or Safari is fine. You need an account — email and a password, or Google. The file has to be a real PDF, not bigger than 50 MB.
+To run EasyCircular on a Windows PC you need the software below already installed. To use the website after it is running, Chrome, Edge, Firefox, or Safari is fine.
+
+| You need | Why |
+| --- | --- |
+| Windows | `start.bat` is written for a Windows PC |
+| Node.js 20 or newer | Runs the website and the API |
+| Python 3.11 or newer | Runs the AI service. Tick **Add python.exe to PATH** when you install it |
+| MongoDB Community, or Docker Desktop | Stores the circulars. `start.bat` will try Docker if the MongoDB service is not there |
+| Ollama (`llama3.2:3b`) | Local summaries. `start.bat` will try to install it with winget if it is missing |
+| A browser | Chrome is fine. Open http://localhost:3002 |
+
+You need an account: email and a password, or Google. The file has to be a real PDF, not bigger than 50 MB.
 
 You can look around without signing in. You cannot upload or import until you do.
 
@@ -52,7 +64,45 @@ Keep the original circular. EasyCircular does not replace it, and it does not se
 
 ---
 
-## 3. The usual path
+## 3. How to start EasyCircular
+
+Open the project folder. If you were given the assessment copy, that folder is named **EasyCircular_2540881**. Double-click **start.bat**. If you see **Run-System.cmd** instead, double-click that. It does the same job.
+
+The first time can take several minutes. It installs Node packages, Python packages and the SpaCy model, and it may download the Ollama model. Later starts are quicker.
+
+![Project folder with start.bat](images/run-folder.png)
+
+*Figure 2. Project folder. Double-click **start.bat**.*
+
+Three extra windows should stay open while you use the site:
+
+| Window title | Port | What it is |
+| --- | --- | --- |
+| **AI :5000** | 5000 | Reads PDFs and writes summaries |
+| **Backend :4000** | 4000 | Accounts, uploads, library |
+| **Frontend :3002** | 3002 | The website you open in Chrome |
+
+![Service windows after start.bat](images/run-services.png)
+
+*Figure 3. After start.bat. Leave these windows open.*
+
+Open Chrome and type **http://localhost:3002**. Keep the three windows open while you work. Close them when you have finished.
+
+![Chrome at localhost:3002](images/run-browser.png)
+
+*Figure 4. Chrome at http://localhost:3002.*
+
+On the home page, scroll down to **System Status**. Backend, MongoDB and AI should show as healthy before you upload a circular. If AI is still unreachable, wait until the window titled **AI :5000** has finished loading, then refresh the page.
+
+![System Status all healthy](images/run-system-status.png)
+
+*Figure 5. System Status. Wait until this looks healthy.*
+
+You only need **start.bat**. You do not need to run docker compose for the whole application. If MongoDB is not installed as a Windows service, start.bat will try Docker for MongoDB only.
+
+---
+
+## 4. The usual path
 
 Along the top of a document you will see four steps: **Upload**, **Extract**, **Review**, **Summarize**. That is the whole job, in order.
 
@@ -65,11 +115,11 @@ The two things worth checking by hand are the circular number and the dates. Sta
 
 ![Signed-in home](images/home-signed-in.png)
 
-*Figure 2. Once you are signed in, the upload box is available.*
+*Figure 6. Signed in. The upload box is available.*
 
 ---
 
-## 4. Accounts
+## 5. Accounts
 
 **New account.** Click **Get Started** or **Sign up**. You will be asked for your name, email, a password of at least eight characters, and your job role (Teacher, Principal, or Education administration). District is optional; type a few letters and pick from the list.
 
@@ -77,7 +127,7 @@ The two things worth checking by hand are the circular number and the dates. Sta
 
 ![Sign-up page](images/sign-up.png)
 
-*Figure 3. Sign-up form.*
+*Figure 7. Sign-up form.*
 
 **Coming back.** Use **Sign in**. Same email and password, or Google again. **Remember me** is there if you want it.
 
@@ -85,13 +135,13 @@ There is a **Forgot password?** link. It does not actually reset anything yet. I
 
 ![Sign-in page](images/sign-in.png)
 
-*Figure 4. Sign-in.*
+*Figure 8. Sign-in.*
 
 **Sign out** is in the top bar on the home page, and in the left sidebar once you are in a document.
 
 ---
 
-## 5. Home
+## 6. Home
 
 This is the first screen. The dark **Start Processing** button takes you to upload (it will send you to sign in if you have not). **Official circulars** opens the moe.gov.lk list inside EasyCircular.
 
@@ -101,7 +151,7 @@ The four cards under the fold are just a description of the product. You do not 
 
 ---
 
-## 6. Uploading a PDF
+## 7. Uploading a PDF
 
 If you are not signed in, the box says **Sign in to upload**. Fair enough.
 
@@ -117,11 +167,11 @@ A few limits that catch people:
 
 ![Upload dropzone](images/upload.png)
 
-*Figure 5. The upload box on the home page.*
+*Figure 9. The upload box on the home page.*
 
 ---
 
-## 7. Checking the text
+## 8. Checking the text
 
 Extraction usually starts on its own. If it does not, use **Extract text**. **Re-extract** runs it again if the first pass looked empty or garbled.
 
@@ -137,11 +187,11 @@ The text on screen is a working copy. The PDF is still the circular.
 
 ![Review extracted text](images/review-text.png)
 
-*Figure 6. Review. Read the text, then confirm it before you summarise.*
+*Figure 10. Review. Read the text, then confirm it before you summarise.*
 
 ---
 
-## 8. The summary
+## 9. The summary
 
 **Generate summary** shows **Building brief…** for a bit. What you get is a title, the number, who issued it, who it is for, when it takes effect, a purpose, the main requirements, **Action items**, and sometimes **Key references**.
 
@@ -159,7 +209,7 @@ If the file came from the catalog, **Open on moe.gov.lk** is a link back to the 
 
 ![Summary workspace](images/summary.png)
 
-*Figure 7. A finished brief. Action items are on the right.*
+*Figure 11. A finished brief. Action items are on the right.*
 
 Sometimes the summary is not a full AI write-up:
 
@@ -171,7 +221,7 @@ Sometimes the summary is not a full AI write-up:
 
 ---
 
-## 9. Coloured labels in the text
+## 10. Coloured labels in the text
 
 After a summary, expand **Source text** and switch to **Highlights**. Dates, organisations, people, and legal-looking phrases are marked. You might see something like “13 entities · 90% confidence” on the bar. Treat that as a hint, not a score you report to anyone.
 
@@ -185,11 +235,11 @@ After a summary, expand **Source text** and switch to **Highlights**. Dates, org
 
 ![Entity highlights](images/entities.png)
 
-*Figure 8. Highlights on the source text.*
+*Figure 12. Highlights on the source text.*
 
 ---
 
-## 10. Saving and translating
+## 11. Saving and translating
 
 **Export** is on the brief toolbar. That PDF is the summary, for a staff meeting or an email. If you only need a paste, use **Copy**.
 
@@ -199,11 +249,11 @@ A translation is for sharing with staff. It is not more official than the circul
 
 ![Export and language tabs](images/export-translate.png)
 
-*Figure 9. Language tabs, Edit, Copy, Export.*
+*Figure 13. Language tabs, Edit, Copy, Export.*
 
 ---
 
-## 11. Library
+## 12. Library
 
 **Library** in the sidebar (or from home) is your pile of work. Uploads and catalog imports both land here.
 
@@ -217,11 +267,11 @@ If you are not signed in you can still see the layout, but you will be asked to 
 
 ![Document library](images/library.png)
 
-*Figure 10. Library.*
+*Figure 14. Library.*
 
 ---
 
-## 12. Official catalog
+## 13. Official catalog
 
 This is the list from [moe.gov.lk](https://moe.gov.lk/en/circulars/), shown inside EasyCircular. Importing a PDF does not mean EasyCircular is the ministry. The summary is still made here, from that file.
 
@@ -233,11 +283,11 @@ Open **Official catalog** (home has **Official circulars** as well). Search. On 
 
 ![Official catalog](images/official-catalog.png)
 
-*Figure 11. Catalog search and import.*
+*Figure 15. Catalog search and import.*
 
 ---
 
-## 13. On a phone
+## 14. On a phone
 
 It works in the phone browser with the same login. Buttons stack. **New Analysis** is still how you upload.
 
@@ -245,15 +295,15 @@ If you are going to sit and correct a long Sinhala scan, a laptop is less painfu
 
 ![Mobile home](images/mobile-home.png)
 
-*Figure 12. Home on a phone.*
+*Figure 16. Home on a phone.*
 
 ![Mobile summary](images/mobile-summary.png)
 
-*Figure 13. A brief on a phone.*
+*Figure 17. A brief on a phone.*
 
 ---
 
-## 14. Those little status labels
+## 15. Those little status labels
 
 | Label | Colour | Meaning |
 | --- | --- | --- |
@@ -265,7 +315,7 @@ If you are going to sit and correct a long Sinhala scan, a laptop is less painfu
 
 ---
 
-## 15. When something goes wrong
+## 16. When something goes wrong
 
 Check the circular number and the dates first. If those are wrong, fix them in the editor and regenerate.
 
@@ -276,6 +326,9 @@ Prefer **Official catalog** when you can, so you are not working from a photocop
 | Problem | Try this |
 | --- | --- |
 | **Sign in to upload** | You are not logged in. |
+| Cannot open http://localhost:3002 | The **Frontend :3002** window is closed, or start.bat has not finished yet. |
+| AI unreachable / System Status not healthy | Wait for the **AI :5000** window, then refresh the page. |
+| start.bat stops with a red message | Install Node.js 20+, Python 3.11+, and MongoDB or Docker, then run start.bat again. |
 | File rejected | It is not a real PDF, or it is over 50 MB. |
 | Blank or messy text | Wait, then **Re-extract**. Edit what you can. |
 | Summary is nonsense | Fix the source, **Save edits**, **Regenerate**. |
