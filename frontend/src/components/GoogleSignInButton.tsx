@@ -31,6 +31,7 @@ export default function GoogleSignInButton({
   const [clientId, setClientId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
+  const [origin, setOrigin] = useState("http://localhost:3002");
 
   const handleCredential = useCallback(
     (response: GoogleCredentialResponse) => {
@@ -40,6 +41,12 @@ export default function GoogleSignInButton({
     },
     [onCredential],
   );
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,14 +79,16 @@ export default function GoogleSignInButton({
       const google = window.google;
       if (!google?.accounts?.id || !buttonHostRef.current) return;
 
-      // Do not set ux_mode: "popup" — it often triggers Google 401 when
-      // Authorized JavaScript origins are incomplete. Default GIS button flow is fine.
+      // Keep FedCM off for the button: with Testing consent screens it often
+      // auto-attaches a cached Google account (login_hint) and returns
+      // Error 400: invalid_user when that account is not a Test user.
       google.accounts.id.initialize({
         client_id: clientId as string,
         callback: handleCredential,
         auto_select: false,
         cancel_on_tap_outside: true,
-        use_fedcm_for_prompt: true,
+        itp_support: true,
+        use_fedcm_for_button: false,
       });
 
       const width = Math.max(buttonHostRef.current.offsetWidth || 320, 280);
@@ -91,6 +100,7 @@ export default function GoogleSignInButton({
         width,
         text: "continue_with",
         shape: "rectangular",
+        logo_alignment: "left",
       });
 
       setReady(true);
@@ -144,12 +154,20 @@ export default function GoogleSignInButton({
   }
 
   return (
-    <div
-      ref={buttonHostRef}
-      className={`flex w-full justify-center overflow-hidden rounded-xl bg-white py-1 ${
-        submitting ? "pointer-events-none opacity-60" : ""
-      } ${ready ? "" : "min-h-[48px]"}`}
-      aria-busy={!ready || submitting}
-    />
+    <div className="space-y-2">
+      <div
+        ref={buttonHostRef}
+        className={`flex w-full justify-center overflow-hidden rounded-xl bg-white py-1 ${
+          submitting ? "pointer-events-none opacity-60" : ""
+        } ${ready ? "" : "min-h-[48px]"}`}
+        aria-busy={!ready || submitting}
+      />
+      <p className="text-center text-[11px] leading-snug text-ink-400 dark:text-slate-500">
+        Google app is in Testing mode: add your Gmail under{" "}
+        <span className="font-medium">OAuth consent screen → Test users</span>
+        , then use that same account. Origin in use:{" "}
+        <code className="rounded bg-black/5 px-1 dark:bg-white/10">{origin}</code>
+      </p>
+    </div>
   );
 }
