@@ -72,12 +72,14 @@ export default function GoogleSignInButton({
       const google = window.google;
       if (!google?.accounts?.id || !buttonHostRef.current) return;
 
+      // Do not set ux_mode: "popup" — it often triggers Google 401 when
+      // Authorized JavaScript origins are incomplete. Default GIS button flow is fine.
       google.accounts.id.initialize({
         client_id: clientId as string,
         callback: handleCredential,
-        ux_mode: "popup",
         auto_select: false,
         cancel_on_tap_outside: true,
+        use_fedcm_for_prompt: true,
       });
 
       const width = Math.max(buttonHostRef.current.offsetWidth || 320, 280);
