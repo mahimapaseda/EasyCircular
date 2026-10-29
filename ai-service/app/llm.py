@@ -121,13 +121,18 @@ def get_chat_model(
             raise RuntimeError("OPENAI_API_KEY is required when LLM_PROVIDER=openai")
 
         model = active_model_name()
-        return ChatOpenAI(
-            model=model,
-            temperature=temp,
-            api_key=api_key,
-            max_tokens=max_tokens,
-            max_retries=retries,
-        )
+        # Optional OpenAI-compatible base (e.g. NVIDIA NIM: https://integrate.api.nvidia.com/v1)
+        base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+        kwargs: dict = {
+            "model": model,
+            "temperature": temp,
+            "api_key": api_key,
+            "max_tokens": max_tokens,
+            "max_retries": retries,
+        }
+        if base_url:
+            kwargs["base_url"] = base_url
+        return ChatOpenAI(**kwargs)
 
     if provider == "ollama":
         from langchain_ollama import ChatOllama

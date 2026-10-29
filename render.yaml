@@ -1,0 +1,51 @@
+# EasyCircular on Render — AI + Backend (MongoDB Atlas URI required).
+# Frontend stays on Vercel; set CORS_ORIGINS to the Vercel URL after deploy.
+#
+# Dashboard: New → Blueprint → connect mahimapaseda/EasyCircular → Deploy Blueprint
+# Then set secret env vars marked sync: false (NVIDIA key, JWT, tokens, Mongo URI).
+
+services:
+  - type: web
+    name: easycircular-ai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./ai-service/Dockerfile
+    dockerContext: ./ai-service
+    healthCheckPath: /health
+    envVars:
+      - key: LLM_PROVIDER
+        value: openai
+      - key: OPENAI_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: LLM_MODEL
+        value: meta/llama-3.1-8b-instruct
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: AI_SERVICE_TOKEN
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+  - type: web
+    name: easycircular-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: UPLOAD_DIR
+        value: /app/backend/uploads
+      # Public URL of the AI web service (same Blueprint names → predictable host)
+      - key: AI_SERVICE_URL
+        value: https://easycircular-ai.onrender.com
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AI_SERVICE_TOKEN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

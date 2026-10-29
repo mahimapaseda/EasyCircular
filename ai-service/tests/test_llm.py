@@ -112,6 +112,29 @@ def test_get_chat_model_ollama_uses_json_format_and_wider_context(monkeypatch):
     assert captured["num_ctx"] == 8192
 
 
+def test_get_chat_model_openai_passes_base_url_for_nvidia_nim(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    monkeypatch.setenv("OPENAI_API_KEY", "nvapi-test")
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://integrate.api.nvidia.com/v1")
+    monkeypatch.setenv("LLM_MODEL", "meta/llama-3.1-8b-instruct")
+
+    captured: dict = {}
+
+    class FakeChatOpenAI:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    import langchain_openai
+
+    monkeypatch.setattr(langchain_openai, "ChatOpenAI", FakeChatOpenAI)
+    from app.llm import get_chat_model
+
+    get_chat_model()
+    assert captured["base_url"] == "https://integrate.api.nvidia.com/v1"
+    assert captured["api_key"] == "nvapi-test"
+    assert captured["model"] == "meta/llama-3.1-8b-instruct"
+
+
 def test_supported_providers():
     assert "gemini" in SUPPORTED_PROVIDERS
     assert "groq" in SUPPORTED_PROVIDERS

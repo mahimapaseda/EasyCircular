@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  // Standalone is for Docker; omit on Vercel (platform handles the build output).
+  ...(process.env.VERCEL ? {} : { output: "standalone" }),
   // Required for Sign in with Google popups when FedCM is unavailable.
   // See: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid
   async headers() {

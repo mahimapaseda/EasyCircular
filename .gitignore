@@ -10,6 +10,7 @@ venv/
 .env
 .env.local
 .env.*.local
+scripts/.deploy-secrets.local
 
 # Build / cache
 .next/
