@@ -1,0 +1,404 @@
+# EasyCircular IEEE US Letter conference paper
+# English title/abstract/keywords/headings + Sinhala body (ICAC-revised claims)
+
+meta:
+  font: Iskoola Pota
+  font_latin: Times New Roman
+  font_size: 10
+
+title_en: >-
+  EasyCircular: An Intelligent Web Application for Summarizing Sri Lankan
+  Government Education Circulars Using Large Language Models
+
+authors:
+  - name: G G M P Kusumsiri
+    department: Department of Computer Science and Technology
+    organization: The University of Bedfordshire
+    city_country: Luton, United Kingdom
+    email: "[email placeholder]"
+  - name: Mr. Anuruddha Abeysinghe
+    department: Department of Computer Science and Technology
+    organization: The University of Bedfordshire
+    city_country: Luton, United Kingdom
+    email: "[email placeholder]"
+
+abstract_en: >-
+  Ministry of Education circulars guide school administration in Sri Lanka, yet
+  staff often receive long, scanned, trilingual PDFs through informal channels.
+  EasyCircular is a self-hostable web application that combines PDF ingest,
+  trilingual optical character recognition, mandatory staff text review, named
+  entity highlighting, and guarded large language model summarization with an
+  extractive fallback. A stakeholder survey (N=41) showed strong demand for
+  summaries (97.6%) but limited willingness to use AI (31.7%), motivating a
+  local-model option and a review gate before generation. On six circulars with
+  single-annotator references, TextRank-style extractive fallback summaries
+  scored ROUGE-1/2/L F1 of 0.414/0.215/0.292; these scores do not evaluate the
+  default LLM path. The original PDF remains the legal source; the brief is an
+  assistive shortcut. Broader OCR, NER, LLM, and user-acceptance evaluation is
+  left for future work.
+
+keywords_en: >-
+  PDF summarization, named entity recognition, optical character recognition,
+  large language models, education circulars
+
+sections:
+  - heading_en: I. INTRODUCTION
+    paragraphs_si:
+      - >-
+        ශ්‍රී ලංකා පාසල්වල දෛනික පරිපාලනය අධ්‍යාපන අමාත්‍යාංශය විසින් නිකුත් කරන චක්‍රලේඛ
+        මගින් හැඩගැසේ [1], [2]. මෙම ලේඛන පාසල් කළමනාකරණය, විභාග, ගුරු සංවර්ධනය සහ ශිෂ්‍ය
+        සුබසාධනය පිළිබඳ නීතිමය සහ මෙහෙයුම් උපදෙස් අඩංගු වේ. ඒවා සිංහල, ඉංග්‍රීසි සහ දෙමළ
+        භාෂාවලින් පෙනෙන අතර බොහෝ විට දිගු පරිපාලන භාෂාවෙන් ලියැවෙන අතර සෙවිය හැකි පෙළ වෙනුවට
+        scanned PDF ලෙස ලැබේ.
+      - >-
+        විදුහල්පතිවරුන්, ගුරුවරුන් සහ අධ්‍යාපන නිලධාරීන්ට තවමත් අවසන් දින, වගකිවයුත්තන් සහ
+        ක්‍රියා අයිතම අතින් උපුටා ගැනීමට සිදු වේ. චක්‍රලේඛ WhatsApp කණ්ඩායම් සහ ඊමේල් හරහා
+        ඉක්මනින් බෙදා හැරෙන නමුත් ආයතනවල searchable archive කලාතුරකින් තිබේ. විශ්වාසදායක
+        optical character recognition සහ විශ්වාසනීය සාරාංශයක් නොමැතිව, අනියම් සාරාංශ නිසා දින
+        මග හැරීමේ සහ උපදෙස් වැරදිව කියවීමේ අවදානම වැඩි වේ.
+      - >-
+        සාමාන්‍ය large language model chatbot මෙවලම් තවත් බාධක ඇති කරයි: දින සහ නියෝග
+        hallucination වීම, පාසල් ලේඛන සඳහා දුර්වල රහස්‍යතා ආරක්ෂාව, සහ විගණනයට අපහසු
+        අසංවිධිත පිළිතුරු [3], [4]. වාණිජ නීතිමය AI මෙවලම් පාසල් සඳහා මිල අධික වන අතර ශ්‍රී
+        ලංකා අධ්‍යාපන චක්‍රලේඛ සඳහා සුසර නොවේ. මෙම ක්ෂේත්‍රය සඳහා PDF ආයාතය, ත්‍රිභාෂික OCR,
+        කාර්ය මණ්ඩල සමාලෝචිත නිස්සාරණය, named entity recognition සහ ආරක්ෂිත සාරාංශකරණය එකතු
+        කරන self-hostable pipeline එකක් සාහිත්‍යයේ නොමැත.
+      - >-
+        මෙම පත්‍රය එම පරතරය වටා නිර්මාණය කළ EasyCircular නම් ත්‍රිස්ථර වෙබ් යෙදුම ඉදිරිපත්
+        කරයි. දායකත්වයන් වන්නේ (i) උඩුගත කිරීමේ සිට ව්‍යුහගත සාරාංශය දක්වා end-to-end
+        self-hostable කාර්යප්‍රවාහයක්, (ii) සාරාංශකරණයට පෙර අනිවාර්ය OCR සමාලෝචන දොරටුවක්,
+        සහ (iii) generative මාර්ගය නොමැති හෝ මූලික පරීක්ෂා අසමත් වූ විට extractive fallback
+        සමඟ දින පදනම් කිරීමේ පරීක්ෂා ය. මුල් PDF එක බලයලත් මූලාශ්‍රය වන අතර සාරාංශය සහායක
+        පමණි.
+      - >-
+        අධ්‍යයනය පර්යේෂණ ප්‍රශ්න තුනක් වටා සංවිධානය කෙරේ. RQ1: ශ්‍රී ලංකා අධ්‍යාපන චක්‍රලේඛ
+        සඳහා PDF නිස්සාරණය, OCR, NER සහ සාරාංශකරණය purpose-built වෙබ් පද්ධතියකට කෙසේ ඒකාබද්ධ
+        කළ හැකිද? RQ2: අනිවාර්ය පෙළ සමාලෝචනය සහ date guardrails මගින් හානිකර hallucination
+        අවදානම කෙසේ අඩු කළ හැකිද? RQ3: stakeholder අවශ්‍යතා සහ ස්වයංක්‍රීය මිනුම් භාවිතයෙන්
+        ප්‍රයෝජනවත් බව තක්සේරු කරන අතර තක්සේරු සීමා අවංකව ප්‍රකාශ කරන්නේ කෙසේද? Section II
+        related work, Section III අවශ්‍යතා සහ සැලසුම, Section IV මූලික ප්‍රතිඵල, Section V
+        නිගමනය දක්වයි.
+
+  - heading_en: II. RELATED WORK
+    paragraphs_si:
+      - >-
+        නවීන ලේඛන අවබෝධය දිගු පරාස සන්දර්භය self-attention මගින් ආකෘතිගත කරන Transformer
+        ගෘහනිර්මාණය මත රඳා පවතී [5]. මෙම පදනම මත ගොඩනැගුණු large language models, GPT-ශෛලීය
+        සහ සම්බන්ධ පද්ධති ඇතුළුව, පෙළ ප්‍රතිව්‍යාඛ්‍යානයට සහ සම්පීඩනයට යොදා ගත හැක [3], [6].
+        EasyCircular වින්‍යාසිත සැපයුම්කරුවකු ඇති විට abstractive සාරාංශ සඳහා එවැනි ආකෘති
+        භාවිත කරන අතර විශ්වාසනීයත්වය සඳහා deterministic extractive මාර්ගයක් තබා ගනී.
+      - >-
+        සාරාංශකරණ පර්යේෂණය මූලාශ්‍ර වාක්‍ය තෝරන extractive ක්‍රම සහ අන්තර්ගතය නැවත ලියන
+        abstractive ක්‍රම වෙන් කරයි [7]. Extractive ප්‍රතිදානය නීතිමය උපදෙස්වල වැදගත් වචන
+        රකින නමුත් කියවීම අසමාන විය හැක. Abstractive fluency කාර්ය මණ්ඩලයට ආකර්ෂණීය වුවත්
+        faithfulness අසාර්ථකත්වයන් හොඳින් වාර්තා වී ඇත [8]. එබැවින් EasyCircular වින්‍යාස
+        කළ විට LLM සාරාංශය default කරන අතර guardrails හෝ ආකෘති ලබා ගත නොහැකි විට
+        TextRank-ශෛලීය extractive සාරාංශයට යයි [9].
+      - >-
+        Named entity recognition අසංවිධිත පෙළෙන් පුද්ගලයන්, ආයතන, දින සහ සම්බන්ධ පරාස
+        උපුටා ගනී [10]. spaCy ප්‍රායෝගික ඉංග්‍රීසි pipeline එකක් සපයන අතර [11] EasyCircular
+        චක්‍රලේඛ අංක, letterhead සහ ක්‍රියා ඉඟි සඳහා domain heuristics සමඟ ඒකාබද්ධ කරයි.
+        බොහෝ අමාත්‍යාංශ චක්‍රලේඛ සිංහල හෝ දෙමළ වේ; එබැවින් ඉංග්‍රීසි-කේන්ද්‍රීය NER භාෂා
+        අතර සමාන යැයි උපකල්පනය කළ නොහැකි බව අපි මිනුම් නොමැතිවම පැහැදිලිව ප්‍රකාශ කරමු.
+      - >-
+        මෙම ක්ෂේත්‍රයේ තක්සේරුවට fluency එකකට වඩා අවශ්‍ය වේ. ROUGE යොමු සාරාංශ සමඟ ශබ්දකෝෂ
+        අතිච්ඡාදනය මැනීමේ සම්මත මිනුමක් ලෙස පවතී [12], නමුත් නීතිමය වශයෙන් වැදගත් උපදෙස්
+        රැකී ඇති බව ඔප්පු නොකරයි. Faithfulness සාහිත්‍යය වෙනම කරුණු පරීක්ෂා ඉල්ලා සිටී [8].
+        වත්මන් අධ්‍යයනය කුඩා gold set එකක් මත extractive fallback සඳහා පමණක් ROUGE වාර්තා
+        කරන අතර LLM ගුණාත්මකභාවය, OCR නිරවද්‍යතාව සහ NER නිරවද්‍යතාව අනාගත මිනුම් ලෙස තබයි.
+      - >-
+        සිංහල සහ දෙමළ OCR පර්යේෂණය උරුම රජයේ අකුරු සහ අඩු-සම්පත් අක්ෂර සඳහා Tesseract සහ
+        සම්බන්ධ එන්ජින් අනුවර්තනය කරයි [13]–[15]. පැරණි සිංහල පෙළ සංරක්ෂණය සඳහා සාරාංශකරණය
+        ද ගවේෂණය වී ඇත [16]. එම කටයුතු අමාත්‍යාංශ අධ්‍යාපන චක්‍රලේඛ සඳහා කාර්ය මණ්ඩල
+        සමාලෝචිත, ආරක්ෂිත සාරාංශකරණ වෙබ් යෙදුමක් ලබා නොදෙයි. නීතිමය-NLP සාහිත්‍යයේ සමාලෝචිත
+        වාණිජ මෙවලම් වෙනත් අධිකරණ සහ මිල ස්ථාන ඉලක්ක කරයි [17]. EasyCircular පාසල්වල
+        යෙදවිය හැකි stack එකකින් කලාපීය පරතරය ආමන්ත්‍රණය කරයි.
+      - >-
+        සාරාංශයක් ලෙස, පෙර කටයුතු OCR, NER සහ සාරාංශකරණ සංරචක ආවරණය කරන නමුත් ශ්‍රී ලංකා
+        අධ්‍යාපන චක්‍රලේඛ සඳහා රහස්‍යතා-දැනුවත් කාර්යප්‍රවාහයකට ඒවා ඒකාබද්ධ නොකරයි [1], [2],
+        [13], [16]. EasyCircular ලබා ඇති සාක්ෂිවලට සමානුපාතික තක්සේරු ප්‍රකාශ තබා ගනිමින්
+        එම පද්ධති පරතරය පුරවන්නට නිර්මාණය වී ඇත.
+
+  - heading_en: III. PROPOSED SYSTEM
+    paragraphs_si:
+      - >-
+        අවශ්‍යතා Google Forms සමීක්ෂණයක් හරහා විදුහල්පතිවරුන්, ගුරුවරුන් සහ පරිපාලන
+        නිලධාරීන්ගෙන්, සිංහල සහ ඉංග්‍රීසි භාෂාවලින් රැස් කෙරිණි [18]. අයිතම අතර කියවීමේ
+        වාරගණනය, අවබෝධ දුෂ්කරතා, කාල බර, සාරාංශ ඉල්ලුම, AI භාවිතයට කැමැත්ත, entity
+        highlighting ප්‍රයෝජනය සහ රහස්‍යතා ගැටලු ඇතුළත් විය. වලංගු ප්‍රතිචාර (N=41) ගුරුවරු
+        ප්‍රධාන පරිශීලක කාණ්ඩය බවත් සාරාංශ සහ highlighting ඉල්ලුම ඉහළ බවත් තහවුරු කළේය. AI
+        පද්ධතියක් භාවිතයට සෘජු කැමැත්ත අඩු විය (ඔව් 31.7%; නැත 68.3%), රහස්‍යතාව නිතර බාධාවක්
+        විය. Fig. 1 සහ TABLE I මෙම සොයාගැනීම් සාරාංශ කරයි.
+      - >-
+        එබැවින් ක්‍රියාකාරී අවශ්‍යතා අතර PDF උඩුගත කිරීම, digital සහ scanned ලේඛනවලින් පෙළ
+        නිස්සාරණය, සංස්කරණය කළ හැකි සමාලෝචනය, ව්‍යුහගත සාරාංශය, entity highlighting,
+        ක්‍රියා අයිතම ලැයිස්තු සහ චක්‍රලේඛ පුස්තකාලය ඇත. ක්‍රියාකාරී-නොවන අවශ්‍යතා ලෙස JWT
+        authentication, ජංගම-කියවිය හැකි අතුරුමුහුණත, විකල්ප දේශීය LLM, rate limiting සහ
+        පහසු self-hosting තෝරා ගන්නා ලදී. සංවර්ධනය සාරාංශකරණය සහ NER සඳහා
+        prototype–test–tune චක්‍ර සහිත කෙටි Agile චක්‍ර අනුගමනය කළේය [18].
+      - >-
+        AI භාවිතයට 68.3% අකමැත්ත එක් දේශීය ආකෘති විකල්පයකට ඔබ්බෙන් නිෂ්පාදන සැලසුම හැඩගැස්වීය.
+        EasyCircular මුල් PDF එක නීතිමය මූලාශ්‍රය ලෙස තබයි, Generate summary සක්‍රිය වීමට
+        පෙර නිස්සාරිත පෙළ තහවුරු කිරීම අවශ්‍ය කරයි, නිදහස් chat වෙනුවට ව්‍යුහගත සාරාංශයක්
+        ලබා දෙයි, සහ පාසල්-පාලිත දෘඪාංග මත Ollama හරහා භාෂා ආකෘතිය ධාවනය කළ හැක. සාරාංශ
+        ලක්ෂ්‍යයකින් මූලාශ්‍ර පරාසයට provenance සබැඳි සහ නිල පරිශීලක පිළිගැනීමේ පරීක්ෂණ අනාගත
+        කටයුතු වේ; වත්මන් පද්ධතිය සමීක්ෂණ පසුබෑමට පළමු ප්‍රතිචාර ලෙස සමාලෝචනය කළ හැකි බව සහ
+        self-hosting ප්‍රමුඛ කරයි.
+      - >-
+        EasyCircular ත්‍රිස්ථර ගෘහනිර්මාණයක් භාවිත කරයි (Fig. 2). Presentation ස්ථරය උඩුගත
+        කිරීම, සමාලෝචනය සහ කියවීම සඳහා Next.js frontend එකකි. Application ස්ථරය JWT auth,
+        PDF metadata සහ MongoDB cache සහිත Express REST API එකකි. AI ස්ථරය PDF parse, OCR,
+        NER [10], [11], සාරාංශකරණය සහ guardrails සඳහා FastAPI microservice එකකි. MongoDB
+        චක්‍රලේඛ තත්ත්වය ගබඩා කරයි. විකල්ප දේශීය අනුමානය default ලෙස Ollama සමඟ llama3.2:3b
+        භාවිත කරයි [19]; cloud OpenAI-compatible සැපයුම්කරුවන් වින්‍යාස කළ හැකි අතර එවිට චක්‍රලේඛ
+        පෙළ ධාරකයෙන් පිටතට යයි. TABLE II තාක්ෂණ stack එක ලැයිස්තුගත කරයි.
+      - >-
+        අතුරුමුහුණත තාක්ෂණික නොවන පාසල් කාර්ය මණ්ඩලය ඉලක්ක කරයි. ප්‍රධාන තිර අතර ඇතුල්වීම,
+        චක්‍රලේඛ ලැයිස්තුව, උඩුගත කිරීම, පෙළ සමාලෝචන editor එක සහ චක්‍රලේඛ අංකය, නිකුත්කරු,
+        ප්‍රේක්ෂකයන්, sections සහ ක්‍රියා අයිතම පෙන්වන සාරාංශ panel එක ඇත. Named entities
+        මුල් පෙළ මත වර්ණ ලේබල කර ඇති බැවින් අවසන් දින සහ නීතිමය යොමු ඉක්මනින් සෙවිය හැක
+        [10], [17].
+      - >-
+        සැකසුම් කාර්යප්‍රවාහය Upload, Extract, Review, Summarize වේ (Fig. 3). උඩුගත කිරීම්
+        PDF magic bytes මගින් වලංගු කෙරේ. Digital-born ගොනු pdfplumber සහ PyMuPDF fallback
+        භාවිත කරයි. Scanned පිටු සඳහා සිංහල, ඉංග්‍රීසි සහ දෙමළ භාෂා ඇසුරුම් සහිත Tesseract
+        භාවිත වේ [13], [14], [20]. නිස්සාරිත පෙළ post-process කර cache යතුරු සඳහා SHA-256
+        මගින් hash කෙරේ. පරිශීලකයා අවශ්‍ය පරිදි සංස්කරණය කර Text is correct තහවුරු කළ පසු
+        පමණක් Generate summary සක්‍රිය වේ [18].
+      - >-
+        සාරාංශකරණයේදී spaCy NER ඉංග්‍රීසි-ප්‍රධාන පෙළ මත DATE, ORG සහ LAW වැනි ලේබල පවරයි
+        [11], චක්‍රලේඛ-විශේෂිත ක්ෂේත්‍ර regex සහ letterhead heuristics මගින් පොහොසත් කෙරේ.
+        ක්‍රියා අයිතම ආඥාත්මක සහ බැඳීම් ඉඟි මත රටා රීති මගින් වෙන් කෙරේ. දිගු ලේඛන සඳහා
+        chunked prompts සහ ව්‍යුහගත JSON-වැනි brief schema සහිත LangChain map-reduce chain
+        භාවිත වේ [7]. Date guardrails සාරාංශයේ එක් එක් දින තන්තුව මූලාශ්‍ර පෙළේ කොහේ හෝ
+        පෙනෙන බව අවශ්‍ය කරයි [8]. දින එම පරීක්ෂාව අසමත් වුවහොත් හෝ LLM ලබා ගත නොහැකි නම්
+        TextRank-ශෛලීය extractive fallback භාවිත වේ [9].
+      - >-
+        දින පරීක්ෂාව හිතාමතාම පටු ය. එය වැරදි ක්‍රියාවකට ඇමිණුණු නිවැරදි දිනයක්, වැරදි
+        ටෝකනයකට ගැලපෙන OCR-විකෘති දින, හෝ ඉංග්‍රීසි-කේන්ද්‍රීය සාමාන්‍යකාරකය මග හරින සිංහල
+        සහ දෙමළ දිනාංක භාෂාව හඳුනා නොගනී. මුදල් ප්‍රමාණ, ශ්‍රේණි, වගකිවයුතු නිලධාරීන් සහ
+        චක්‍රලේඛ අංක තවමත් එම ආකාරයෙන් ආරක්ෂා නොවේ. වත්මන් රීතිය එක් හානිකර hallucination
+        පන්තියකට අඩු පිරිවැය ආරක්ෂාවක් ලෙස සලකනු ලැබේ, සම්පූර්ණ කරුණු පද්ධතියක් ලෙස නොවේ.
+      - >-
+        ආරක්ෂක පාලන අතර JWT සැසි, හවුල් AI සේවා ටෝකනයක්, rate limits සහ CORS allowlist ඇත.
+        බාහිර API එකකට පෙළ යැවිය නොහැකි පාසල් Ollama මත අනුමානය තබා ගත හැක [19]. Docker
+        Compose සේවා තුන self-hosting සඳහා ඇසුරුම් කරයි, අවශ්‍යතා රැස් කිරීමේදී මතු වූ
+        රහස්‍යතා සහ දැරිය හැකි බව පිළිබඳ ගැටලුවලට ගැලපේ.
+      - >-
+        දත්ත ආකෘතිය User සහ Circular වාර්තා වටා කේන්ද්‍රගත වේ. එක් එක් චක්‍රලේඛය ගොනු මාර්ගය,
+        නිස්සාරිත සහ සංස්කරිත පෙළ, content hash, entities, ව්‍යුහගත සාරාංශ ක්ෂේත්‍ර,
+        පරිවර්තන ස්ථාන සහ සැකසුම් metadata ගබඩා කරයි. Content-hash caching එකම සමාලෝචිත පෙළ
+        සහ සාරාංශකරණ අනුවාදය යටතේ එකම LLM කාර්යය නැවත නැවත කිරීම වළක්වයි.
+
+  - heading_en: IV. RESULTS AND DISCUSSION
+    paragraphs_si:
+      - >-
+        Fig. 4 ව්‍යුහගත සාරාංශය සහ entity highlights සහිත සාරාංශ panel එක පෙන්වයි.
+        අතුරුමුහුණත අරමුණ, ක්‍රියා සහ අවසන් දින වෙන් කරන අතර මුල් පෙළ මත highlighted පරාස
+        දෘශ්‍යමානව තබයි, සාරාංශ සහ entity ඉඟි සඳහා සමීක්ෂණ ඉල්ලුමට ගැලපේ [10], [11]. පෙර
+        සිංහල සංරක්ෂණ සාරාංශකරණ කටයුතුවලට [16] සාපේක්ෂව මෙහි ඉලක්කය පාසල් කාර්ය මණ්ඩල
+        කාර්යප්‍රවාහයක් තුළ අමාත්‍යාංශ අධ්‍යාපන චක්‍රලේඛ ය.
+      - >-
+        තක්සේරුව මූලික මාන තුනක් ආවරණය කරයි: staging latency, extractive fallback සඳහා
+        ශබ්දකෝෂ අතිච්ඡාදනය, සහ ස්වයංක්‍රීය මෘදුකාංග පරීක්ෂණ. TABLE III staging stack එකේ
+        digital නිස්සාරණය, scanned නියැදියක OCR, Ollama හරහා llama3.2:3b cold LLM ඇමතුමක්
+        සහ cached නැවත-සැකසුම සඳහා සාමාන්‍ය කාල වාර්තා කරයි. දෘඪාංගය පාලිත benchmark
+        පොකුරක් නොව සංවර්ධක staging යන්ත්‍රයකි; කාල පාසල් කාර්යප්‍රවාහ සඳහා ඇඟවුම්කාරී වන
+        අතර production SLA එකක් නොවේ, නැවත නැවත ධාවනවල විචල්‍යතාව විධිමත්ව වාර්තා නොකෙරිණි.
+      - >-
+        සාරාංශ ගුණාත්මකභාවය අභ්‍යන්තර gold set ලෙස සකසන ලද චක්‍රලේඛ හයක් සඳහා මානව යොමු
+        සාරාංශ සමඟ ROUGE මගින් මනින ලදී [12]. වැදගත් ලෙස, TABLE IV සහ Fig. 5 ආකෘතියක්
+        වින්‍යාස කළ විට පරිශීලකයන් දකින default LLM සාරාංශකරණය නොව TextRank-ශෛලීය extractive
+        fallback මාර්ගය පමණක් වාර්තා කරයි. Macro ROUGE-1/2/L F1 අගයන් 0.414, 0.215 සහ 0.292
+        විය. යොමු තනි annotator විසින් ලියන ලද බැවින් inter-annotator agreement නොමැත. මෙම
+        ලකුණු අභ්‍යන්තර ශබ්දකෝෂ baseline එකකි; නීතිමය නිවැරදිභාවය හෝ LLM සාරාංශ ඉහළ-අවදානම්
+        උපදෙස් රකින බව ඒවා තහවුරු නොකරයි [8].
+      - >-
+        මෙම පත්‍රයේ ගණනය කළ guardrail ප්‍රතික්ෂේප අනුපාතයක් අපි ප්‍රකාශ නොකරමු. සංවර්ධනයේදී
+        සමහර LLM කෙටුම්පත් මත date guardrails ක්‍රියාත්මක වන බව නිරීක්ෂණය වන අතර ඉන්පසු
+        පද්ධතිය extractive fallback ලබා දෙයි, නමුත් ස්ථිර නියැදියක් සහ නම් කළ ආකෘති
+        වින්‍යාසයක් මත ගණන් කළ අනුපාතය අනාගත මිනුම් කාර්යයකි. එසේම, OCR සඳහා character
+        error rate සහ DATE, ORG, LAW සඳහා entity-level precision/recall මෙහි වාර්තා
+        නොවේ, විශේෂයෙන් spaCy ඉංග්‍රීසි ආකෘති දුර්වල ගැලපීමක් වන සිංහල සහ දෙමළ සඳහා.
+      - >-
+        TABLE V backend unit, Selenium IDE UI සහ functional පරීක්ෂණ 35ක් සමත් වූ බව
+        සටහන් කරයි [18]. එම ප්‍රතිඵල ක්‍රියාත්මක pipeline එකේ මෘදුකාංග නිවැරදිභාවයට සහාය
+        දක්වයි; සාරාංශ faithfulness පිළිබඳ පර්යේෂණ ප්‍රකාශ සඳහා සාක්ෂි නොවේ. පාසල් කාර්ය
+        මණ්ඩල පරිශීලක පිළිගැනීමේ පරීක්ෂණ අසම්පූර්ණය. සමීක්ෂණයේ බාහිර වලංගුතාව convenience
+        sample එකකට සීමා වේ. එබැවින් RQ පිළිතුරු සම්පූර්ණයෙන් වලංගු කළ පර්යේෂණාත්මක නිගමන
+        ලෙස නොව සැලසුම් සහ මූලික-සාක්ෂි ප්‍රකාශ ලෙස සලකමු [8], [12].
+
+  - heading_en: V. CONCLUSION
+    paragraphs_si:
+      - >-
+        EasyCircular PDF උඩුගත කිරීම, ත්‍රිභාෂික OCR, අනිවාර්ය පෙළ සමාලෝචනය, NER
+        highlighting, map-reduce LLM සාරාංශකරණය සහ දින පදනම් කිරීමේ පරීක්ෂා ශ්‍රී ලංකා
+        අධ්‍යාපන චක්‍රලේඛ සඳහා self-hostable ත්‍රිස්ථර වෙබ් යෙදුමකට ඒකාබද්ධ කරයි. මුල් PDF
+        එක නීතිමය මූලාශ්‍රය ලෙස පවතින අතර ව්‍යුහගත සාරාංශය සහායක කෙටිමඟකි. Ollama
+        llama3.2:3b සමඟ විකල්ප දේශීය අනුමානය stakeholder විසින් මතු කළ රහස්‍යතා ගැටලු
+        ආමන්ත්‍රණය කරයි.
+      - >-
+        පර්යේෂණ ප්‍රශ්නවලට සාපේක්ෂව, RQ1 ක්‍රියාත්මක ගෘහනිර්මාණය සහ
+        Upload–Extract–Review–Summarize කාර්යප්‍රවාහය මගින් ආමන්ත්‍රණය වේ. RQ2 සැලසුම
+        මගින් ආමන්ත්‍රණය වේ: සමාලෝචන දොරටුවක් සහ පටු date guardrails සහ extractive
+        fallback, අනෙකුත් entity වර්ග සහ ඉංග්‍රීසි නොවන දින ආකෘති සඳහා පිළිගත් පරතර සමඟ.
+        RQ3 අඩ වශයෙන් පමණක් ආමන්ත්‍රණය වේ: සමීක්ෂණය අවශ්‍යතා සහ පසුබෑම පැහැදිලි කරන අතර
+        fallback සාරාංශ හයක් මත ROUGE සහ staging latency නිශ්චිත සාධනයකට වඩා මූලික තාක්ෂණික
+        සංඥා ලබා දෙයි.
+      - >-
+        අනාගත කටයුතු ලෙස ඉංග්‍රීසි, සිංහල සහ දෙමළ හරහා චක්‍රලේඛ දස ගණනක් දක්වා gold set
+        විශාල කර බහු annotator සහ එකඟතා සංඛ්‍යාලේඛන භාවිත කිරීම; එකම යොමු මත llama3.2:3b සහ
+        වින්‍යාසිත cloud ආකෘතියක් factual-consistency හෝ මානව ශ්‍රේණිගත කිරීම් සමඟ තක්සේරු
+        කිරීම; භාෂාවකට OCR character error rate සහ NER precision/recall මැනීම; චක්‍රලේඛ අංක,
+        මුදල් ප්‍රමාණ සහ නිලධාරී නම් දක්වා guardrails විස්තීරණය; සාරාංශ ලක්ෂ්‍යවලින් මූලාශ්‍ර
+        පරාසයට provenance සබැඳි එක් කිරීම; සහ පාසල් කාර්ය මණ්ඩල පිළිගැනීමේ පරීක්ෂණ සම්පූර්ණ
+        කිරීම යෝජනා කෙරේ. විශ්වාසනීයත්වය හෝ පිළිගැනීම පිළිබඳ දැඩි ප්‍රකාශවලට පෙර එම පියවර
+        අවශ්‍ය වේ.
+
+figures:
+  - id: survey_chart
+    number: 1
+    file: docs/conference/figures/survey-key-findings.png
+    width_cm: 8.0
+    caption_si: >-
+      සමීක්ෂණ ප්‍රධාන සොයාගැනීම් (N=41). සාරාංශ ඉල්ලුම ඉහළය; AI භාවිත කැමැත්ත අඩුය.
+  - id: architecture
+    number: 2
+    file: docs/thesis/figures/architecture.png
+    width_cm: 8.0
+    caption_si: >-
+      EasyCircular ත්‍රිස්ථර ගෘහනිර්මාණය: frontend, backend API, AI සේවාව සහ MongoDB.
+  - id: flowchart
+    number: 3
+    file: docs/thesis/figures/algorithm-flowchart.png
+    width_cm: 8.0
+    caption_si: >-
+      සැකසුම් කාර්යප්‍රවාහය: ingest, OCR, කාර්ය මණ්ඩල සමාලෝචනය, NER සහ ආරක්ෂිත සාරාංශකරණය.
+  - id: ui_summary
+    number: 4
+    file: docs/thesis/figures/ui-06-summary.png
+    width_cm: 8.0
+    caption_si: >-
+      ව්‍යුහගත සාරාංශය සහ මුල් පෙළ මත entity highlights පෙන්වන සාරාංශ panel එක.
+  - id: rouge_chart
+    number: 5
+    file: docs/thesis/figures/eval-rouge-chart.png
+    width_cm: 8.0
+    caption_si: >-
+      Extractive fallback මාර්ගය සඳහා පමණක් චක්‍රලේඛ-පාඩි ROUGE F1 (N=6).
+
+tables:
+  - id: findings
+    marker: TABLE I
+    caption_si: KEY SURVEY FINDINGS (N=41)
+    headers: ["Item", "n", "%"]
+    rows:
+      - ["Want a summary feature (Yes)", "40", "97.6"]
+      - ["Entity highlighting useful", "32", "78.0"]
+      - ["Expects efficiency gain", "32", "78.0"]
+      - ["Willing to use an AI system (Yes)", "13", "31.7"]
+      - ["Not willing to use AI (No)", "28", "68.3"]
+      - ["Named privacy as a concern", "17", "41.5"]
+  - id: stack
+    marker: TABLE II
+    caption_si: EASYCIRCULAR TECHNOLOGY STACK
+    headers: ["Layer", "Technology", "Note"]
+    rows:
+      - ["Frontend", "Next.js 14, TypeScript", "responsive UI"]
+      - ["Backend", "Express, JWT, Mongoose", "REST API"]
+      - ["AI service", "FastAPI, spaCy, Tesseract", "NLP pipeline"]
+      - ["Data", "MongoDB 7", "document store"]
+      - ["LLM (optional)", "Ollama llama3.2:3b", "local privacy"]
+  - id: perf
+    marker: TABLE III
+    caption_si: PIPELINE LATENCY ON STAGING STACK
+    headers: ["Stage", "Typical time"]
+    rows:
+      - ["Digital PDF extract (pdfplumber)", "~1.2 s"]
+      - ["OCR scanned sample", "~6.8 s"]
+      - ["Cold LLM call (llama3.2:3b)", "8–15 s"]
+      - ["Cached re-process", "~114 ms"]
+  - id: rouge
+    marker: TABLE IV
+    caption_si: ROUGE F1 BY CIRCULAR (EXTRACTIVE FALLBACK ONLY)
+    headers: ["Circular", "R-1", "R-2", "R-L"]
+    rows:
+      - ["10-2026", "0.394", "0.183", "0.265"]
+      - ["12-2026", "0.416", "0.166", "0.243"]
+      - ["15-2026", "0.347", "0.160", "0.263"]
+      - ["23-2026", "0.467", "0.292", "0.352"]
+      - ["44-2006i", "0.489", "0.243", "0.298"]
+      - ["44-2025", "0.369", "0.245", "0.332"]
+      - ["Macro", "0.414", "0.215", "0.292"]
+  - id: tests
+    marker: TABLE V
+    caption_si: AUTOMATED SOFTWARE TESTS (CORRECTNESS ONLY)
+    headers: ["Suite", "Cases", "Pass"]
+    rows:
+      - ["Backend unit tests", "13", "13"]
+      - ["Selenium IDE UI", "4", "4"]
+      - ["Functional tests", "10", "10"]
+      - ["Total", "35", "35"]
+
+references:
+  - >-
+    Ministry of Education Sri Lanka, "Official circulars portal," 2026. [Online]. Available:
+    https://moe.gov.lk/en/circulars/
+  - >-
+    R. M. Fernando, "ABCDE: An enduring education reform for a sustainable Sri Lanka," Int.
+    J. Res. Innov. Soc. Sci., vol. 9, no. 26, pp. 9004–9017, 2025.
+  - >-
+    T. Brown et al., "Language models are few-shot learners," in Proc. NeurIPS, 2020, pp.
+    1877–1901.
+  - >-
+    Z. Ji et al., "Survey of hallucination in natural language generation," ACM Comput.
+    Surv., vol. 55, no. 12, pp. 1–38, 2023.
+  - >-
+    A. Vaswani et al., "Attention is all you need," in Proc. NeurIPS, 2017, pp. 5998–6008.
+  - >-
+    J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, "BERT: Pre-training of deep
+    bidirectional transformers for language understanding," in Proc. NAACL-HLT, 2019, pp.
+    4171–4186.
+  - >-
+    M. Lewis et al., "BART: Denoising sequence-to-sequence pre-training for natural language
+    generation, translation, and comprehension," in Proc. ACL, 2020, pp. 7871–7880.
+  - >-
+    J. Maynez, S. Narayan, B. Bohnet, and R. McDonald, "On faithfulness and factuality in
+    abstractive summarization," in Proc. ACL, 2020, pp. 1906–1919.
+  - >-
+    R. Mihalcea and P. Tarau, "TextRank: Bringing order into text," in Proc. EMNLP, 2004,
+    pp. 404–411.
+  - >-
+    S. Sarawagi, "Information extraction," Found. Trends Databases, vol. 1, no. 3, pp.
+    261–377, 2008.
+  - >-
+    M. Honnibal and I. Montani, "spaCy 2: Natural language understanding with Bloom
+    embeddings, convolutional neural networks and incremental parsing," 2017.
+  - >-
+    C.-Y. Lin, "ROUGE: A package for automatic evaluation of summaries," in Text
+    Summarization Branches Out. Barcelona: ACL, 2004, pp. 74–81.
+  - >-
+    C. Vasantharajan, L. Tharmalingam, and U. Thayasivam, "Adapting the Tesseract
+    open-source OCR engine for Tamil and Sinhala legacy fonts and creating a parallel corpus
+    for Tamil-Sinhala-English," in Proc. IALP, 2022, pp. 143–149.
+  - >-
+    N. Jayatilleke and N. de Silva, "Zero-shot OCR accuracy of low-resourced languages: A
+    comparative analysis on Sinhala and Tamil," in Proc. RANLP, 2025, pp. 471–480.
+  - >-
+    A. Dilhara and N. Jayatilleke, "Cross-temporal Sinhala OCR: Page-level adaptation and
+    diachronic analysis," arXiv:2606.29378, 2026.
+  - >-
+    K. A. M. P. Rathnasena, K. M. S. J. Kumarasinghe, D. T. P. Paranavitharana, D. V. A. U.
+    Dayarathne, and L. Ranathunga, "Summarization based approach for old Sinhala text
+    archival search and preservation," in Proc. ICTer, 2018, pp. 182–188.
+  - >-
+    I. Chalkidis, M. Fergadiotis, P. Malakasiotis, N. Aletras, and I. Androutsopoulos,
+    "LEGAL-BERT: The muppets straight out of law school," in Findings of EMNLP, 2020, pp.
+    2898–2904.
+  - >-
+    S. Amershi et al., "Guidelines for human-AI interaction," in Proc. CHI, 2019, pp. 1–13.
+  - >-
+    H. Touvron et al., "LLaMA: Open and efficient foundation language models,"
+    arXiv:2302.13971, 2023.
+  - >-
+    R. Smith, "An overview of the Tesseract OCR engine," in Proc. ICDAR, 2007, pp. 629–633.

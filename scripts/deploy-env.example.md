@@ -1,41 +1,50 @@
-# Production env checklist (Railway + Vercel)
+# Production env (Render + Vercel + NVIDIA)
 
-Do not commit real secrets. Set these in Railway / Vercel dashboards.
+## Live URLs (EasyCircular)
 
-## Railway: `ai-service`
+| Layer | URL |
+|-------|-----|
+| Frontend | https://frontend-five-self-66.vercel.app |
+| Backend | https://easycircular-backend.onrender.com |
+| AI | https://easycircular-ai.onrender.com |
+
+## Render: `easycircular-ai` (standard plan recommended)
+
+OCR + SpaCy need ≥2GB RAM. Free/starter (512MB) OOMs on scanned PDFs.
 
 ```
-PORT=5000
 LLM_PROVIDER=openai
-OPENAI_API_KEY=<nvapi-rotated-key>
+OPENAI_API_KEY=<nvapi-key>
 OPENAI_BASE_URL=https://integrate.api.nvidia.com/v1
 LLM_MODEL=meta/llama-3.1-8b-instruct
 AI_SERVICE_TOKEN=<shared-random-token>
+OCR_LANGUAGES=eng
 ```
 
-Dockerfile: `ai-service/Dockerfile` (root directory `ai-service`).
+Use `OCR_LANGUAGES=sin+eng+tam` only if the instance has enough RAM for Tesseract.
 
-## Railway: `backend`
+## Render: `easycircular-backend` (free OK)
 
 ```
-PORT=4000
 NODE_ENV=production
-MONGODB_URI=<railway-mongo-or-atlas-uri>
-AI_SERVICE_URL=http://<ai-service>.railway.internal:5000
+MONGODB_URI=<mongodb+srv Atlas URI>/easycircular
+AI_SERVICE_URL=https://easycircular-ai.onrender.com
 AI_SERVICE_TOKEN=<same-as-ai>
 JWT_SECRET=<long-random>
-CORS_ORIGINS=https://<your-app>.vercel.app,http://localhost:3002
+CORS_ORIGINS=https://frontend-five-self-66.vercel.app,http://localhost:3002
 UPLOAD_DIR=/app/backend/uploads
 ```
 
-Dockerfile: `backend/Dockerfile` with **build context = repo root**.
+## Vercel: frontend (Root Directory = `frontend`)
 
-## Railway: MongoDB
+```
+NEXT_PUBLIC_API_URL=https://easycircular-backend.onrender.com
+```
 
-Add Railway MongoDB plugin (or Atlas). Copy connection string into backend `MONGODB_URI`.
+Redeploy after changing `NEXT_PUBLIC_*`.
 
-## Vercel: `frontend`
+## Notes
 
-- Root Directory: `frontend`
-- Env: `NEXT_PUBLIC_API_URL=https://<backend-public>.up.railway.app`
-- Redeploy after changing `NEXT_PUBLIC_*` vars
+- Rotate any API keys that were pasted in chat.
+- Blueprint file: [render.yaml](../render.yaml)
+- Smoke: `BACKEND_URL=https://easycircular-backend.onrender.com node scripts/smoke-prod.mjs`

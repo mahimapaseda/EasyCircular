@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Generate EasyCircular IEEE A4 conference paper from YAML + official template."""
+"""Generate EasyCircular IEEE conference paper from YAML + official template.
+
+Supports A4 (legacy) and US Letter (ICAC-revised) builds.
+Letter body is Sinhala with English title/abstract/keywords/headings.
+"""
 
 from __future__ import annotations
 
@@ -20,11 +24,19 @@ from docx.shared import Cm, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parents[1]
 CONF = ROOT / "docs" / "conference"
-TEMPLATE = CONF / "conference-template-a4.docx"
-CONTENT = CONF / "content.yaml"
-OUTPUT = CONF / "EasyCircular-Conference-Paper.docx"
-OUTPUT_BLIND = CONF / "EasyCircular-Conference-Paper-Blind.docx"
-OUTPUT_PDF = CONF / "EasyCircular-Conference-Paper.pdf"
+
+TEMPLATE_A4 = CONF / "conference-template-a4.docx"
+TEMPLATE_LETTER = CONF / "conference-template-letter.docx"
+CONTENT_A4 = CONF / "content.yaml"
+CONTENT_LETTER = CONF / "content-letter-en.yaml"
+
+OUTPUT_A4 = CONF / "EasyCircular-Conference-Paper.docx"
+OUTPUT_A4_BLIND = CONF / "EasyCircular-Conference-Paper-Blind.docx"
+OUTPUT_A4_PDF = CONF / "EasyCircular-Conference-Paper.pdf"
+
+OUTPUT_LETTER = CONF / "EasyCircular-Conference-Paper-Letter.docx"
+OUTPUT_LETTER_BLIND = CONF / "EasyCircular-Conference-Paper-Letter-Blind.docx"
+OUTPUT_LETTER_PDF = CONF / "EasyCircular-Conference-Paper-Letter.pdf"
 
 OOXML_PATCHES = [
     (
@@ -46,8 +58,18 @@ OOXML_PATCHES = [
     ("http://purl.oclc.org/ooxml/drawingml/main", "http://schemas.openxmlformats.org/drawingml/2006/main"),
 ]
 
-def load_content() -> dict[str, Any]:
-    with CONTENT.open(encoding="utf-8") as f:
+AUTHOR_SLOT_MARKERS = (
+    "1st Given Name",
+    "2nd Given Name",
+    "3rd Given Name",
+    "4th Given Name",
+    "5th Given Name",
+    "6th Given Name",
+)
+
+
+def load_content(path: Path) -> dict[str, Any]:
+    with path.open(encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 
@@ -164,21 +186,47 @@ def set_author_block(paragraph, author: dict, meta: dict) -> None:
         add_runs(paragraph, line, meta, 10)
 
 
+def _author_slot_index(text: str) -> int | None:
+    for idx, marker in enumerate(AUTHOR_SLOT_MARKERS):
+        if marker in text:
+            return idx
+    return None
+
+
 def replace_authors(doc: Document, authors: list[dict], meta: dict, blind: bool) -> None:
-    author2_placed = False
-    for paragraph in doc.paragraphs:
-        if not (paragraph.style and paragraph.style.name == "Author"):
-            continue
-        if blind:
+    author_paras = [
+        paragraph
+        for paragraph in doc.paragraphs
+        if paragraph.style and paragraph.style.name == "Author"
+    ]
+    if blind:
+        for paragraph in author_paras:
+            clear_paragraph(paragraph)
+        return
+
+    # Ranked fillable slots: numbered IEEE placeholders, then empty Author cells.
+    ranked: list[tuple[int, Any]] = []
+    for paragraph in author_paras:
+        text = paragraph.text
+        if "Sub-titles" in text:
             clear_paragraph(paragraph)
             continue
-        text = paragraph.text
-        if "1st Given Name" in text:
-            set_author_block(paragraph, authors[0], meta)
-        elif ("4th Given Name" in text or "3rd Given Name" in text) and not author2_placed and len(authors) > 1:
-            set_author_block(paragraph, authors[1], meta)
-            author2_placed = True
+        slot = _author_slot_index(text)
+        if slot is not None:
+            ranked.append((slot, paragraph))
+        elif not text.strip():
+            ranked.append((50 + len(ranked), paragraph))
         else:
+            clear_paragraph(paragraph)
+
+    ranked.sort(key=lambda item: item[0])
+    used_ids: set[int] = set()
+    for author, (_rank, paragraph) in zip(authors, ranked):
+        set_author_block(paragraph, author, meta)
+        used_ids.add(id(paragraph))
+
+    for paragraph in author_paras:
+        if id(paragraph) not in used_ids:
             clear_paragraph(paragraph)
 
 
@@ -226,6 +274,21 @@ def add_section_heading(doc: Document, heading: str, meta: dict) -> None:
     add_runs(paragraph, heading, meta, meta.get("font_size", 10), bold=True)
 
 
+def figure_caption(fig: dict) -> str:
+    return fig.get("caption_en") or fig.get("caption_si") or ""
+
+
+def table_caption(table_def: dict) -> str:
+    return table_def.get("caption_en") or table_def.get("caption_si") or ""
+
+
+def section_paragraphs(section: dict) -> list[str]:
+    paragraphs = section.get("paragraphs_en")
+    if paragraphs:
+        return paragraphs
+    return section.get("paragraphs_si") or []
+
+
 def add_figure(doc: Document, fig_num: int, fig: dict, meta: dict) -> None:
     image_path = ROOT / fig["file"]
     if not image_path.exists():
@@ -239,7 +302,7 @@ def add_figure(doc: Document, fig_num: int, fig: dict, meta: dict) -> None:
     caption = doc.add_paragraph(style="figure caption")
     caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
     add_runs(caption, f"Fig. {fig_num}. ", meta, 8, bold=True)
-    add_runs(caption, fig["caption_si"], meta, 8)
+    add_runs(caption, figure_caption(fig), meta, 8)
 
 
 def add_table(doc: Document, table_def: dict, meta: dict) -> None:
@@ -247,7 +310,7 @@ def add_table(doc: Document, table_def: dict, meta: dict) -> None:
     caption = doc.add_paragraph(style="figure caption")
     caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
     add_runs(caption, f"{marker}. ", meta, 8, bold=True)
-    add_runs(caption, table_def["caption_si"], meta, 8)
+    add_runs(caption, table_caption(table_def), meta, 8)
     headers = table_def["headers"]
     rows = table_def["rows"]
     table = doc.add_table(rows=1 + len(rows), cols=len(headers))
@@ -295,7 +358,7 @@ def append_body(doc: Document, content: dict, meta: dict) -> None:
 
     for section in content.get("sections") or []:
         add_section_heading(doc, section["heading_en"], meta)
-        for paragraph_text in section.get("paragraphs_si") or []:
+        for paragraph_text in section_paragraphs(section):
             add_body_paragraph(doc, paragraph_text, meta)
             for fig in figures:
                 fid = fig["id"]
@@ -335,9 +398,7 @@ try {{
   [System.Runtime.InteropServices.Marshal]::ReleaseComObject($word) | Out-Null
 }}
 """
-    import subprocess as _sp
-
-    result = _sp.run(
+    result = subprocess.run(
         ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps],
         capture_output=True,
         text=True,
@@ -348,14 +409,19 @@ try {{
             print(f"  {result.stderr.strip()}")
 
 
-def build_document(content: dict, blind: bool, output_path: Path) -> None:
+def build_document(
+    content: dict,
+    blind: bool,
+    output_path: Path,
+    template_path: Path,
+) -> None:
     meta = content.get("meta") or {}
     meta.setdefault("font", "Iskoola Pota")
     meta.setdefault("font_latin", "Times New Roman")
     meta.setdefault("font_size", 10)
 
     work = CONF / "_working-template.docx"
-    patch_template_ooxml(TEMPLATE, work)
+    patch_template_ooxml(template_path, work)
     doc = Document(str(work))
 
     replace_title(doc, content["title_en"])
@@ -377,29 +443,44 @@ def build_document(content: dict, blind: bool, output_path: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate EasyCircular IEEE conference paper")
+    parser.add_argument(
+        "--letter",
+        action="store_true",
+        help="Build US Letter English revised paper (content-letter-en.yaml)",
+    )
     parser.add_argument("--blind", action="store_true", help="Omit author names (double-blind review)")
     parser.add_argument("--no-pdf", action="store_true", help="Skip PDF export")
     args = parser.parse_args()
 
-    if not TEMPLATE.exists():
-        print(f"Missing template: {TEMPLATE}")
+    if args.letter:
+        template_path = TEMPLATE_LETTER
+        content_path = CONTENT_LETTER
+        output = OUTPUT_LETTER_BLIND if args.blind else OUTPUT_LETTER
+        pdf_path = OUTPUT_LETTER_PDF
+    else:
+        template_path = TEMPLATE_A4
+        content_path = CONTENT_A4
+        output = OUTPUT_A4_BLIND if args.blind else OUTPUT_A4
+        pdf_path = OUTPUT_A4_PDF
+
+    if not template_path.exists():
+        print(f"Missing template: {template_path}")
         return 1
-    if not CONTENT.exists():
-        print(f"Missing content: {CONTENT}")
+    if not content_path.exists():
+        print(f"Missing content: {content_path}")
         return 1
 
-    content = load_content()
+    content = load_content(content_path)
     subprocess.run(
         ["python", str(ROOT / "scripts" / "render_conference_survey_chart.py")],
         check=False,
     )
-    output = OUTPUT_BLIND if args.blind else OUTPUT
-    build_document(content, blind=args.blind, output_path=output)
+    build_document(content, blind=args.blind, output_path=output, template_path=template_path)
 
     if not args.no_pdf and not args.blind:
-        export_pdf(output, OUTPUT_PDF)
-        if OUTPUT_PDF.exists() and OUTPUT_PDF.stat().st_size > 0:
-            print(f"Wrote {OUTPUT_PDF}")
+        export_pdf(output, pdf_path)
+        if pdf_path.exists() and pdf_path.stat().st_size > 0:
+            print(f"Wrote {pdf_path}")
 
     return 0
 

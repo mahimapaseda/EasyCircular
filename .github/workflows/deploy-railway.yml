@@ -1,0 +1,44 @@
+# Deploy backend + AI to Railway when RAILWAY_TOKEN secrets are configured.
+# Create project tokens in Railway → Project Settings → Tokens, then add:
+#   RAILWAY_TOKEN_BACKEND, RAILWAY_TOKEN_AI
+# Optional: set repository variables for NVIDIA / JWT if not already on Railway.
+
+name: Deploy Railway
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - "backend/**"
+      - "ai-service/**"
+      - "shared/**"
+      - "docker-compose.yml"
+
+jobs:
+  deploy-ai:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.RAILWAY_TOKEN_AI != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+      - name: Deploy AI service
+        working-directory: ai-service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_AI }}
+        run: railway up --detach
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.RAILWAY_TOKEN_BACKEND != '' }}
+    needs: [deploy-ai]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+      - name: Deploy backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_BACKEND }}
+        # Build context is repo root (backend/Dockerfile COPY shared/)
+        run: railway up --detach --path-as-root

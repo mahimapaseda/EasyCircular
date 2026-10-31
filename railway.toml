@@ -1,0 +1,9 @@
+# EasyCircular Railway project — services use Dockerfiles below.
+# Create services in the Railway dashboard or via CLI and set env vars per README.
+
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

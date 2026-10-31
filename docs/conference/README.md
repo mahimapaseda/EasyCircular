@@ -1,25 +1,34 @@
 # EasyCircular IEEE Conference Paper
 
-Generate an IEEE A4 two-column conference paper with **English section headings** and **Sinhala body text**. Target: **about 4 pages of body** so references start on page 5.
+Two builds are supported:
+
+| Build | Template | Content | Body language |
+|-------|----------|---------|---------------|
+| **Letter (recommended for resubmission)** | `conference-template-letter.docx` | `content-letter-en.yaml` | English headings + Sinhala body |
+| A4 (legacy) | `conference-template-a4.docx` | `content.yaml` | English headings + Sinhala body |
+
+The Letter build revises claims for peer-review feedback: ROUGE is reported for the extractive fallback only, evaluation limits are stated openly, and figure/table references match the assets below.
 
 ## Output
 
 | File | Description |
 |------|-------------|
-| `EasyCircular-Conference-Paper.docx` | Named paper |
-| `EasyCircular-Conference-Paper-Blind.docx` | Double-blind copy |
-| `EasyCircular-Conference-Paper.pdf` | Optional PDF (Windows + Word) |
-| `content.yaml` | Paper source |
+| `EasyCircular-Conference-Paper-Letter.docx` | US Letter revised paper (Sinhala body) |
+| `EasyCircular-Conference-Paper-Letter-Blind.docx` | Double-blind Letter copy |
+| `EasyCircular-Conference-Paper-Letter.pdf` | Optional PDF (Windows + Word) |
+| `EasyCircular-Conference-Paper.docx` | Legacy A4 Sinhala-body paper |
+| `content-letter-en.yaml` | Letter source (EN abstract + SI body) |
+| `content.yaml` | Legacy A4 source |
 
-## Structure (supervisor feedback)
+## Structure
 
 | Section | Notes |
 |---------|-------|
-| I. INTRODUCTION | Linked story: background → problem → motivation → RQs |
-| II. RELATED WORK | Paragraph-wise themes (~1 column) |
-| III. PROPOSED SYSTEM | Requirement gathering first, then design/workflow/tech |
-| IV. RESULTS AND DISCUSSION | Latency, ROUGE, tests with tables/figures |
-| V. CONCLUSION | Short wrap-up |
+| I. INTRODUCTION | Background → problem → contributions → RQs |
+| II. RELATED WORK | Transformers, summarization, NER, OCR, gap |
+| III. PROPOSED SYSTEM | Survey, architecture, workflow, guardrail limits |
+| IV. RESULTS AND DISCUSSION | Latency, fallback ROUGE, tests (correctness only) |
+| V. CONCLUSION | Honest RQ framing + future eval work |
 
 ## Figures and tables
 
@@ -28,24 +37,31 @@ Generate an IEEE A4 two-column conference paper with **English section headings*
 | Fig. 1 Survey key findings | III |
 | Fig. 2 Architecture | III |
 | Fig. 3 Algorithm flowchart | III |
-| Fig. 4 Summary UI (structured brief + entities) | IV |
-| Fig. 5 ROUGE F1 chart | IV |
+| Fig. 4 Summary UI | IV |
+| Fig. 5 ROUGE F1 chart (fallback) | IV |
 | TABLE I Survey findings | III |
 | TABLE II Technology stack | III |
 | TABLE III Latency | IV |
-| TABLE IV ROUGE by circular | IV |
+| TABLE IV ROUGE by circular (fallback) | IV |
 | TABLE V Automated tests | IV |
 
 ## Generate
 
 ```powershell
+# US Letter revised paper, Sinhala body (named + PDF if Word available)
+npm run generate:conference-paper:letter
+
+# Double-blind Letter copy
+python scripts/generate_conference_paper.py --letter --blind --no-pdf
+
+# Legacy A4 Sinhala-body paper
 npm run generate:conference-paper
-python scripts/generate_conference_paper.py --blind --no-pdf
 ```
 
 ## Checklist
 
-- [ ] Replace `[email placeholder]` on author line 5
-- [ ] Confirm page count (~4 body + refs on page 5)
-- [ ] Sinhala renders (Iskoola Pota)
-- [ ] No leftover IEEE template text
+- [ ] Replace `[email placeholder]` on author lines
+- [ ] Confirm Letter page size (8.5 × 11 in)
+- [ ] Confirm Fig. 1–5 and TABLE I–V appear once each
+- [ ] Confirm abstract reports ROUGE macros and N=6 fallback-only framing
+- [ ] No leftover IEEE template boilerplate

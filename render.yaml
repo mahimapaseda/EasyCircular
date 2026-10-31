@@ -8,7 +8,8 @@ services:
   - type: web
     name: easycircular-ai
     runtime: docker
-    plan: free
+    # OCR + SpaCy need >= standard (2GB). Free/starter (512MB) OOM on scanned PDFs.
+    plan: standard
     dockerfilePath: ./ai-service/Dockerfile
     dockerContext: ./ai-service
     healthCheckPath: /health
@@ -25,6 +26,8 @@ services:
         sync: false
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: OCR_LANGUAGES
+        value: eng
 
   - type: web
     name: easycircular-backend
